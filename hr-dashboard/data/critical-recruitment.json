@@ -1,0 +1,50 @@
+[
+  {
+    "id": "7e73292d-88fc-4b55-b615-486085c97ec5",
+    "candidateName": "Hilton Freyes",
+    "position": "Executive Assistant",
+    "country": "TT",
+    "stage": "Interview stage",
+    "createdAt": "2026-01-26T18:39:04.789Z"
+  },
+  {
+    "id": "744bb3cf-5981-46bb-adf5-e156697f3a49",
+    "candidateName": "Gigi",
+    "position": "Courier",
+    "country": "GY",
+    "stage": "Approval stage",
+    "createdAt": "2026-01-26T18:39:35.453Z"
+  },
+  {
+    "id": "56e5b4a3-f31b-42e4-aaa4-7e9282ec3871",
+    "candidateName": "Bella",
+    "position": "Project Manager",
+    "country": "TT",
+    "stage": "Contract development",
+    "createdAt": "2026-01-26T18:40:22.234Z"
+  },
+  {
+    "id": "9b61569c-2903-46a7-9dcb-7a900ae69974",
+    "candidateName": "Riri",
+    "position": "ICT Officer",
+    "country": "COL",
+    "stage": "Plan development",
+    "createdAt": "2026-01-26T18:41:20.921Z"
+  },
+  {
+    "id": "128c6224-a423-40fa-8dce-5f2158933b6f",
+    "candidateName": "Logan",
+    "position": "Marketing Intern",
+    "country": "MEX",
+    "stage": "Offer stage",
+    "createdAt": "2026-01-26T18:41:46.679Z"
+  },
+  {
+    "id": "abcc2d88-d730-4e0a-b867-ae787aa71ede",
+    "candidateName": "Veronica",
+    "position": "Intern",
+    "country": "SUR",
+    "stage": "Offer accepted",
+    "createdAt": "2026-01-26T18:42:12.631Z"
+  }
+]
