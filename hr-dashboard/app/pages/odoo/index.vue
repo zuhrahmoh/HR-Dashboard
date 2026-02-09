@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-6">
     <div class="space-y-1">
-      <h1 class="text-3xl font-semibold">HR Analytics</h1>
-      <p class="text-base text-slate-300">A real-time overview of workforce composition, employee movement, and people-related costs across regions.</p>
+      <h1 class="text-3xl font-semibold">HR Analytics (Odoo)</h1>
+      <p class="text-base text-slate-300">Employee analytics sourced from the Odoo Employee module.</p>
     </div>
 
     <hr class="border-slate-800" />
@@ -234,7 +234,7 @@ function getErrorMessage(error: unknown) {
   )
 }
 
-const { data: analyticsData, pending: analyticsPending, error: analyticsError } = await useFetch<HomeAnalytics>('/api/analytics/home')
+const { data: analyticsData, pending: analyticsPending, error: analyticsError } = await useFetch<HomeAnalytics>('/api/odoo/analytics/home')
 const analytics = computed(() => analyticsData.value ?? null)
 const analyticsErrorMessage = computed(() => getErrorMessage(analyticsError.value))
 

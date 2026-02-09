@@ -682,7 +682,7 @@
                   <td class="px-4 py-3 text-slate-50">{{ n.name }}</td>
                   <td class="px-4 py-3 text-slate-200">{{ n.position }}</td>
                   <td class="px-4 py-3 text-slate-200">{{ n.country }}</td>
-                  <td class="px-4 py-3 text-slate-200">{{ n.startDate }}</td>
+                  <td class="px-4 py-3 text-slate-200">{{ formatYmdDateOrDash(n.startDate) }}</td>
                   <td class="px-4 py-3">
                     <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium" :class="newHireStatusBadgeClass(n.status)">
                       {{ n.status }}
@@ -723,13 +723,13 @@
     <section class="space-y-3">
       <div class="space-y-1">
         <h2 class="text-base font-semibold text-slate-200">Recent Separations</h2>
-        <p class="text-xs text-slate-400">Employees where Employee Status = Resigned.</p>
+        <p class="text-xs text-slate-400">Employees where Active = false (resigned / fired / retired).</p>
       </div>
 
-      <div v-if="employeesPending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
-      <div v-else-if="employeesError" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
+      <div v-if="separationsPending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
+      <div v-else-if="separationsError" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
         Failed to load employees.
-        <div v-if="employeesErrorMessage" class="mt-2 text-xs text-red-200/80">{{ employeesErrorMessage }}</div>
+        <div v-if="separationsErrorMessage" class="mt-2 text-xs text-red-200/80">{{ separationsErrorMessage }}</div>
       </div>
       <div v-else class="overflow-hidden rounded-md border border-slate-800 bg-slate-900">
         <div class="overflow-x-auto">
@@ -749,7 +749,7 @@
                 <td class="px-4 py-3 text-slate-200">{{ e.department }}</td>
                 <td class="px-4 py-3 text-slate-200">{{ e.position }}</td>
                 <td class="px-4 py-3 text-slate-200">{{ e.countryAssigned }}</td>
-                <td class="px-4 py-3 text-slate-200">{{ e.startDate ?? '—' }}</td>
+                <td class="px-4 py-3 text-slate-200">{{ formatYmdDateOrDash(e.startDate) }}</td>
               </tr>
               <tr v-if="recentSeparations.length === 0" class="border-t border-slate-800">
                 <td colspan="5" class="px-4 py-6 text-center text-slate-300">No recent separations found.</td>
@@ -763,6 +763,8 @@
 </template>
 
 <script setup lang="ts">
+import { formatYmdDateOrDash } from '~/utils/dates'
+
 type Vacancy = {
   id: string
   positionTitle: string
@@ -894,8 +896,13 @@ const newHiresErrorMessage = computed(() => getErrorMessage(newHiresError.value)
 const { data: employeesData, pending: employeesPending, error: employeesError } = await useFetch<Employee[]>('/api/employees')
 const employeesErrorMessage = computed(() => getErrorMessage(employeesError.value))
 
+const { data: separationsData, pending: separationsPending, error: separationsError } = await useFetch<Employee[]>(
+  '/api/odoo/employees?includeInactive=1'
+)
+const separationsErrorMessage = computed(() => getErrorMessage(separationsError.value))
+
 const recentSeparations = computed(() =>
-  (employeesData.value ?? [])
+  (separationsData.value ?? [])
     .filter((e) => e.employeeStatus === 'Resigned')
     .sort((a, b) => a.name.localeCompare(b.name))
 )

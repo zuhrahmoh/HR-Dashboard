@@ -1,11 +1,11 @@
 <template>
   <div class="space-y-3">
-    <div v-if="items.length === 0" class="text-sm text-slate-300">No headcount data.</div>
+    <div v-if="items.length === 0" class="text-base text-slate-300">No headcount data.</div>
 
     <div v-else class="space-y-2">
-      <div class="text-center text-sm font-semibold tabular-nums text-slate-50">Total headcount: {{ total }}</div>
+      <div class="text-center text-base font-semibold tabular-nums text-slate-50">Total headcount: {{ total }}</div>
       <div v-for="row in rows" :key="row.key" class="grid grid-cols-12 items-center gap-3">
-        <div class="col-span-4 truncate text-sm text-slate-200" :title="row.label">
+        <div class="col-span-4 truncate text-base text-slate-200" :title="row.label">
           {{ row.label }}
         </div>
 
@@ -15,7 +15,7 @@
           </div>
         </div>
 
-        <div class="col-span-2 text-right text-sm tabular-nums text-slate-200">
+        <div class="col-span-2 text-right text-base tabular-nums text-slate-200">
           {{ row.headcount }}
         </div>
       </div>

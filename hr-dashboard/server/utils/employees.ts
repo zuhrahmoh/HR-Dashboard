@@ -10,6 +10,7 @@ export type Employee = {
   department: string
   position: string
   startDate: string | null
+  birthDate?: string | null
   countryAssigned: string
   employeeStatus: string
   // Common extra CSV fields (read-only; optional)
@@ -19,6 +20,7 @@ export type Employee = {
   employmentStatus?: string
   contractOrProbationEndDate?: string | null
   talentRating?: string
+  departureReason?: string
   monthlySalary?: string
   allowances?: string
   grossSalary?: string
@@ -45,6 +47,7 @@ function canonicalHeaderKey(rawHeader: string) {
   const h = normalizeHeader(rawHeader)
   if (h === 'country assigsned' || h === 'country assigned') return 'countryAssigned'
   if (h === 'start date') return 'startDate'
+  if (h === 'date of birth' || h === 'dob' || h === 'birth date' || h === 'birthday') return 'birthDate'
   if (h === 'employee status') return 'employeeStatus'
   if (h === 'department') return 'department'
   if (h === 'name') return 'name'
@@ -269,6 +272,7 @@ export async function loadEmployeesFromCsv(): Promise<Employee[]> {
   const employees: Employee[] = rows.map((r) => {
     const startDate = normalizeDateToYmd(r.startDate ?? '')
     const contractOrProbationEndDate = normalizeDateToYmd(r.contractOrProbationEndDate ?? '')
+    const birthDate = normalizeDateToYmd((r as any).birthDate ?? '')
 
     const { baseString, fullHash } = generateEmployeeKey({
       name: r.name ?? '',
@@ -287,6 +291,7 @@ export async function loadEmployeesFromCsv(): Promise<Employee[]> {
       department: r.department ?? '',
       position: r.position ?? '',
       startDate,
+      birthDate,
       countryAssigned: r.countryAssigned ?? '',
       employeeStatus,
       gender: r.gender || undefined,

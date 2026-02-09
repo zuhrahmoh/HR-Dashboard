@@ -1,6 +1,14 @@
+import defaultTheme from 'tailwindcss/defaultTheme'
 import type { Config } from 'tailwindcss'
 
 export default {
-  darkMode: 'class'
-} satisfies Partial<Config>
+  darkMode: 'class',
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Inter', ...defaultTheme.fontFamily.sans]
+      }
+    }
+  }
+} satisfies Config
 

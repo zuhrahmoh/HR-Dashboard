@@ -1,4 +1,4 @@
-import { loadEmployeesFromCsv } from '../../utils/employees'
+import { loadEmployeesFromOdoo } from '../../../utils/odooEmployees'
 
 type HomeAnalytics = {
   headcountByCountry: Array<{ country: string; headcount: number }>
@@ -32,6 +32,11 @@ type HomeAnalytics = {
 
 function isResigned(status: string) {
   return status.trim().toLowerCase() === 'resigned'
+}
+
+function isDepartureResigned(reason: string | undefined) {
+  const v = (reason ?? '').trim().toLowerCase()
+  return v === 'resigned' || v.startsWith('resign')
 }
 
 function normalizeGender(raw: string | undefined): 'male' | 'female' | null {
@@ -88,10 +93,13 @@ function extractBucket(rating: string): 'A' | 'B+' | 'B' | 'B-' | 'C' | null {
 }
 
 export default defineEventHandler(async (): Promise<HomeAnalytics> => {
-  const employees = await loadEmployeesFromCsv()
+  const employees = await loadEmployeesFromOdoo({ includeInactive: true })
 
   const total = employees.length
-  const resigned = employees.reduce((acc, e) => acc + (isResigned(e.employeeStatus) ? 1 : 0), 0)
+  const resigned = employees.reduce(
+    (acc, e) => acc + (isResigned(e.employeeStatus) && isDepartureResigned(e.departureReason) ? 1 : 0),
+    0
+  )
 
   const headcountMap = new Map<string, number>()
   const genderByCountry = new Map<string, { male: number; female: number }>()

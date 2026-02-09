@@ -2,23 +2,27 @@
   <section class="rounded-md border border-slate-800 bg-slate-900 p-4">
     <div class="flex items-start justify-between gap-4">
       <div class="min-w-0">
-        <h3 class="truncate text-sm font-semibold text-slate-100" :title="country">{{ country || '—' }}</h3>
-        <p v-if="month" class="mt-0.5 text-xs text-slate-400">{{ month }}</p>
+        <h3 class="truncate text-base font-semibold text-slate-100" :title="country">{{ country || '—' }}</h3>
+        <p v-if="month" class="mt-0.5 text-sm text-slate-400">{{ month }}</p>
       </div>
-      <div class="text-right text-sm font-semibold tabular-nums text-emerald-400">
+      <div class="text-right text-base font-semibold tabular-nums text-emerald-400">
         {{ formatCurrency(total) }}
       </div>
     </div>
 
-    <dl class="mt-4 space-y-2 rounded-md bg-slate-950/20 p-3 text-xs text-slate-200 shadow-lg shadow-black/20">
-      <div v-for="row in breakdownRows" :key="row.key" class="grid grid-cols-12 items-center gap-3">
-        <dt class="col-span-4 truncate text-slate-400" :title="row.label">{{ row.label }}</dt>
-        <dd class="col-span-6">
-          <div class="h-2 w-full overflow-hidden rounded bg-slate-800">
+    <dl
+      class="mt-4 grid grid-cols-[8.5rem_6.5rem_max-content] items-center gap-x-1 gap-y-1.5 overflow-hidden rounded-md bg-slate-950/20 p-2.5 text-xs text-slate-200 shadow-lg shadow-black/20"
+    >
+      <div v-for="row in breakdownRows" :key="row.key" class="contents">
+        <dt class="min-w-0 truncate text-slate-400" :title="row.label">{{ row.label }}</dt>
+        <dd>
+          <div class="h-1.5 w-full overflow-hidden rounded bg-slate-800">
             <div class="h-full rounded bg-slate-200" :style="{ width: row.widthPct }" />
           </div>
         </dd>
-        <dd class="col-span-2 text-right tabular-nums">{{ formatCurrency(row.value) }}</dd>
+        <dd class="justify-self-end whitespace-nowrap text-right tabular-nums text-[13px] font-semibold text-slate-100">
+          {{ formatCurrency(row.value) }}
+        </dd>
       </div>
     </dl>
   </section>

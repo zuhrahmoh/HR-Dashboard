@@ -1,13 +1,13 @@
 <template>
   <div class="space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <div class="text-sm font-semibold text-slate-200">Gender breakdown</div>
+      <div class="text-base font-semibold text-slate-200">Gender breakdown</div>
 
-      <label class="flex items-center gap-2 text-xs text-slate-300">
+      <label class="flex items-center gap-2 text-sm text-slate-300">
         <span class="whitespace-nowrap">Country</span>
         <select
           v-model="selectedCountry"
-          class="rounded-md border border-slate-800 bg-slate-950 px-2 py-1 text-xs text-slate-200 outline-none focus:border-slate-600"
+          class="rounded-md border border-slate-800 bg-slate-950 px-2 py-1 text-sm text-slate-200 outline-none focus:border-slate-600"
         >
           <option value="">All</option>
           <option v-for="c in countries" :key="c.value" :value="c.value">{{ c.label }}</option>
@@ -38,23 +38,23 @@
                 text-anchor="middle"
                 dominant-baseline="middle"
                 fill="rgb(2 6 23)"
-                font-size="6"
+                font-size="7"
                 font-weight="600"
               >
                 <tspan :x="lbl.x" dy="-2">{{ lbl.count }}</tspan>
-                <tspan :x="lbl.x" dy="8" font-size="5" font-weight="500">{{ lbl.pct }}%</tspan>
+                <tspan :x="lbl.x" dy="8" font-size="6" font-weight="500">{{ lbl.pct }}%</tspan>
               </text>
             </template>
           </svg>
 
           <div class="absolute inset-0 grid place-items-center text-center">
-            <div class="text-xs font-medium text-slate-200">Headcount</div>
-            <div class="text-2xl font-semibold tabular-nums text-slate-50">{{ total }}</div>
-            <div class="text-xs font-medium text-slate-300">{{ subtitle }}</div>
+            <div class="text-sm font-medium text-slate-200">Headcount</div>
+            <div class="text-3xl font-semibold tabular-nums text-slate-50">{{ total }}</div>
+            <div class="text-sm font-medium text-slate-300">{{ subtitle }}</div>
           </div>
       </div>
 
-        <div class="mt-5 w-full max-w-xs space-y-2 text-sm">
+        <div class="mt-5 w-full max-w-xs space-y-2 text-base">
           <div class="flex items-center justify-between gap-6">
             <div class="flex items-center gap-2 text-slate-300">
               <span class="h-2.5 w-2.5 rounded-sm bg-pink-400" />

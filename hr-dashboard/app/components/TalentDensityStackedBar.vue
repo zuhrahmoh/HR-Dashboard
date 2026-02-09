@@ -2,16 +2,16 @@
   <div class="space-y-3">
     <div class="flex items-start justify-between gap-4">
       <div class="min-w-0">
-        <h3 class="truncate text-sm font-semibold text-slate-200" :title="title">{{ title }}</h3>
-        <p class="text-xs text-slate-400">Total: {{ total }}</p>
+        <h3 class="truncate text-base font-semibold text-slate-200" :title="title">{{ title }}</h3>
+        <p class="text-sm text-slate-400">Total: {{ total }}</p>
       </div>
     </div>
 
-    <div v-if="total === 0" class="text-sm text-slate-300">No rating data.</div>
+    <div v-if="total === 0" class="text-base text-slate-300">No rating data.</div>
 
     <div v-else class="space-y-2">
       <div v-for="row in rows" :key="row.bucket" class="grid grid-cols-12 items-center gap-3">
-        <div class="col-span-4 truncate text-sm text-slate-200" :title="row.bucket">
+        <div class="col-span-4 truncate text-base text-slate-200" :title="row.bucket">
           {{ row.bucket }}
         </div>
 
@@ -21,7 +21,7 @@
           </div>
         </div>
 
-        <div class="col-span-2 text-right text-sm tabular-nums text-slate-200">
+        <div class="col-span-2 text-right text-base tabular-nums text-slate-200">
           {{ row.count }} <span class="text-sm text-slate-400 tabular-nums">({{ row.pctLabel }})</span>
         </div>
       </div>

@@ -42,7 +42,7 @@
                 <td class="px-4 py-3 text-slate-200">{{ e.department }}</td>
                 <td class="px-4 py-3 text-slate-200">{{ e.position }}</td>
                 <td class="px-4 py-3 text-slate-200">{{ e.countryAssigned }}</td>
-                <td class="px-4 py-3 text-slate-200">{{ e.startDate ?? '—' }}</td>
+                <td class="px-4 py-3 text-slate-200">{{ formatYmdDateOrDash(e.startDate) }}</td>
                 <td class="px-4 py-3">
                   <div v-if="noteLoading[e.employeeKey]" class="text-xs text-slate-400">Loading note…</div>
                   <template v-else-if="editingNoteEmployeeKey === e.employeeKey">
@@ -123,6 +123,8 @@
 </template>
 
 <script setup lang="ts">
+import { formatYmdDateOrDash } from '~/utils/dates'
+
 type Employee = {
   employeeKey: string
   name: string

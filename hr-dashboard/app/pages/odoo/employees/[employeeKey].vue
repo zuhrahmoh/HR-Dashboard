@@ -2,18 +2,10 @@
   <div class="space-y-6">
     <div class="flex flex-wrap items-end justify-between gap-4">
       <div class="space-y-1">
-        <NuxtLink to="/employees" class="text-sm text-slate-300 hover:text-slate-50">← Back to Employees</NuxtLink>
-        <h1 class="text-2xl font-semibold">Employee Profile</h1>
-        <p class="text-slate-300">Read-only view sourced from the employee CSV.</p>
+        <NuxtLink to="/odoo/employees" class="text-sm text-slate-300 hover:text-slate-50">← Back to Employees</NuxtLink>
+        <h1 class="text-2xl font-semibold">Employee Profile (Odoo)</h1>
+        <p class="text-slate-300">Read-only view sourced from Odoo.</p>
       </div>
-
-      <a
-        v-if="employeeKey"
-        :href="`/api/employees/${employeeKey}/pdf`"
-        class="rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-200 hover:bg-slate-900"
-      >
-        Download PDF
-      </a>
     </div>
 
     <hr class="border-slate-800" />
@@ -74,6 +66,10 @@
             <dd class="text-slate-50">{{ employee.employeeStatus }}</dd>
           </div>
           <div class="flex justify-between gap-4">
+            <dt class="text-slate-400">Employment Type</dt>
+            <dd class="text-slate-50">{{ employee.employeeType ? toTitleCase(employee.employeeType) : '—' }}</dd>
+          </div>
+          <div class="flex justify-between gap-4">
             <dt class="text-slate-400">Start Date</dt>
             <dd class="text-slate-50">{{ formatYmdDateOrDash(employee.startDate) }}</dd>
           </div>
@@ -81,37 +77,16 @@
             <dt class="text-slate-400">Contract/Probation End</dt>
             <dd class="text-slate-50">{{ formatYmdDateOrDash(employee.contractOrProbationEndDate) }}</dd>
           </div>
-          <div class="flex justify-between gap-4">
-            <dt class="text-slate-400">Employee Type</dt>
-            <dd class="text-slate-50">{{ employee.employeeType ?? '—' }}</dd>
-          </div>
-          <div class="flex justify-between gap-4">
-            <dt class="text-slate-400">Employment Status</dt>
-            <dd class="text-slate-50">{{ employee.employmentStatus ?? '—' }}</dd>
-          </div>
         </dl>
       </section>
 
       <section class="rounded-md border border-slate-800 bg-slate-900 p-4">
-        <h2 class="mb-3 text-sm font-semibold text-slate-200">Compensation</h2>
+        <h2 class="mb-3 text-sm font-semibold text-slate-200">Talent</h2>
         <dl class="space-y-2 text-sm">
           <div class="flex justify-between gap-4">
-            <dt class="text-slate-400">Monthly Salary</dt>
-            <dd class="text-slate-50">{{ employee.monthlySalary ?? '—' }}</dd>
+            <dt class="text-slate-400">Rating</dt>
+            <dd class="text-slate-50">{{ employee.talentRating ?? '—' }}</dd>
           </div>
-          <div class="flex justify-between gap-4">
-            <dt class="text-slate-400">Allowances</dt>
-            <dd class="text-slate-50">{{ employee.allowances ?? '—' }}</dd>
-          </div>
-          <div class="flex justify-between gap-4">
-            <dt class="text-slate-400">Type of Allowance</dt>
-            <dd class="text-slate-50">{{ employee.typeOfAllowance ?? '—' }}</dd>
-          </div>
-          <div class="flex justify-between gap-4">
-            <dt class="text-slate-400">Gross Salary (including allowances)</dt>
-            <dd class="text-slate-50">{{ employee.grossSalary ?? '—' }}</dd>
-          </div>
-          
         </dl>
       </section>
     </div>
@@ -129,21 +104,26 @@ type Employee = {
   startDate: string | null
   countryAssigned: string
   employeeStatus: string
+  employeeType?: string
   gender?: string
   reportingTo?: string
-  employeeType?: string
-  employmentStatus?: string
   contractOrProbationEndDate?: string | null
-  monthlySalary?: string
-  allowances?: string
-  grossSalary?: string
-  typeOfAllowance?: string
+  talentRating?: string
 }
 
 const route = useRoute()
 const employeeKey = computed(() => String(route.params.employeeKey || ''))
 
-const { data, pending, error } = await useFetch<Employee>(() => `/api/employees/${employeeKey.value}`)
+const { data, pending, error } = await useFetch<Employee>(() => `/api/odoo/employees/${employeeKey.value}`)
 const employee = computed(() => data.value ?? null)
+
+function toTitleCase(input: string) {
+  return input
+    .trim()
+    .split(/\s+/g)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ')
+}
 </script>
 
