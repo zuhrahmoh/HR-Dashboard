@@ -38,6 +38,15 @@ function safeString(v: unknown) {
   return typeof v === 'string' ? v : v == null ? '' : String(v)
 }
 
+function normalizeDepartureReason(reason: string | undefined): 'resigned' | 'retired' | 'fired' | null {
+  const v = (reason ?? '').trim().toLowerCase()
+  if (!v) return null
+  if (v === 'resigned' || v.startsWith('resign')) return 'resigned'
+  if (v === 'retired' || v.startsWith('retire')) return 'retired'
+  if (v === 'fired' || v.startsWith('fire') || v.includes('terminated') || v.includes('termination')) return 'fired'
+  return null
+}
+
 async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean }): Promise<Employee[]> {
   const ttlMs = getCacheTtlMs()
   const cache = opts.includeInactive ? cachedIncludingInactive : cachedActiveOnly
@@ -77,12 +86,44 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
     'x_dob'
   ])
   const departureReasonField = pickFirstExistingField(fieldInfo, ['departure_reason_id', 'x_departure_reason_id'])
+  const tenureField = pickFirstExistingField(fieldInfo, [
+    'tenure',
+    'employee_tenure',
+    'length_of_service',
+    'years_of_service',
+    'x_tenure',
+    'x_employee_tenure',
+    'x_length_of_service',
+    'x_years_of_service'
+  ])
+  const workEmailField = pickFirstExistingField(fieldInfo, [
+    'work_email',
+    'x_work_email',
+    'x_email'
+  ])
+  const personalEmailField = pickFirstExistingField(fieldInfo, ['private_email', 'personal_email', 'x_private_email', 'x_personal_email'])
+
+  const workPhoneField = pickFirstExistingField(fieldInfo, [
+    'work_phone',
+    'x_work_phone',
+    'x_phone'
+  ])
+  const personalPhoneField = pickFirstExistingField(fieldInfo, [
+    'mobile_phone',
+    'private_phone',
+    'phone',
+    'mobile',
+    'x_mobile_phone',
+    'x_private_phone'
+  ])
 
   const fields = Array.from(
     new Set(
       [
         'name',
         'active',
+        'write_date',
+        'create_date',
         'department_id',
         'job_title',
         'job_id',
@@ -94,7 +135,12 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
         talentRatingField,
         employmentTypeField,
         birthDateField,
-        departureReasonField
+        departureReasonField,
+        tenureField,
+        workEmailField,
+        personalEmailField,
+        workPhoneField,
+        personalPhoneField
       ].filter(Boolean)
     )
   ) as string[]
@@ -121,6 +167,18 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
     const rawCountry = countryField ? r?.[countryField] : null
     const countryAssigned = (many2oneName(rawCountry) || safeString(rawCountry)).trim()
 
+    const departureReason = departureReasonField ? many2oneName(r?.[departureReasonField]).trim() || undefined : undefined
+    const normReason = normalizeDepartureReason(departureReason)
+    const employeeStatus = isActive
+      ? 'Active'
+      : normReason === 'retired'
+        ? 'Retired'
+        : normReason === 'fired'
+          ? 'Fired'
+          : normReason === 'resigned'
+            ? 'Resigned'
+            : 'Separated'
+
     const employee: Employee = {
       employeeKey: `odoo-${id}`,
       name: safeString(r?.name).trim(),
@@ -129,7 +187,7 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
       startDate: startDateField ? toYmd(r?.[startDateField]) : null,
       birthDate: birthDateField ? toYmd(r?.[birthDateField]) : null,
       countryAssigned,
-      employeeStatus: isActive ? 'Active' : 'Resigned',
+      employeeStatus,
       gender: safeString(r?.gender).trim() || undefined,
       reportingTo: many2oneName(r?.parent_id) || undefined,
       contractOrProbationEndDate: contractEndField ? toYmd(r?.[contractEndField]) : null,
@@ -137,7 +195,14 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
       employeeType: employmentTypeField
         ? (many2oneName(r?.[employmentTypeField]) || safeString(r?.[employmentTypeField])).trim() || undefined
         : undefined,
-      departureReason: departureReasonField ? many2oneName(r?.[departureReasonField]).trim() || undefined : undefined
+      departureReason,
+      separatedAt: !isActive ? toYmd(r?.write_date) : null,
+      createdAt: toYmd(r?.create_date),
+      tenure: tenureField ? safeString(r?.[tenureField]).trim() || undefined : undefined,
+      workEmail: workEmailField ? safeString(r?.[workEmailField]).trim() || undefined : undefined,
+      personalEmail: personalEmailField ? safeString(r?.[personalEmailField]).trim() || undefined : undefined,
+      workPhone: workPhoneField ? safeString(r?.[workPhoneField]).trim() || undefined : undefined,
+      personalPhone: personalPhoneField ? safeString(r?.[personalPhoneField]).trim() || undefined : undefined
     }
 
     return employee

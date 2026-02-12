@@ -28,7 +28,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-800">
-                <tr v-for="row in group.rows" :key="row.key" class="text-slate-200">
+                <tr v-for="row in group.rows" :key="row.key" :class="upcomingRowClass(row)">
                   <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-100">{{ row.name || '—' }}</td>
                   <td class="whitespace-nowrap px-4 py-3 text-slate-300">{{ row.department || '—' }}</td>
                   <td class="whitespace-nowrap px-4 py-3 text-slate-300">{{ row.position || '—' }}</td>
@@ -225,6 +225,15 @@ const upcomingGroups = computed(() => {
   const list = rows.value.filter((r) => r.daysRemaining > 0 || getStatusForRow(r) === 'completed')
   return groupByCountry(list)
 })
+
+const SIX_WEEKS_DAYS = 42
+function upcomingRowClass(row: Row) {
+  const shouldHighlight = row.daysRemaining > 0 && row.daysRemaining <= SIX_WEEKS_DAYS
+  return [
+    'text-slate-200',
+    shouldHighlight ? 'bg-pink-950/55 outline outline-1 outline-pink-500/40 outline-offset-[-1px]' : '',
+  ]
+}
 
 const pendingExpiryGroups = computed(() => {
   const list = rows.value.filter((r) => r.daysRemaining <= 0 && getStatusForRow(r) !== 'completed')

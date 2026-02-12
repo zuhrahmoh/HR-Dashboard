@@ -2,7 +2,24 @@ import { loadEmployeesFromOdoo } from '../../../utils/odooEmployees'
 
 type HomeAnalytics = {
   headcountByCountry: Array<{ country: string; headcount: number }>
-  separations: { resigned: number; total: number; ratio: number }
+  separations: {
+    currentMonth: string
+    months: string[]
+    byMonth: Record<
+      string,
+      {
+        resigned: number
+        retired: number
+        fired: number
+        headcountAfter: number
+      }
+    >
+  }
+  additions: {
+    currentMonth: string
+    months: string[]
+    byMonth: Record<string, { hires: number }>
+  }
   genderBreakdown: {
     overall: { male: number; female: number; total: number }
     byCountry: Array<{ country: string; male: number; female: number; total: number }>
@@ -30,13 +47,20 @@ type HomeAnalytics = {
   }>
 }
 
-function isResigned(status: string) {
-  return status.trim().toLowerCase() === 'resigned'
+function isActiveStatus(status: string) {
+  return status.trim().toLowerCase() === 'active'
 }
 
-function isDepartureResigned(reason: string | undefined) {
-  const v = (reason ?? '').trim().toLowerCase()
-  return v === 'resigned' || v.startsWith('resign')
+function isSeparatedStatus(status: string) {
+  return !isActiveStatus(status)
+}
+
+function normalizeSeparatedStatus(status: string): 'resigned' | 'retired' | 'fired' | null {
+  const v = status.trim().toLowerCase()
+  if (v === 'resigned') return 'resigned'
+  if (v === 'retired') return 'retired'
+  if (v === 'fired') return 'fired'
+  return null
 }
 
 function normalizeGender(raw: string | undefined): 'male' | 'female' | null {
@@ -60,6 +84,37 @@ function parseYmdToUtcMs(ymd: string): number | null {
 function utcTodayMs() {
   const now = new Date()
   return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+}
+
+function monthKeyFromUtcMs(utcMs: number) {
+  const d = new Date(utcMs)
+  const y = d.getUTCFullYear()
+  const m = d.getUTCMonth() + 1
+  return `${y}-${String(m).padStart(2, '0')}`
+}
+
+function monthIndexFromKey(key: string) {
+  const m = /^(\d{4})-(\d{2})$/.exec(key.trim())
+  if (!m) return null
+  const y = Number(m[1])
+  const mo = Number(m[2])
+  if (!Number.isFinite(y) || !Number.isFinite(mo) || mo < 1 || mo > 12) return null
+  return y * 12 + (mo - 1)
+}
+
+function monthKeyFromIndex(idx: number) {
+  const y = Math.floor(idx / 12)
+  const m0 = idx % 12
+  return `${y}-${String(m0 + 1).padStart(2, '0')}`
+}
+
+function monthEndUtcMs(monthKey: string) {
+  const m = /^(\d{4})-(\d{2})$/.exec(monthKey.trim())
+  if (!m) return null
+  const y = Number(m[1])
+  const mo = Number(m[2])
+  if (!Number.isFinite(y) || !Number.isFinite(mo) || mo < 1 || mo > 12) return null
+  return Date.UTC(y, mo, 0)
 }
 
 function ageYearsFromBirthYmd(birthYmd: string, todayUtcMs: number): number | null {
@@ -95,11 +150,96 @@ function extractBucket(rating: string): 'A' | 'B+' | 'B' | 'B-' | 'C' | null {
 export default defineEventHandler(async (): Promise<HomeAnalytics> => {
   const employees = await loadEmployeesFromOdoo({ includeInactive: true })
 
-  const total = employees.length
-  const resigned = employees.reduce(
-    (acc, e) => acc + (isResigned(e.employeeStatus) && isDepartureResigned(e.departureReason) ? 1 : 0),
-    0
-  )
+  const activeNowCount = employees.reduce((acc, e) => acc + (isActiveStatus(e.employeeStatus) ? 1 : 0), 0)
+
+  // Additions (monthly new hires, from create_date)
+  const createdRows = employees
+    .map((e) => {
+      const ymd = e.createdAt ?? null
+      const ms = ymd ? parseYmdToUtcMs(ymd) : null
+      if (!ymd || ms === null) return null
+      return { monthKey: ymd.slice(0, 7), ms }
+    })
+    .filter((v): v is NonNullable<typeof v> => v !== null)
+
+  const separatedRows = employees
+    .filter((e) => isSeparatedStatus(e.employeeStatus))
+    .map((e) => {
+      const ymd = e.separatedAt ?? null
+      const ms = ymd ? parseYmdToUtcMs(ymd) : null
+      if (!ymd || ms === null) return null
+      const monthKey = ymd.slice(0, 7)
+      const bucket = normalizeSeparatedStatus(e.employeeStatus)
+      return { monthKey, ms, bucket }
+    })
+    .filter((v): v is NonNullable<typeof v> => v !== null)
+
+  const nowMonthKey = monthKeyFromUtcMs(utcTodayMs())
+  const nowMonthIdx = monthIndexFromKey(nowMonthKey) ?? 0
+  const minSepIdx =
+    separatedRows.length > 0
+      ? Math.min(...separatedRows.map((r) => monthIndexFromKey(r.monthKey) ?? nowMonthIdx))
+      : nowMonthIdx
+
+  const MAX_MONTHS = 48
+  const span = Math.max(0, nowMonthIdx - minSepIdx) + 1
+  const countMonths = Math.min(MAX_MONTHS, span)
+  const startIdx = nowMonthIdx - (countMonths - 1)
+  const months = Array.from({ length: countMonths }, (_, i) => monthKeyFromIndex(startIdx + i)).reverse()
+
+  const countsByMonth = new Map<string, { resigned: number; retired: number; fired: number }>()
+  const sepMs = separatedRows.map((r) => r.ms).sort((a, b) => a - b)
+
+  for (const r of separatedRows) {
+    const cur = countsByMonth.get(r.monthKey) ?? { resigned: 0, retired: 0, fired: 0 }
+    if (r.bucket === 'resigned') cur.resigned += 1
+    else if (r.bucket === 'retired') cur.retired += 1
+    else if (r.bucket === 'fired') cur.fired += 1
+    countsByMonth.set(r.monthKey, cur)
+  }
+
+  function countSeparatedAfter(utcMs: number) {
+    let lo = 0
+    let hi = sepMs.length
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1
+      if (sepMs[mid] <= utcMs) lo = mid + 1
+      else hi = mid
+    }
+    return sepMs.length - lo
+  }
+
+  const separationsByMonth: HomeAnalytics['separations']['byMonth'] = {}
+  for (const m of months) {
+    const c = countsByMonth.get(m) ?? { resigned: 0, retired: 0, fired: 0 }
+    const endMs = monthEndUtcMs(m)
+    const afterCount = endMs === null ? 0 : countSeparatedAfter(endMs)
+    separationsByMonth[m] = {
+      resigned: c.resigned,
+      retired: c.retired,
+      fired: c.fired,
+      headcountAfter: activeNowCount + afterCount
+    }
+  }
+
+  const minCreateIdx =
+    createdRows.length > 0
+      ? Math.min(...createdRows.map((r) => monthIndexFromKey(r.monthKey) ?? nowMonthIdx))
+      : nowMonthIdx
+  const spanCreate = Math.max(0, nowMonthIdx - minCreateIdx) + 1
+  const countCreateMonths = Math.min(MAX_MONTHS, spanCreate)
+  const startCreateIdx = nowMonthIdx - (countCreateMonths - 1)
+  const createMonths = Array.from({ length: countCreateMonths }, (_, i) => monthKeyFromIndex(startCreateIdx + i)).reverse()
+
+  const hiresByMonthMap = new Map<string, number>()
+  for (const r of createdRows) {
+    hiresByMonthMap.set(r.monthKey, (hiresByMonthMap.get(r.monthKey) ?? 0) + 1)
+  }
+
+  const additionsByMonth: HomeAnalytics['additions']['byMonth'] = {}
+  for (const m of createMonths) {
+    additionsByMonth[m] = { hires: hiresByMonthMap.get(m) ?? 0 }
+  }
 
   const headcountMap = new Map<string, number>()
   const genderByCountry = new Map<string, { male: number; female: number }>()
@@ -117,7 +257,7 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
   const todayUtcMs = utcTodayMs()
 
   for (const e of employees) {
-    if (isResigned(e.employeeStatus)) continue
+    if (!isActiveStatus(e.employeeStatus)) continue
     const country = (e.countryAssigned ?? '').trim()
     headcountMap.set(country, (headcountMap.get(country) ?? 0) + 1)
 
@@ -155,8 +295,6 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
     .map(([country, headcount]) => ({ country, headcount }))
     .sort((a, b) => b.headcount - a.headcount || a.country.localeCompare(b.country))
 
-  const ratio = total > 0 ? resigned / total : 0
-
   const genderByCountryList = Array.from(genderByCountry.entries())
     .map(([country, counts]) => ({
       country,
@@ -183,7 +321,7 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
   const playersCount = new Map(playerBuckets.map((b) => [b, 0]))
 
   for (const e of employees) {
-    if (isResigned(e.employeeStatus)) continue
+    if (!isActiveStatus(e.employeeStatus)) continue
     const rating = (e.talentRating ?? '').trim()
     if (!rating) continue
     const lower = rating.toLowerCase()
@@ -204,7 +342,7 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
   const todayMs = utcTodayMs()
   const DAY_MS = 24 * 60 * 60 * 1000
   const upcomingContracts = employees
-    .filter((e) => !isResigned(e.employeeStatus))
+    .filter((e) => isActiveStatus(e.employeeStatus))
     .map((e) => {
       const ymd = e.contractOrProbationEndDate ?? null
       if (!ymd) return null
@@ -233,7 +371,8 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
 
   return {
     headcountByCountry,
-    separations: { resigned, total, ratio },
+    separations: { currentMonth: nowMonthKey, months, byMonth: separationsByMonth },
+    additions: { currentMonth: nowMonthKey, months: createMonths, byMonth: additionsByMonth },
     genderBreakdown: {
       overall: { male: maleOverall, female: femaleOverall, total: maleOverall + femaleOverall },
       byCountry: genderByCountryList

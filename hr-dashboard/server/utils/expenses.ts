@@ -1,14 +1,17 @@
 import { readFile, stat } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { loadExpensesRowsFromSharePoint } from './sharepointExpenses'
 
 export type ExpenseCountryBreakdown = {
   country: string
-  salariesInclusiveOfPaye: number
+  grossSalary: number
+  paye: number
   overtime: number
   vc: number
-  otherAllowances: number
+  healthSurcharge: number
   nisCompany: number
+  totalOutgoingExpenses: number
   total: number
 }
 
@@ -27,6 +30,19 @@ let cached:
     }
   | null = null
 
+export type ExpenseCountryDelta = ExpenseCountryBreakdown
+
+export type ExpensesResponse = ExpensesSnapshot & {
+  monthKey: string | null
+  availableMonths: string[]
+  monthLabels: Record<string, string>
+  previousMonth: string | null
+  compareTo: string | null
+  deltas?: ExpenseCountryDelta[]
+  source: 'sharepoint' | 'csv'
+  warning?: string
+}
+
 function normalizeHeader(header: string) {
   return header.trim().replace(/\s+/g, ' ').toLowerCase()
 }
@@ -36,11 +52,16 @@ function canonicalHeaderKey(rawHeader: string) {
   if (!h) return ''
   if (h === 'country') return 'country'
   if (h === 'month') return 'month'
-  if (h === 'salaries inclusive of paye') return 'salariesInclusiveOfPaye'
+  if (h === 'gross salary') return 'grossSalary'
+  if (h === 'paye') return 'paye'
   if (h === 'overtime') return 'overtime'
   if (h === 'vc') return 'vc'
-  if (h === 'other allowances') return 'otherAllowances'
+  if (h === 'health surcharge') return 'healthSurcharge'
   if (h === 'nis (company)') return 'nisCompany'
+  if (h === 'total outgoing expenses') return 'totalOutgoingExpenses'
+  // Legacy CSV headers (pre-SharePoint)
+  if (h === 'salaries inclusive of paye') return 'grossSalary'
+  if (h === 'other allowances') return 'healthSurcharge'
   return h
 }
 
@@ -52,6 +73,10 @@ function normalizeMonthKey(v: string) {
   const key = v.trim().replace(/\s+/g, ' ').toLowerCase()
   if (key === 'decemeber') return 'december'
   return key
+}
+
+function isYyyyMm(v: string) {
+  return /^\d{4}-\d{2}$/.test(v)
 }
 
 function parseAmount(raw: string) {
@@ -171,6 +196,111 @@ function pickMonthSnapshot(rows: CanonicalRow[]) {
   return { month: lastLabelByKey.get(lastKey) ?? null, monthKey: lastKey }
 }
 
+type NormalizedExpenseRow = {
+  country: string
+  monthKey: string
+  monthLabel: string
+  grossSalary: number
+  paye: number
+  overtime: number
+  vc: number
+  healthSurcharge: number
+  nisCompany: number
+  totalOutgoingExpenses: number
+}
+
+function sortMonthKeysNewestFirst(keysInEncounterOrder: string[]) {
+  const unique: string[] = []
+  const seen = new Set<string>()
+  for (const k of keysInEncounterOrder) {
+    if (!k) continue
+    if (seen.has(k)) continue
+    seen.add(k)
+    unique.push(k)
+  }
+
+  const allYyyyMm = unique.length > 0 && unique.every(isYyyyMm)
+  if (allYyyyMm) return unique.slice().sort((a, b) => (a < b ? 1 : a > b ? -1 : 0))
+
+  // Fallback: preserve encounter order (newest assumed to be last encountered)
+  return unique.slice().reverse()
+}
+
+function aggregateSnapshot(rows: NormalizedExpenseRow[], selectedMonthKey: string | null) {
+  const filtered = selectedMonthKey ? rows.filter((r) => r.monthKey === selectedMonthKey) : rows
+
+  const countryMap = new Map<string, Omit<ExpenseCountryBreakdown, 'total'>>()
+  for (const r of filtered) {
+    const country = r.country.trim()
+    if (!country) continue
+
+    const prev = countryMap.get(country) ?? {
+      country,
+      grossSalary: 0,
+      paye: 0,
+      overtime: 0,
+      vc: 0,
+      healthSurcharge: 0,
+      nisCompany: 0,
+      totalOutgoingExpenses: 0
+    }
+
+    prev.grossSalary += r.grossSalary
+    prev.paye += r.paye
+    prev.overtime += r.overtime
+    prev.vc += r.vc
+    prev.healthSurcharge += r.healthSurcharge
+    prev.nisCompany += r.nisCompany
+    prev.totalOutgoingExpenses += r.totalOutgoingExpenses
+
+    countryMap.set(country, prev)
+  }
+
+  const items: ExpenseCountryBreakdown[] = Array.from(countryMap.values())
+    .map((i) => ({
+      ...i,
+      total: i.totalOutgoingExpenses
+    }))
+    .sort((a, b) => b.total - a.total || a.country.localeCompare(b.country))
+
+  return items
+}
+
+function computeDeltas(current: ExpenseCountryBreakdown[], baseline: ExpenseCountryBreakdown[]) {
+  const byCountryCurrent = new Map(current.map((i) => [i.country, i]))
+  const byCountryBaseline = new Map(baseline.map((i) => [i.country, i]))
+  const countries = new Set<string>([...byCountryCurrent.keys(), ...byCountryBaseline.keys()])
+
+  const deltas: ExpenseCountryDelta[] = []
+  for (const country of countries) {
+    const c = byCountryCurrent.get(country)
+    const b = byCountryBaseline.get(country)
+
+    const grossSalary = (c?.grossSalary ?? 0) - (b?.grossSalary ?? 0)
+    const paye = (c?.paye ?? 0) - (b?.paye ?? 0)
+    const overtime = (c?.overtime ?? 0) - (b?.overtime ?? 0)
+    const vc = (c?.vc ?? 0) - (b?.vc ?? 0)
+    const healthSurcharge = (c?.healthSurcharge ?? 0) - (b?.healthSurcharge ?? 0)
+    const nisCompany = (c?.nisCompany ?? 0) - (b?.nisCompany ?? 0)
+    const totalOutgoingExpenses = (c?.totalOutgoingExpenses ?? 0) - (b?.totalOutgoingExpenses ?? 0)
+    const total = (c?.total ?? 0) - (b?.total ?? 0)
+
+    deltas.push({
+      country,
+      grossSalary,
+      paye,
+      overtime,
+      vc,
+      healthSurcharge,
+      nisCompany,
+      totalOutgoingExpenses,
+      total
+    })
+  }
+
+  return deltas.sort((a, b) => Math.abs(b.total) - Math.abs(a.total) || a.country.localeCompare(b.country))
+}
+
 export async function loadExpensesFromCsv(): Promise<ExpensesSnapshot> {
   const csvPath = resolveExpensesCsvPath()
   const mtimeMs = await stat(csvPath)
@@ -193,18 +323,22 @@ export async function loadExpensesFromCsv(): Promise<ExpensesSnapshot> {
     const country = String(r.country ?? '').trim()
     const prev = countryMap.get(country) ?? {
       country,
-      salariesInclusiveOfPaye: 0,
+      grossSalary: 0,
+      paye: 0,
       overtime: 0,
       vc: 0,
-      otherAllowances: 0,
-      nisCompany: 0
+      healthSurcharge: 0,
+      nisCompany: 0,
+      totalOutgoingExpenses: 0
     }
 
-    prev.salariesInclusiveOfPaye += parseAmount(r.salariesInclusiveOfPaye ?? '')
+    prev.grossSalary += parseAmount((r.grossSalary ?? r.salariesInclusiveOfPaye ?? '') as string)
+    prev.paye += parseAmount((r.paye ?? '') as string)
     prev.overtime += parseAmount(r.overtime ?? '')
     prev.vc += parseAmount(r.vc ?? '')
-    prev.otherAllowances += parseAmount(r.otherAllowances ?? '')
+    prev.healthSurcharge += parseAmount((r.healthSurcharge ?? r.otherAllowances ?? '') as string)
     prev.nisCompany += parseAmount(r.nisCompany ?? '')
+    prev.totalOutgoingExpenses += parseAmount((r.totalOutgoingExpenses ?? '') as string)
 
     countryMap.set(country, prev)
   }
@@ -212,12 +346,141 @@ export async function loadExpensesFromCsv(): Promise<ExpensesSnapshot> {
   const items: ExpenseCountryBreakdown[] = Array.from(countryMap.values())
     .map((i) => ({
       ...i,
-      total: i.salariesInclusiveOfPaye + i.overtime + i.vc + i.otherAllowances + i.nisCompany
+      total: i.totalOutgoingExpenses
     }))
     .sort((a, b) => b.total - a.total || a.country.localeCompare(b.country))
 
   const snapshot = { month, items }
   cached = { csvPath, mtimeMs, snapshot }
   return snapshot
+}
+
+async function loadNormalizedRowsFromCsv() {
+  const csvPath = resolveExpensesCsvPath()
+  const csvText = await readFile(csvPath, 'utf8')
+  const rows = canonicalizeRows(csvText)
+
+  const out: NormalizedExpenseRow[] = []
+  for (const r of rows) {
+    const country = String(r.country ?? '').trim()
+    const monthLabel = String(r.month ?? '').trim()
+    const monthKey = normalizeMonthKey(monthLabel)
+    if (!country || !monthKey) continue
+
+    out.push({
+      country,
+      monthKey,
+      monthLabel: monthLabel || monthKey,
+      grossSalary: parseAmount((r.grossSalary ?? r.salariesInclusiveOfPaye ?? '') as string),
+      paye: parseAmount((r.paye ?? '') as string),
+      overtime: parseAmount(r.overtime ?? ''),
+      vc: parseAmount(r.vc ?? ''),
+      healthSurcharge: parseAmount((r.healthSurcharge ?? r.otherAllowances ?? '') as string),
+      nisCompany: parseAmount(r.nisCompany ?? ''),
+      totalOutgoingExpenses: parseAmount((r.totalOutgoingExpenses ?? '') as string)
+    })
+  }
+
+  return { csvPath, out }
+}
+
+export async function loadExpenses(input: {
+  runtimeConfig: {
+    graph?: { tenantId?: string; clientId?: string; clientSecret?: string }
+    sharepoint?: { hostname?: string; siteId?: string; sitePath?: string; listId?: string; cacheTtlMs?: number }
+  }
+  month?: string
+  compareTo?: string
+}): Promise<ExpensesResponse> {
+  const monthParam = typeof input.month === 'string' ? input.month.trim() : ''
+  const compareToParam = typeof input.compareTo === 'string' ? input.compareTo.trim() : ''
+
+  const graph = input.runtimeConfig.graph || {}
+  const sp = input.runtimeConfig.sharepoint || {}
+
+  const canUseSharePoint =
+    !!graph.tenantId && !!graph.clientId && !!graph.clientSecret && !!sp.hostname && !!sp.listId
+
+  if (canUseSharePoint) {
+    try {
+      const rows = await loadExpensesRowsFromSharePoint({
+        tenantId: graph.tenantId || '',
+        clientId: graph.clientId || '',
+        clientSecret: graph.clientSecret || '',
+        hostname: sp.hostname || '',
+        siteId: sp.siteId || undefined,
+        sitePath: sp.sitePath || undefined,
+        listId: sp.listId || '',
+        cacheTtlMs: sp.cacheTtlMs
+      })
+
+      const monthKeysEncountered = rows.map((r) => r.monthKey)
+      const availableMonths = sortMonthKeysNewestFirst(monthKeysEncountered)
+
+      const monthLabels: Record<string, string> = {}
+      for (const r of rows) {
+        if (!monthLabels[r.monthKey]) monthLabels[r.monthKey] = r.monthLabel || r.monthKey
+      }
+
+      const selectedMonthKey = monthParam && availableMonths.includes(monthParam) ? monthParam : availableMonths[0] || null
+      const month = selectedMonthKey ? monthLabels[selectedMonthKey] ?? selectedMonthKey : null
+
+      const selectedIndex = selectedMonthKey ? availableMonths.indexOf(selectedMonthKey) : -1
+      const previousMonth = selectedIndex >= 0 ? availableMonths[selectedIndex + 1] ?? null : null
+
+      const items = aggregateSnapshot(rows, selectedMonthKey)
+
+      const compareTo = compareToParam && availableMonths.includes(compareToParam) ? compareToParam : null
+      const deltas = compareTo ? computeDeltas(items, aggregateSnapshot(rows, compareTo)) : undefined
+
+      return {
+        month,
+        monthKey: selectedMonthKey,
+        items,
+        availableMonths,
+        monthLabels,
+        previousMonth,
+        compareTo,
+        deltas,
+        source: 'sharepoint'
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e)
+      const fallback = await loadExpenses({ runtimeConfig: { graph: {}, sharepoint: {} }, month: monthParam, compareTo: compareToParam })
+      return {
+        ...fallback,
+        warning: `SharePoint read failed. Showing CSV data instead. (${message})`
+      }
+    }
+  }
+
+  const { out } = await loadNormalizedRowsFromCsv()
+  const monthKeysEncountered = out.map((r) => r.monthKey)
+  const availableMonths = sortMonthKeysNewestFirst(monthKeysEncountered)
+  const monthLabels: Record<string, string> = {}
+  for (const r of out) {
+    if (!monthLabels[r.monthKey]) monthLabels[r.monthKey] = r.monthLabel || r.monthKey
+  }
+
+  const selectedMonthKey = monthParam && availableMonths.includes(monthParam) ? monthParam : availableMonths[0] || null
+  const month = selectedMonthKey ? monthLabels[selectedMonthKey] ?? selectedMonthKey : null
+  const selectedIndex = selectedMonthKey ? availableMonths.indexOf(selectedMonthKey) : -1
+  const previousMonth = selectedIndex >= 0 ? availableMonths[selectedIndex + 1] ?? null : null
+
+  const items = aggregateSnapshot(out, selectedMonthKey)
+  const compareTo = compareToParam && availableMonths.includes(compareToParam) ? compareToParam : null
+  const deltas = compareTo ? computeDeltas(items, aggregateSnapshot(out, compareTo)) : undefined
+
+  return {
+    month,
+    monthKey: selectedMonthKey,
+    items,
+    availableMonths,
+    monthLabels,
+    previousMonth,
+    compareTo,
+    deltas,
+    source: 'csv'
+  }
 }
 

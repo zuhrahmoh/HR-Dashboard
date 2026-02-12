@@ -16,11 +16,20 @@ export type Employee = {
   // Common extra CSV fields (read-only; optional)
   gender?: string
   reportingTo?: string
+  email?: string
+  phone?: string
+  workEmail?: string
+  personalEmail?: string
+  workPhone?: string
+  personalPhone?: string
   employeeType?: string
   employmentStatus?: string
   contractOrProbationEndDate?: string | null
   talentRating?: string
   departureReason?: string
+  separatedAt?: string | null
+  createdAt?: string | null
+  tenure?: string
   monthlySalary?: string
   allowances?: string
   grossSalary?: string
@@ -54,6 +63,11 @@ function canonicalHeaderKey(rawHeader: string) {
   if (h === 'position') return 'position'
   if (h === 'gender') return 'gender'
   if (h === 'reporting to') return 'reportingTo'
+  if (h === 'email' || h === 'work email' || h === 'work_email' || h === 'e-mail') return 'email'
+  if (h === 'personal email' || h === 'private email' || h === 'private_email' || h === 'personal_email') return 'personalEmail'
+  if (h === 'phone' || h === 'work phone' || h === 'work_phone' || h === 'mobile' || h === 'mobile phone' || h === 'mobile_phone')
+    return 'phone'
+  if (h === 'personal phone' || h === 'private phone' || h === 'private_phone' || h === 'personal_phone') return 'personalPhone'
   if (h === 'employee type') return 'employeeType'
   if (h === 'employment status') return 'employmentStatus'
   if (h === 'contract/probation end date') return 'contractOrProbationEndDate'

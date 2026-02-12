@@ -10,6 +10,18 @@ export default defineNuxtConfig({
     }
   },
   runtimeConfig: {
+    graph: {
+      tenantId: process.env.GRAPH_TENANT_ID || '',
+      clientId: process.env.GRAPH_CLIENT_ID || '',
+      clientSecret: process.env.GRAPH_CLIENT_SECRET || ''
+    },
+    sharepoint: {
+      hostname: process.env.SP_HOSTNAME || '',
+      siteId: process.env.SP_SITE_ID || '',
+      sitePath: process.env.SP_SITE_PATH || '',
+      listId: process.env.SP_LIST_ID || '',
+      cacheTtlMs: Number(process.env.SP_CACHE_TTL_MS || '600000')
+    },
     odoo: {
       url: process.env.ODOO_URL || '',
       username: process.env.ODOO_USERNAME || '',

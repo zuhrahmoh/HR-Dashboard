@@ -260,3 +260,72 @@ Because the list updates monthly:
   - Month dropdown changes the shown month
   - Net change toggle adds/removes delta display without breaking layout
 
+---
+
+## Implementation Notes (as-built)
+
+### Data source
+
+- Global expenses now load from the SharePoint list **Global Expenses Draft** via Microsoft Graph (server-side).
+- The UI renders from `GET /api/expenses` (same endpoint as before), but the payload now includes month metadata and (optionally) deltas.
+
+### Endpoints
+
+- `GET /api/expenses`
+  - **Default**: latest month from SharePoint.
+  - **Query params**:
+    - `month=YYYY-MM` → return that month.
+    - `compareTo=YYYY-MM` → include `deltas` comparing current month vs `compareTo`.
+  - **Response fields** (high-signal):
+    - `month`, `monthKey`
+    - `items[]`
+    - `availableMonths[]`, `monthLabels{}`, `previousMonth`
+    - `compareTo`, `deltas[]` (only when comparing)
+    - `source`: `"sharepoint"` or `"csv"`
+    - `warning` (only when SharePoint read fails and CSV fallback is used)
+
+- `GET /api/expenses/fields` (dev/debug)
+  - Returns one list item’s `fields` keys to help verify SharePoint internal column names.
+  - Useful when SharePoint display column names differ from the Graph `fields` keys.
+
+### Environment variables (server-only)
+
+Configured in `hr-dashboard/.env` and consumed via `runtimeConfig`:
+
+- Microsoft Graph (client credentials)
+  - `GRAPH_TENANT_ID`
+  - `GRAPH_CLIENT_ID`
+  - `GRAPH_CLIENT_SECRET`
+
+- SharePoint list targeting
+  - `SP_HOSTNAME` (e.g. `rampslogistics.sharepoint.com`)
+  - `SP_SITE_PATH` (defaults to `/` / root site)
+  - `SP_LIST_ID` (GUID)
+  - `SP_CACHE_TTL_MS` (production cache TTL)
+
+### SharePoint column mapping (Graph `fields` keys)
+
+The dashboard labels match the SharePoint list display columns, but the Graph API uses internal `fields` keys.
+As currently implemented (verified via `GET /api/expenses/fields`):
+
+- **Gross Salary** ← `Salaries_x0028_inclusiveofPAYE_x`
+- **PAYE** ← `PAYE`
+- **Overtime** ← `Overtime`
+- **VC** ← `VC`
+- **Health Surcharge** ← `OtherAllowances`
+- **NIS (Company)** ← `NIS_x0028_Company_x0029_`
+- **Total Outgoing Expenses** ← `Total`
+
+Important: **Totals are not calculated by the app**. The visualization displays the list’s **Total Outgoing Expenses** value.
+
+### Caching behavior
+
+- **Dev**: SharePoint expenses cache is disabled (TTL \(= 0\)) so list edits reflect on reload.
+- **Prod**: set `SP_CACHE_TTL_MS` to control how quickly list updates appear (default 10 minutes).
+
+### Troubleshooting checklist
+
+- `/api/expenses` returns `source: "sharepoint"` when the Graph call succeeds.
+- If `/api/expenses` returns `source: "csv"` with a `warning`, Graph/permissions are failing and the API fell back to CSV.
+- If a column shows `0` unexpectedly, verify the internal field key via `GET /api/expenses/fields` and update the mapping in `hr-dashboard/server/utils/sharepointExpenses.ts`.
+

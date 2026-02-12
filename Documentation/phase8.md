@@ -97,6 +97,9 @@ Key endpoints:
 - `GET /api/odoo/analytics/home`
   - Odoo version of home analytics (headcount, separations, talent density, upcoming contracts, age data)
   - File: `hr-dashboard/server/api/odoo/analytics/home.get.ts`
+- `GET /api/odoo/separations`
+  - Monthly separations list (archived employees grouped by `write_date`)
+  - File: `hr-dashboard/server/api/odoo/separations.get.ts`
 
 ### D) Duplicated Odoo pages for Home and Employees
 
@@ -168,6 +171,7 @@ Added interactive status tracking to the Upcoming Contracts section:
 - Split into two tables:
   - normal “upcoming” list
   - “Pending Contract Expiries” list for rows where `daysRemaining <= 0` and status not completed
+- Highlight rows when contract/probation end date is within **6 weeks (42 days)** (pink row highlight for visibility).
 - Persist status selections in `localStorage`
 - Replaced native `<select>` with a custom dark-menu dropdown for consistent dark UI
 
@@ -175,6 +179,49 @@ Key files:
 
 - `hr-dashboard/app/components/UpcomingContractsTable.vue`
 - `hr-dashboard/app/components/StatusBadgeSelect.vue`
+
+### H2) Recruitment onboarding workflow — New Hire Check-ins (monthly benchmarks)
+
+Added a **New Hire Check-ins** section to the Recruitment page so HR can track and act on **regular monthly check-ups** with new hires. This is a second table focused on tenure-based milestones, separate from the main New Hires list.
+
+**Objective**
+
+- Support HR’s need for scheduled check-ins at 1, 2, and 3 months after start date.
+- Surface which hires are due or overdue for a check-in without scanning the main table.
+- Keep a simple status per check-in (No Action → In Progress → Completed) for workflow tracking.
+
+**UX and behaviour**
+
+- **Placement**: Section sits under the existing “New Hires” table on the Recruitment page (`/recruitment`).
+- **When rows appear**: A check-in row is shown starting **7 days before** the milestone date (e.g. 1 month, 2 months, 3 months from `startDate`) and remains in the table until that check-in is marked **Completed**.
+- **Milestones**: 1 month, 2 months, 3 months (computed from each new hire’s start date).
+- **Visual cues**:
+  - **Check-In Approaching** badge per row with the milestone (1 / 2 / 3 month) and distinct colors so HR can quickly see which milestone is due.
+  - **Days** column shows the number of days until the milestone (negative values indicate the check-in is overdue).
+- **Status**: Each check-in row has a status dropdown: **No Action**, **In Progress**, **Completed**. Selections are persisted in **localStorage** (no backend yet), so the table survives refresh and gives HR an actionable worklist.
+
+**Data and implementation notes**
+
+- Tenure and milestone due dates are derived **client-side** from the existing New Hires data (`startDate`); no new API or persistence layer was added in this phase.
+- The table consumes the same new-hires source as the main Recruitment New Hires table (e.g. `/api/new-hires` or Odoo-backed list, depending on page wiring). Future phases can add a dedicated check-in API and server-side persistence (e.g. `new_hire_checkins` with `newHireId`, `milestone`, `dueDate`, `completedAt`, `notes`) and migrate status off localStorage.
+
+**Key files**
+
+- `hr-dashboard/app/components/NewHireCheckinsTable.vue` — Renders the check-ins table, computes tenure/milestones from start dates, and wires status to localStorage.
+- `hr-dashboard/app/components/CheckinStatusSelect.vue` — Reusable status dropdown (No Action / In Progress / Completed) with dark-theme styling consistent with the dashboard.
+
+### H3) Recruitment separations — monthly table + separation type
+
+Updated Recruitment “Recent Separations” to match the Home separations month logic:
+
+- Monthly view (defaults to current month) with a month filter for prior months
+- Uses Odoo archive date (`write_date`) via `separatedAt` for month grouping
+- Adds **Separation Date** and **Type** columns (Resigned / Retired / Fired / Separated), consistent with the Home donut categories
+
+Key files:
+
+- `hr-dashboard/server/api/odoo/separations.get.ts`
+- `hr-dashboard/app/pages/recruitment.vue`
 
 ### I) Archived employees as separations + resignation reason filtering
 
@@ -185,14 +232,87 @@ Odoo behavior:
 
 Updates:
 
-- Recruitment page “Recent Separations” now lists archived employees (active=false) via Odoo
+- Recruitment page “Recent Separations” lists archived employees (active=false) from a dedicated monthly endpoint (`/api/odoo/separations`)
 - Odoo Home “Employee Separations” now counts only archived employees whose **departure reason is Resigned**
 
 Key files:
 
 - `hr-dashboard/server/utils/odooEmployees.ts` (include inactive + map departure reason)
 - `hr-dashboard/server/api/odoo/analytics/home.get.ts` (resigned count uses departure reason)
-- `hr-dashboard/app/pages/recruitment.vue` (recent separations list via `/api/odoo/employees?includeInactive=1`)
+- `hr-dashboard/server/api/odoo/separations.get.ts` (monthly separations list)
+- `hr-dashboard/app/pages/recruitment.vue`
+
+### J) Odoo employee profile page – layout and visualizations
+
+Reworked the Odoo employee profile page (`/odoo/employees/:employeeKey`) so it occupies the full page with a clear card layout and consistent styling.
+
+**Layout**
+
+- **Top row (two cards side by side)**
+  - **Primary info**: Avatar (initials only, no photo), name, position, status/type badges, then a shaded inner block with Department, Country, Reporting To.
+  - **Contact**: Work Email, Work Phone, Personal Phone (Personal Email omitted for compactness).
+- **Middle row**: Full-width **Employment** card with Start Date, Tenure, Contract/Probation End, Gender, and Employee Key on a single line (Employee Key at the end).
+- **Bottom row**: Full-width **Talent** card with rating and a 5-badge scale.
+
+**Badges (employment type / status)**
+
+- **Active** → green pill.
+- **Contract** → purple pill.
+- **Permanent** → pink pill.
+- **Intern** → teal blue pill.
+
+**Talent section**
+
+- Displays the rating letter (A, B+, B, B-, C) when available from the server.
+- **5-badge scale** next to the rating (badge/ribbon icons): 5 badges always shown; when a rating exists, the corresponding number are filled in yellow (A = 5, B+ = 4, B = 3, B- = 2, C = 1); when no rating is available, all badges are unfilled (gray).
+- Logic is ready for when the talent rating field is added on the server; until then every employee shows the unfilled scale.
+
+**Contact and spacing**
+
+- Contact card uses `break-words` so long emails/phones don’t overlap.
+- Tighter padding and line spacing so all sections fit with minimal scrolling.
+
+Key file:
+
+- `hr-dashboard/app/pages/odoo/employees/[employeeKey].vue`
+
+### K) Odoo employee profile PDF – card layout on white background
+
+The PDF downloaded from the Odoo employee profile now matches the on-screen layout: rounded containers with drop shadows on a white page.
+
+**Layout**
+
+- **Stacked sections** (no side-by-side): Employee Information, Contact, Employment, Talent – each full width, one per row.
+- **Rounded cards** with light gray drop shadow and light gray border; white fill.
+- **Shaded inner box** on the Employee Information card: Department, Country, and Reporting To sit inside a light gray rounded rectangle (same idea as the profile page’s inner block).
+- **Line spacing** increased (card gaps, padding, row spacing) so the content fills the page.
+
+**Implementation**
+
+- New `buildProfilePdfCardLayout()` in `profilePdf.ts`: draws rounded rects (Bézier corners), shadow, and shaded box; single stream object for the page contents so the PDF renders correctly.
+- Odoo PDF handler calls `buildProfilePdfCardLayout()` with primary, contact, employment, and talent data; initials derived from name.
+
+Key files:
+
+- `hr-dashboard/server/utils/profilePdf.ts` (`roundedRectPath`, `drawRoundedCard`, `drawShadedBox`, `buildProfilePdfCardLayout`, `ProfileCardInput`)
+- `hr-dashboard/server/api/odoo/employees/[employeeKey]/pdf.get.ts` (uses card layout and passes profile-matching data)
+
+### L) Odoo analytics – error handling and health check
+
+**Error handling on Odoo analytics page**
+
+- When the analytics/additions request fails with a **“fetch failed”**-style error (e.g. server not reachable, connection refused), the UI shows the error message and a short hint: ensure the dev server is running and reachable, and to check `/api/odoo/health` for Odoo config.
+- Applied to the three analytics cards (Geographical Headcount, Employee Separations, Employee Additions) on `/odoo`.
+
+**Health check endpoint**
+
+- **GET /api/odoo/health** returns a small JSON payload indicating whether Odoo config is present (no secrets): e.g. `config: "ok"` with `urlHost`, `urlPort`, `db`, `insecureTLS`, or `config: "missing"` with `hasUrl`, `hasUsername`, `hasPassword` and an error hint.
+- Used to confirm the server is up and env vars are loaded when Odoo data does not load.
+
+Key files:
+
+- `hr-dashboard/app/pages/odoo/index.vue` (`isFetchFailed()`, troubleshooting hint when message indicates fetch failed)
+- `hr-dashboard/server/api/odoo/health.get.ts` (new)
 
 ---
 
@@ -268,12 +388,17 @@ The Odoo loader maps the following into the app’s canonical employee object:
   - `hr-dashboard/server/utils/odoo.ts`
   - `hr-dashboard/server/utils/odooEmployees.ts`
   - `hr-dashboard/server/api/odoo/analytics/home.get.ts`
+  - `hr-dashboard/server/api/odoo/separations.get.ts`
   - `hr-dashboard/server/api/odoo/employees.get.ts`
   - `hr-dashboard/server/api/odoo/employees/[employeeKey].get.ts`
+  - `hr-dashboard/server/api/odoo/health.get.ts` (Odoo config health check)
+- Odoo employee profile and PDF
+  - `hr-dashboard/app/pages/odoo/employees/[employeeKey].vue` (card layout, badges, talent badge scale)
+  - `hr-dashboard/server/utils/profilePdf.ts` (card layout, rounded rects, shaded box, `buildProfilePdfCardLayout`)
+  - `hr-dashboard/server/api/odoo/employees/[employeeKey]/pdf.get.ts` (uses card layout)
 - Duplicated Odoo pages
-  - `hr-dashboard/app/pages/odoo/index.vue`
+  - `hr-dashboard/app/pages/odoo/index.vue` (analytics; error hint when fetch failed)
   - `hr-dashboard/app/pages/odoo/employees/index.vue`
-  - `hr-dashboard/app/pages/odoo/employees/[employeeKey].vue`
   - `hr-dashboard/app/layouts/default.vue`
 - UI and formatting
   - `hr-dashboard/app/utils/dates.ts`
@@ -283,7 +408,12 @@ The Odoo loader maps the following into the app’s canonical employee object:
   - `hr-dashboard/app/components/AverageAgeGroupedBarChart.vue`
   - `hr-dashboard/app/components/UpcomingContractsTable.vue`
   - `hr-dashboard/app/components/StatusBadgeSelect.vue`
+  - `hr-dashboard/app/components/NewHireCheckinsTable.vue` (monthly check-in milestones)
+  - `hr-dashboard/app/components/CheckinStatusSelect.vue`
   - `hr-dashboard/app/components/ExpenseCountryCard.vue`
   - `hr-dashboard/app/components/AdditionsDonut.vue`
   - `hr-dashboard/app/components/SeparationsDonut.vue`
+  - `hr-dashboard/app/components/HeadcountBarChart.vue` (Geographical Headcount)
+  - `hr-dashboard/app/components/TalentDensityStackedBar.vue` (Leaders / Players)
+  - `hr-dashboard/app/components/GenderBreakdownPie.vue` (gender by country)
 

@@ -1,8 +1,26 @@
 import { loadEmployeesFromCsv } from '../../utils/employees'
+import { readJsonArray } from '../../utils/jsonStore'
 
 type HomeAnalytics = {
   headcountByCountry: Array<{ country: string; headcount: number }>
-  separations: { resigned: number; total: number; ratio: number }
+  separations: {
+    currentMonth: string
+    months: string[]
+    byMonth: Record<
+      string,
+      {
+        resigned: number
+        retired: number
+        fired: number
+        headcountAfter: number
+      }
+    >
+  }
+  additions: {
+    currentMonth: string
+    months: string[]
+    byMonth: Record<string, { hires: number }>
+  }
   genderBreakdown: {
     overall: { male: number; female: number; total: number }
     byCountry: Array<{ country: string; male: number; female: number; total: number }>
@@ -57,6 +75,28 @@ function utcTodayMs() {
   return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
 }
 
+function monthKeyFromUtcMs(utcMs: number) {
+  const d = new Date(utcMs)
+  const y = d.getUTCFullYear()
+  const m = d.getUTCMonth() + 1
+  return `${y}-${String(m).padStart(2, '0')}`
+}
+
+function monthIndexFromKey(key: string) {
+  const m = /^(\d{4})-(\d{2})$/.exec(key.trim())
+  if (!m) return null
+  const y = Number(m[1])
+  const mo = Number(m[2])
+  if (!Number.isFinite(y) || !Number.isFinite(mo) || mo < 1 || mo > 12) return null
+  return y * 12 + (mo - 1)
+}
+
+function monthKeyFromIndex(idx: number) {
+  const y = Math.floor(idx / 12)
+  const m0 = idx % 12
+  return `${y}-${String(m0 + 1).padStart(2, '0')}`
+}
+
 function ageYearsFromBirthYmd(birthYmd: string, todayUtcMs: number): number | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(birthYmd.trim())
   if (!m) return null
@@ -92,6 +132,31 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
 
   const total = employees.length
   const resigned = employees.reduce((acc, e) => acc + (isResigned(e.employeeStatus) ? 1 : 0), 0)
+  const headcountAfter = Math.max(0, total - resigned)
+  const currentMonth = monthKeyFromUtcMs(utcTodayMs())
+
+  // Additions from locally-tracked new hires (createdAt)
+  type NewHire = { createdAt: string }
+  const newHires = await readJsonArray<NewHire>('new-hires.json')
+  const createdMonths = newHires
+    .map((n) => (n.createdAt ?? '').trim())
+    .filter(Boolean)
+    .map((iso) => iso.slice(0, 7))
+    .filter((monthKey) => /^\d{4}-\d{2}$/.test(monthKey))
+
+  const nowIdx = monthIndexFromKey(currentMonth) ?? 0
+  const minCreateIdx = createdMonths.length > 0 ? Math.min(...createdMonths.map((m) => monthIndexFromKey(m) ?? nowIdx)) : nowIdx
+  const MAX_MONTHS = 48
+  const spanCreate = Math.max(0, nowIdx - minCreateIdx) + 1
+  const countCreateMonths = Math.min(MAX_MONTHS, spanCreate)
+  const startCreateIdx = nowIdx - (countCreateMonths - 1)
+  const monthsAdd = Array.from({ length: countCreateMonths }, (_, i) => monthKeyFromIndex(startCreateIdx + i)).reverse()
+
+  const hiresByMonthMap = new Map<string, number>()
+  for (const monthKey of createdMonths) hiresByMonthMap.set(monthKey, (hiresByMonthMap.get(monthKey) ?? 0) + 1)
+
+  const additionsByMonth: HomeAnalytics['additions']['byMonth'] = {}
+  for (const monthKey of monthsAdd) additionsByMonth[monthKey] = { hires: hiresByMonthMap.get(monthKey) ?? 0 }
 
   const headcountMap = new Map<string, number>()
   const genderByCountry = new Map<string, { male: number; female: number }>()
@@ -146,8 +211,6 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
   const headcountByCountry = Array.from(headcountMap.entries())
     .map(([country, headcount]) => ({ country, headcount }))
     .sort((a, b) => b.headcount - a.headcount || a.country.localeCompare(b.country))
-
-  const ratio = total > 0 ? resigned / total : 0
 
   const genderByCountryList = Array.from(genderByCountry.entries())
     .map(([country, counts]) => ({
@@ -225,7 +288,14 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
 
   return {
     headcountByCountry,
-    separations: { resigned, total, ratio },
+    separations: {
+      currentMonth,
+      months: [currentMonth],
+      byMonth: {
+        [currentMonth]: { resigned, retired: 0, fired: 0, headcountAfter }
+      }
+    },
+    additions: { currentMonth, months: monthsAdd, byMonth: additionsByMonth },
     genderBreakdown: {
       overall: { male: maleOverall, female: femaleOverall, total: maleOverall + femaleOverall },
       byCountry: genderByCountryList

@@ -397,153 +397,23 @@
     <hr class="border-slate-800" />
 
     <section class="space-y-3">
-      <div class="space-y-2">
+      <div class="flex flex-wrap items-center justify-between gap-3">
         <h2 class="text-base font-semibold text-slate-200">New Hires</h2>
-        <button
-          v-if="!showNewHireForm"
-          type="button"
-          class="inline-flex items-center rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800/40"
-          @click="showNewHireForm = true"
-        >
-          <span aria-hidden="true" class="mr-1.5 font-semibold">+</span>
-          <span>Add new hire</span>
-        </button>
+        <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+          <span class="whitespace-nowrap">Month</span>
+          <select
+            v-model="selectedNewHireMonth"
+            class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+          >
+            <option v-for="m in newHireMonths" :key="m" :value="m">{{ formatMonthLabel(m) }}</option>
+          </select>
+        </label>
       </div>
 
-      <form
-        v-if="showNewHireForm"
-        class="rounded-md border border-slate-800 bg-slate-900 p-4"
-        @submit.prevent="createNewHire"
-      >
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-5">
-          <label class="block">
-            <div class="mb-1 text-sm text-slate-300">Name</div>
-            <input v-model="newHireForm.name" type="text" class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50" />
-          </label>
-          <label class="block">
-            <div class="mb-1 text-sm text-slate-300">Position</div>
-            <input
-              v-model="newHireForm.position"
-              type="text"
-              class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
-            />
-          </label>
-          <label class="block">
-            <div class="mb-1 text-sm text-slate-300">Country</div>
-            <select
-              v-model="newHireForm.country"
-              class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
-            >
-              <option value="" disabled>Select country</option>
-              <option v-for="c in vacancyCountries" :key="c" :value="c">{{ c }}</option>
-            </select>
-          </label>
-          <label class="block">
-            <div class="mb-1 text-sm text-slate-300">Start Date</div>
-            <div ref="newHireCreateDatePickerEl" class="relative">
-              <input
-                v-model="newHireForm.startDate"
-                type="text"
-                inputmode="numeric"
-                placeholder="YYYY-MM-DD"
-                class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 pr-10 text-sm text-slate-50 placeholder:text-slate-500"
-                @focus="openDatePicker('newHireCreate')"
-              />
-              <button
-                type="button"
-                class="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-800/40 hover:text-slate-200"
-                @click="toggleDatePicker('newHireCreate')"
-              >
-                <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" aria-hidden="true">
-                  <path
-                    d="M7 3v2M17 3v2M4.5 8.5h15M6.5 5h11A2 2 0 0 1 19.5 7v12a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </button>
-
-              <div
-                v-if="datePicker.openFor === 'newHireCreate'"
-                class="absolute z-10 mt-2 w-64 rounded-md border border-slate-800 bg-slate-950 p-3 shadow-lg"
-              >
-                <div class="mb-2 flex items-center justify-between gap-2">
-                  <button
-                    type="button"
-                    class="rounded-md border border-slate-800 bg-slate-900 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800/40"
-                    @click="shiftDatePickerMonth(-1)"
-                  >
-                    Prev
-                  </button>
-                  <div class="text-sm font-medium text-slate-200">{{ datePickerMonthLabel }}</div>
-                  <button
-                    type="button"
-                    class="rounded-md border border-slate-800 bg-slate-900 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800/40"
-                    @click="shiftDatePickerMonth(1)"
-                  >
-                    Next
-                  </button>
-                </div>
-
-                <div class="grid grid-cols-7 gap-1 text-center text-[11px] text-slate-400">
-                  <div v-for="d in datePickerWeekdays" :key="d" class="py-1">{{ d }}</div>
-                </div>
-                <div class="grid grid-cols-7 gap-1 text-center">
-                  <button
-                    v-for="cell in datePickerCells"
-                    :key="cell.key"
-                    type="button"
-                    class="rounded-md px-0 py-1.5 text-xs hover:bg-slate-800/40"
-                    :class="cell.iso === activeDatePickerValue ? 'bg-slate-50 text-slate-900 hover:bg-slate-50' : 'text-slate-200'"
-                    :disabled="!cell.iso"
-                    @click="cell.iso && selectDatePickerDate(cell.iso)"
-                  >
-                    {{ cell.day ?? '' }}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </label>
-          <label class="block">
-            <div class="mb-1 text-sm text-slate-300">Status</div>
-            <select
-              v-model="newHireForm.status"
-              class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
-            >
-              <option value="" disabled>Select status</option>
-              <option v-for="s in newHireStatuses" :key="s" :value="s">{{ s }}</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="mt-3 flex items-center justify-between gap-3">
-          <div v-if="newHireActionError" class="text-xs text-red-200">{{ newHireActionError }}</div>
-          <div class="ml-auto flex items-center gap-2">
-            <button
-              type="button"
-              class="rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800/40"
-              @click="cancelNewHireCreate"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              class="inline-flex items-center rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800/40 disabled:opacity-60"
-              :disabled="newHireSaving"
-            >
-              <span aria-hidden="true" class="mr-1.5 font-semibold">+</span>
-              <span>Add new hire</span>
-            </button>
-          </div>
-        </div>
-      </form>
-
-      <div v-if="newHiresPending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
-      <div v-else-if="newHiresError" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
+      <div v-if="odooNewHiresPending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
+      <div v-else-if="odooNewHiresError" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
         Failed to load new hires.
-        <div v-if="newHiresErrorMessage" class="mt-2 text-xs text-red-200/80">{{ newHiresErrorMessage }}</div>
+        <div v-if="odooNewHiresErrorMessage" class="mt-2 text-xs text-red-200/80">{{ odooNewHiresErrorMessage }}</div>
       </div>
       <div v-else class="overflow-hidden rounded-md border border-slate-800 bg-slate-900">
         <div class="overflow-x-auto">
@@ -554,167 +424,29 @@
                 <th class="px-4 py-3 font-medium">Position</th>
                 <th class="px-4 py-3 font-medium">Country</th>
                 <th class="px-4 py-3 font-medium">Start Date</th>
-                <th class="px-4 py-3 font-medium">Status</th>
-                <th class="px-4 py-3 font-medium"></th>
+                <th class="px-4 py-3 font-medium">Tenure</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="n in newHires" :key="n.id" class="border-t border-slate-800">
-                <template v-if="newHireEditId === n.id">
-                  <td class="px-4 py-3">
-                    <input v-model="newHireEditForm.name" type="text" class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50" />
-                  </td>
-                  <td class="px-4 py-3">
-                    <input
-                      v-model="newHireEditForm.position"
-                      type="text"
-                      class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
-                    />
-                  </td>
-                  <td class="px-4 py-3">
-                    <select
-                      v-model="newHireEditForm.country"
-                      class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
-                    >
-                      <option value="" disabled>Select country</option>
-                      <option v-for="c in vacancyCountries" :key="c" :value="c">{{ c }}</option>
-                    </select>
-                  </td>
-                  <td class="px-4 py-3">
-                    <div ref="newHireEditDatePickerEl" class="relative">
-                      <input
-                        v-model="newHireEditForm.startDate"
-                        type="text"
-                        inputmode="numeric"
-                        placeholder="YYYY-MM-DD"
-                        class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 pr-10 text-sm text-slate-50 placeholder:text-slate-500"
-                        @focus="openDatePicker('newHireEdit')"
-                      />
-                      <button
-                        type="button"
-                        class="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-800/40 hover:text-slate-200"
-                        @click="toggleDatePicker('newHireEdit')"
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" aria-hidden="true">
-                          <path
-                            d="M7 3v2M17 3v2M4.5 8.5h15M6.5 5h11A2 2 0 0 1 19.5 7v12a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </svg>
-                      </button>
-
-                      <div
-                        v-if="datePicker.openFor === 'newHireEdit'"
-                        class="absolute z-10 mt-2 w-64 rounded-md border border-slate-800 bg-slate-950 p-3 shadow-lg"
-                      >
-                        <div class="mb-2 flex items-center justify-between gap-2">
-                          <button
-                            type="button"
-                            class="rounded-md border border-slate-800 bg-slate-900 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800/40"
-                            @click="shiftDatePickerMonth(-1)"
-                          >
-                            Prev
-                          </button>
-                          <div class="text-sm font-medium text-slate-200">{{ datePickerMonthLabel }}</div>
-                          <button
-                            type="button"
-                            class="rounded-md border border-slate-800 bg-slate-900 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800/40"
-                            @click="shiftDatePickerMonth(1)"
-                          >
-                            Next
-                          </button>
-                        </div>
-
-                        <div class="grid grid-cols-7 gap-1 text-center text-[11px] text-slate-400">
-                          <div v-for="d in datePickerWeekdays" :key="d" class="py-1">{{ d }}</div>
-                        </div>
-                        <div class="grid grid-cols-7 gap-1 text-center">
-                          <button
-                            v-for="cell in datePickerCells"
-                            :key="cell.key"
-                            type="button"
-                            class="rounded-md px-0 py-1.5 text-xs hover:bg-slate-800/40"
-                            :class="cell.iso === activeDatePickerValue ? 'bg-slate-50 text-slate-900 hover:bg-slate-50' : 'text-slate-200'"
-                            :disabled="!cell.iso"
-                            @click="cell.iso && selectDatePickerDate(cell.iso)"
-                          >
-                            {{ cell.day ?? '' }}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="px-4 py-3">
-                    <select
-                      v-model="newHireEditForm.status"
-                      class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
-                    >
-                      <option value="" disabled>Select status</option>
-                      <option v-for="s in newHireStatuses" :key="s" :value="s">{{ s }}</option>
-                    </select>
-                  </td>
-                  <td class="px-4 py-3 text-right">
-                    <div class="flex justify-end gap-2">
-                      <button
-                        type="button"
-                        class="rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-800/40"
-                        @click="cancelEditNewHire"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        class="rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-800/40 disabled:opacity-60"
-                        :disabled="newHireSaving"
-                        @click="saveEditNewHire"
-                      >
-                        Save
-                      </button>
-                    </div>
-                    <div v-if="newHireEditError" class="mt-2 text-xs text-red-200">{{ newHireEditError }}</div>
-                  </td>
-                </template>
-
-                <template v-else>
-                  <td class="px-4 py-3 text-slate-50">{{ n.name }}</td>
-                  <td class="px-4 py-3 text-slate-200">{{ n.position }}</td>
-                  <td class="px-4 py-3 text-slate-200">{{ n.country }}</td>
-                  <td class="px-4 py-3 text-slate-200">{{ formatYmdDateOrDash(n.startDate) }}</td>
-                  <td class="px-4 py-3">
-                    <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium" :class="newHireStatusBadgeClass(n.status)">
-                      {{ n.status }}
-                    </span>
-                  </td>
-                  <td class="px-4 py-3 text-right">
-                    <div class="flex justify-end gap-2">
-                      <button
-                        type="button"
-                        class="rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-800/40"
-                        @click="startEditNewHire(n)"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        class="rounded-md border border-red-900/60 bg-red-950/30 px-3 py-1.5 text-xs text-red-200 hover:bg-red-950/50"
-                        @click="deleteNewHire(n.id)"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </template>
+              <tr v-for="n in odooNewHires" :key="n.employeeKey" class="border-t border-slate-800">
+                <td class="px-4 py-3 text-slate-50">{{ n.name }}</td>
+                <td class="px-4 py-3 text-slate-200">{{ n.position }}</td>
+                <td class="px-4 py-3 text-slate-200">{{ n.countryAssigned }}</td>
+                <td class="px-4 py-3 text-slate-200">{{ formatYmdDateOrDash(n.startDate) }}</td>
+                <td class="px-4 py-3 text-slate-200">{{ n.tenure || '—' }}</td>
               </tr>
 
-              <tr v-if="(newHires?.length ?? 0) === 0" class="border-t border-slate-800">
-                <td colspan="6" class="px-4 py-6 text-center text-slate-300">No new hires yet.</td>
+              <tr v-if="odooNewHires.length === 0" class="border-t border-slate-800">
+                <td colspan="5" class="px-4 py-6 text-center text-slate-300">No new hires found for this month.</td>
               </tr>
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div class="space-y-2 pt-2">
+        <h3 class="text-sm font-semibold text-slate-200">New Hire Check-ins</h3>
+        <NewHireCheckinsTable :items="odooNewHires" />
       </div>
     </section>
 
@@ -724,6 +456,19 @@
       <div class="space-y-1">
         <h2 class="text-base font-semibold text-slate-200">Recent Separations</h2>
         <p class="text-xs text-slate-400">Employees where Active = false (resigned / fired / retired).</p>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="text-sm text-slate-300">Archived employees (by month, from Odoo write date).</div>
+        <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+          <span class="whitespace-nowrap">Month</span>
+          <select
+            v-model="selectedSeparationMonth"
+            class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+          >
+            <option v-for="m in separationMonths" :key="m" :value="m">{{ formatMonthLabel(m) }}</option>
+          </select>
+        </label>
       </div>
 
       <div v-if="separationsPending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
@@ -741,6 +486,8 @@
                 <th class="px-4 py-3 font-medium">Position</th>
                 <th class="px-4 py-3 font-medium">Country</th>
                 <th class="px-4 py-3 font-medium">Start Date</th>
+                <th class="px-4 py-3 font-medium">Separation Date</th>
+                <th class="px-4 py-3 font-medium">Type</th>
               </tr>
             </thead>
             <tbody>
@@ -750,9 +497,15 @@
                 <td class="px-4 py-3 text-slate-200">{{ e.position }}</td>
                 <td class="px-4 py-3 text-slate-200">{{ e.countryAssigned }}</td>
                 <td class="px-4 py-3 text-slate-200">{{ formatYmdDateOrDash(e.startDate) }}</td>
+                <td class="px-4 py-3 text-slate-200">{{ formatYmdDateOrDash(e.separatedAt) }}</td>
+                <td class="px-4 py-3">
+                  <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium" :class="separationTypeBadgeClass(e.separationType)">
+                    {{ formatSeparationType(e.separationType) }}
+                  </span>
+                </td>
               </tr>
               <tr v-if="recentSeparations.length === 0" class="border-t border-slate-800">
-                <td colspan="5" class="px-4 py-6 text-center text-slate-300">No recent separations found.</td>
+                <td colspan="7" class="px-4 py-6 text-center text-slate-300">No separations found for this month.</td>
               </tr>
             </tbody>
           </table>
@@ -764,6 +517,7 @@
 
 <script setup lang="ts">
 import { formatYmdDateOrDash } from '~/utils/dates'
+import NewHireCheckinsTable from '~/components/NewHireCheckinsTable.vue'
 
 type Vacancy = {
   id: string
@@ -793,6 +547,23 @@ type NewHire = {
   createdAt: string
 }
 
+type OdooNewHire = {
+  employeeKey: string
+  name: string
+  position: string
+  department: string
+  countryAssigned: string
+  startDate: string | null
+  tenure?: string
+  createdAt: string | null
+}
+
+type OdooNewHiresResponse = {
+  currentMonth: string
+  months: string[]
+  items: OdooNewHire[]
+}
+
 type Employee = {
   employeeKey: string
   name: string
@@ -801,6 +572,23 @@ type Employee = {
   startDate: string | null
   countryAssigned: string
   employeeStatus: string
+}
+
+type OdooSeparationsRow = {
+  employeeKey: string
+  name: string
+  department: string
+  position: string
+  countryAssigned: string
+  startDate: string | null
+  separatedAt: string
+  separationType: 'resigned' | 'retired' | 'fired' | 'separated'
+}
+
+type OdooSeparationsResponse = {
+  currentMonth: string
+  months: string[]
+  items: OdooSeparationsRow[]
 }
 
 function uniqueSorted(values: string[]) {
@@ -866,6 +654,15 @@ function getErrorMessage(error: unknown) {
   )
 }
 
+function formatMonthLabel(monthKey: string) {
+  const m = /^(\d{4})-(\d{2})$/.exec(monthKey.trim())
+  if (!m) return monthKey
+  const y = Number(m[1])
+  const mo = Number(m[2])
+  if (!Number.isFinite(y) || !Number.isFinite(mo) || mo < 1 || mo > 12) return monthKey
+  return new Date(Date.UTC(y, mo - 1, 1)).toLocaleString('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' })
+}
+
 const {
   data: vacanciesData,
   pending: vacanciesPending,
@@ -884,27 +681,45 @@ const {
 const criticalRecruitment = computed(() => criticalRecruitmentData.value ?? [])
 const criticalRecruitmentErrorMessage = computed(() => getErrorMessage(criticalRecruitmentError.value))
 
+const selectedNewHireMonth = ref('')
+const newHireQuery = computed(() => ({ month: selectedNewHireMonth.value || undefined }))
 const {
-  data: newHiresData,
-  pending: newHiresPending,
-  error: newHiresError,
-  refresh: refreshNewHires
-} = await useFetch<NewHire[]>('/api/new-hires')
-const newHires = computed(() => newHiresData.value ?? [])
-const newHiresErrorMessage = computed(() => getErrorMessage(newHiresError.value))
+  data: odooNewHiresData,
+  pending: odooNewHiresPending,
+  error: odooNewHiresError
+} = await useFetch<OdooNewHiresResponse>('/api/odoo/new-hires', { query: newHireQuery })
+
+const newHireMonths = computed(() => odooNewHiresData.value?.months ?? [])
+const odooNewHires = computed(() => odooNewHiresData.value?.items ?? [])
+const odooNewHiresErrorMessage = computed(() => getErrorMessage(odooNewHiresError.value))
+
+watchEffect(() => {
+  if (selectedNewHireMonth.value) return
+  const m = odooNewHiresData.value?.currentMonth
+  if (m) selectedNewHireMonth.value = m
+})
 
 const { data: employeesData, pending: employeesPending, error: employeesError } = await useFetch<Employee[]>('/api/employees')
 const employeesErrorMessage = computed(() => getErrorMessage(employeesError.value))
 
-const { data: separationsData, pending: separationsPending, error: separationsError } = await useFetch<Employee[]>(
-  '/api/odoo/employees?includeInactive=1'
-)
+const selectedSeparationMonth = ref('')
+const separationsQuery = computed(() => ({ month: selectedSeparationMonth.value || undefined }))
+const {
+  data: separationsData,
+  pending: separationsPending,
+  error: separationsError
+} = await useFetch<OdooSeparationsResponse>('/api/odoo/separations', { query: separationsQuery })
 const separationsErrorMessage = computed(() => getErrorMessage(separationsError.value))
 
+const separationMonths = computed(() => separationsData.value?.months ?? [])
+watchEffect(() => {
+  if (selectedSeparationMonth.value) return
+  const m = separationsData.value?.currentMonth
+  if (m) selectedSeparationMonth.value = m
+})
+
 const recentSeparations = computed(() =>
-  (separationsData.value ?? [])
-    .filter((e) => e.employeeStatus === 'Resigned')
-    .sort((a, b) => a.name.localeCompare(b.name))
+  (separationsData.value?.items ?? []).slice().sort((a, b) => a.name.localeCompare(b.name))
 )
 
 const vacancyCountries = computed(() => uniqueSorted((employeesData.value ?? []).map((e) => e.countryAssigned)))
@@ -919,6 +734,20 @@ const criticalRecruitmentStages = [
   'Offer accepted'
 ] as const
 const newHireStatuses = ['Pre-Onboarding Stage', 'Onboarding', 'Hired'] as const
+
+function formatSeparationType(value: OdooSeparationsRow['separationType']) {
+  if (value === 'resigned') return 'Resigned'
+  if (value === 'retired') return 'Retired'
+  if (value === 'fired') return 'Fired'
+  return 'Separated'
+}
+
+function separationTypeBadgeClass(value: OdooSeparationsRow['separationType']) {
+  if (value === 'resigned') return 'border-amber-500/40 bg-amber-950/40 text-amber-100'
+  if (value === 'retired') return 'border-violet-400/30 bg-violet-500/10 text-violet-200'
+  if (value === 'fired') return 'border-red-500/40 bg-red-950/40 text-red-100'
+  return 'border-slate-700 bg-slate-900 text-slate-200'
+}
 
 type DatePickerTarget = 'newHireCreate' | 'newHireEdit' | null
 
