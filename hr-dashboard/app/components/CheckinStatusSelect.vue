@@ -2,7 +2,7 @@
   <div ref="rootEl" class="relative inline-block">
     <button
       type="button"
-      class="inline-flex h-8 items-center gap-2 rounded-full border px-3 text-sm font-semibold outline-none ring-0 transition focus-visible:ring-2 focus-visible:ring-sky-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+      class="inline-flex h-7 items-center gap-2 rounded-full border px-2.5 text-xs font-semibold outline-none ring-0 transition focus-visible:ring-2 focus-visible:ring-sky-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
       :class="badgeClass"
       @click="toggle"
       @keydown.escape.prevent="close"
@@ -64,8 +64,8 @@ function labelFor(v: StatusKey) {
 
 const badgeClass = computed(() => {
   const v = props.modelValue
-  if (v === 'no_action') return 'border-slate-400/30 bg-slate-500/10 text-slate-200'
-  if (v === 'in_progress') return 'border-sky-400/30 bg-sky-500/10 text-sky-200'
+  if (v === 'no_action') return 'border-red-400/30 bg-red-500/10 text-red-200'
+  if (v === 'in_progress') return 'border-amber-400/30 bg-amber-500/10 text-amber-200'
   return 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200'
 })
 

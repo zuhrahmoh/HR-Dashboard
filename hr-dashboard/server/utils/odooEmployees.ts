@@ -1,6 +1,8 @@
 import { createError } from 'h3'
 import type { Employee } from './employees'
 import { getOdooClient } from './odoo'
+import { classifyBranchCountry } from './branchClassification'
+import { dedupeOdooEmployees } from './dedupeOdooEmployees'
 
 type CachedEmployees = { fetchedAtMs: number; employees: Employee[] }
 let cachedActiveOnly: CachedEmployees | null = null
@@ -56,6 +58,17 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
   const fieldInfo = await client.fieldsGet('hr.employee')
 
   const countryField = pickFirstExistingField(fieldInfo, ['country_id', 'work_location_id', 'work_country_id'])
+  const companyField = pickFirstExistingField(fieldInfo, ['company_id', 'x_company_id', 'x_company'])
+  const workAddressField = pickFirstExistingField(fieldInfo, [
+    'work_location',
+    'x_work_location',
+    'work_address',
+    'x_work_address',
+    'work_address_id',
+    'address_id',
+    'work_contact_id',
+    'work_location_id'
+  ])
   const startDateField = pickFirstExistingField(fieldInfo, [
     'date_hired',
     'hire_date',
@@ -86,6 +99,18 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
     'x_dob'
   ])
   const departureReasonField = pickFirstExistingField(fieldInfo, ['departure_reason_id', 'x_departure_reason_id'])
+  const departureDateField = pickFirstExistingField(fieldInfo, [
+    'departure_date',
+    'x_departure_date',
+    'x_separation_date',
+    'x_separated_at',
+    'x_exit_date',
+    'x_date_of_exit',
+    'x_last_working_day',
+    'x_last_day_worked',
+    'last_working_day',
+    'last_day_worked'
+  ])
   const tenureField = pickFirstExistingField(fieldInfo, [
     'tenure',
     'employee_tenure',
@@ -124,18 +149,21 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
         'active',
         'write_date',
         'create_date',
+        companyField,
         'department_id',
         'job_title',
         'job_id',
         'parent_id',
         'gender',
         countryField,
+        workAddressField,
         startDateField,
         contractEndField,
         talentRatingField,
         employmentTypeField,
         birthDateField,
         departureReasonField,
+        departureDateField,
         tenureField,
         workEmailField,
         personalEmailField,
@@ -167,7 +195,22 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
     const rawCountry = countryField ? r?.[countryField] : null
     const countryAssigned = (many2oneName(rawCountry) || safeString(rawCountry)).trim()
 
-    const departureReason = departureReasonField ? many2oneName(r?.[departureReasonField]).trim() || undefined : undefined
+    const rawCompany = companyField ? r?.[companyField] : null
+    const companyName = (many2oneName(rawCompany) || safeString(rawCompany)).trim()
+
+    const rawWorkAddress = workAddressField ? r?.[workAddressField] : null
+    const workAddress = (many2oneName(rawWorkAddress) || safeString(rawWorkAddress)).trim()
+
+    const branchCountry = classifyBranchCountry({
+      companyName,
+      workAddress,
+      fallbackCountry: countryAssigned
+    })
+
+    const rawDepartureReason = departureReasonField ? r?.[departureReasonField] : null
+    const departureReason = departureReasonField
+      ? (many2oneName(rawDepartureReason) || safeString(rawDepartureReason)).trim() || undefined
+      : undefined
     const normReason = normalizeDepartureReason(departureReason)
     const employeeStatus = isActive
       ? 'Active'
@@ -186,7 +229,9 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
       position,
       startDate: startDateField ? toYmd(r?.[startDateField]) : null,
       birthDate: birthDateField ? toYmd(r?.[birthDateField]) : null,
-      countryAssigned,
+      countryAssigned: branchCountry,
+      companyName: companyName || undefined,
+      workAddress: workAddress || undefined,
       employeeStatus,
       gender: safeString(r?.gender).trim() || undefined,
       reportingTo: many2oneName(r?.parent_id) || undefined,
@@ -196,7 +241,7 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
         ? (many2oneName(r?.[employmentTypeField]) || safeString(r?.[employmentTypeField])).trim() || undefined
         : undefined,
       departureReason,
-      separatedAt: !isActive ? toYmd(r?.write_date) : null,
+      separatedAt: !isActive ? (departureDateField ? toYmd(r?.[departureDateField]) : null) ?? toYmd(r?.write_date) : null,
       createdAt: toYmd(r?.create_date),
       tenure: tenureField ? safeString(r?.[tenureField]).trim() || undefined : undefined,
       workEmail: workEmailField ? safeString(r?.[workEmailField]).trim() || undefined : undefined,
@@ -208,10 +253,11 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
     return employee
   })
 
-  const nextCache = { fetchedAtMs: Date.now(), employees }
+  const employeesDeduped = dedupeOdooEmployees(employees)
+  const nextCache = { fetchedAtMs: Date.now(), employees: employeesDeduped }
   if (opts.includeInactive) cachedIncludingInactive = nextCache
   else cachedActiveOnly = nextCache
-  return employees
+  return employeesDeduped
 }
 
 export async function loadEmployeesFromOdoo(opts?: { includeInactive?: boolean }): Promise<Employee[]> {

@@ -8,8 +8,13 @@
     <hr class="border-slate-800" />
 
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-      <section class="rounded-md border border-slate-800 bg-slate-900 p-4">
-        <h2 class="mb-1 text-lg font-semibold text-slate-200">Geographical Headcount</h2>
+      <section class="flex h-[20rem] flex-col rounded-md border border-slate-800 bg-slate-900 p-4">
+        <div class="mb-1 flex items-end justify-between gap-3">
+          <h2 class="text-lg font-semibold text-slate-200">Geographical Headcount</h2>
+          <div class="text-sm font-semibold tabular-nums text-orange-400">
+            Total: {{ totalHeadcountNow }}
+          </div>
+        </div>
         <p class="mb-4 text-sm text-slate-400">Excludes resigned employees.</p>
 
         <div v-if="analyticsPending" class="text-sm text-slate-200">Loading…</div>
@@ -22,11 +27,37 @@
             Ensure the dev server is running and reachable. Check /api/odoo/health for Odoo config.
           </div>
         </div>
-        <HeadcountBarChart v-else :items="analytics?.headcountByCountry ?? []" />
+        <div v-else class="mt-2 min-h-0 flex-1">
+          <HeadcountBarChart :items="analytics?.headcountByCountry ?? []" />
+        </div>
       </section>
 
-      <section class="rounded-md border border-slate-800 bg-slate-900 p-4">
-        <h2 class="mb-1 text-lg font-semibold text-slate-200">Employee Separations</h2>
+      <section class="flex h-[20rem] flex-col rounded-md border border-slate-800 bg-slate-900 p-4">
+        <div class="mb-1 flex items-center justify-between gap-3">
+          <h2 class="text-lg font-semibold text-slate-200">Employee Separations</h2>
+          <button
+            v-if="!showSeparationsOverview"
+            type="button"
+            class="rounded-md border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-100 hover:bg-slate-800/70"
+            @click="showSeparationsOverview = true"
+          >
+            <span class="inline-flex items-center gap-1.5">
+              <span>View trends</span>
+              <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" class="h-3.5 w-3.5" stroke="currentColor" stroke-width="1.75">
+                <path d="M5.25 3.5L9.25 8l-4 4.5" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M8.25 3.5L12.25 8l-4 4.5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+          </button>
+          <button
+            v-else
+            type="button"
+            class="rounded-md border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-100 hover:bg-slate-800/70"
+            @click="showSeparationsOverview = false"
+          >
+            ← Back
+          </button>
+        </div>
         <p class="mb-4 text-sm text-slate-400">Separated employees (by month and reason).</p>
 
         <div v-if="analyticsPending" class="text-sm text-slate-200">Loading…</div>
@@ -39,14 +70,45 @@
             Ensure the dev server is running and reachable. Check /api/odoo/health for Odoo config.
           </div>
         </div>
-        <SeparationsDonut
-          v-else
-          :separations="analytics?.separations ?? { currentMonth: '', months: [], byMonth: {} }"
-        />
+        <template v-else>
+          <SeparationsYearLineChart
+            v-if="showSeparationsOverview"
+            :items="analytics?.separationsByYear ?? []"
+            :by-type="analytics?.separationsByYearByType ?? null"
+          />
+          <SeparationsDonut
+            v-else
+            :separations="analytics?.separations ?? { currentMonth: '', months: [], byMonth: {} }"
+          />
+        </template>
       </section>
 
-      <section class="rounded-md border border-slate-800 bg-slate-900 p-4">
-        <h2 class="mb-1 text-lg font-semibold text-slate-200">Employee Additions</h2>
+      <section class="flex h-[20rem] flex-col rounded-md border border-slate-800 bg-slate-900 p-4">
+        <div class="mb-1 flex items-center justify-between gap-3">
+          <h2 class="text-lg font-semibold text-slate-200">Employee Additions</h2>
+          <button
+            v-if="!showAdditionsOverview"
+            type="button"
+            class="rounded-md border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-100 hover:bg-slate-800/70"
+            @click="showAdditionsOverview = true"
+          >
+            <span class="inline-flex items-center gap-1.5">
+              <span>View trends</span>
+              <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" class="h-3.5 w-3.5" stroke="currentColor" stroke-width="1.75">
+                <path d="M5.25 3.5L9.25 8l-4 4.5" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M8.25 3.5L12.25 8l-4 4.5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+          </button>
+          <button
+            v-else
+            type="button"
+            class="rounded-md border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-100 hover:bg-slate-800/70"
+            @click="showAdditionsOverview = false"
+          >
+            ← Back
+          </button>
+        </div>
         <p class="mb-4 text-sm text-slate-400">New hires added (relative to current headcount).</p>
 
         <div v-if="analyticsPending" class="text-sm text-slate-200">Loading…</div>
@@ -57,11 +119,17 @@
             Ensure the dev server is running and reachable. Check /api/odoo/health for Odoo config.
           </div>
         </div>
-        <AdditionsDonut
-          v-else
-          :additions="analytics?.additions ?? { currentMonth: '', months: [], byMonth: {} }"
-          :total-headcount="totalHeadcountNow"
-        />
+        <template v-else>
+          <AdditionsYearLineChart
+            v-if="showAdditionsOverview"
+            :items="analytics?.additionsByYear ?? []"
+          />
+          <AdditionsDonut
+            v-else
+            :additions="analytics?.additions ?? { currentMonth: '', months: [], byMonth: {} }"
+            :total-headcount="totalHeadcountNow"
+          />
+        </template>
       </section>
     </div>
 
@@ -84,6 +152,16 @@
               <option v-for="m in expenses?.availableMonths ?? []" :key="m" :value="m">
                 {{ (expenses?.monthLabels && expenses.monthLabels[m]) || m }}
               </option>
+            </select>
+          </label>
+
+          <label class="space-y-1">
+            <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">Currency</div>
+            <select
+              v-model="selectedCurrency"
+              class="h-9 rounded-md border border-slate-700 bg-slate-950/40 px-2 text-sm text-slate-200 focus:border-slate-500 focus:outline-none"
+            >
+              <option v-for="c in CURRENCIES" :key="c" :value="c">{{ c }}</option>
             </select>
           </label>
 
@@ -131,21 +209,22 @@
             :key="item.country"
             :country="item.country"
             :month="expenses?.month ?? null"
-            :gross-salary="item.grossSalary"
-            :paye="item.paye"
-            :overtime="item.overtime"
-            :vc="item.vc"
-            :health-surcharge="item.healthSurcharge"
-            :nis-company="item.nisCompany"
-            :total="item.total"
+            :currency="selectedCurrency"
+            :gross-salary="convertUsd(item.grossSalary)"
+            :paye="convertUsd(item.paye)"
+            :overtime="convertUsd(item.overtime)"
+            :vc="convertUsd(item.vc)"
+            :health-surcharge="convertUsd(item.healthSurcharge)"
+            :nis-company="convertUsd(item.nisCompany)"
+            :total="convertUsd(item.total)"
             :show-deltas="showNetChanges && !!baselineMonthKey"
-            :delta-gross-salary="expenseDeltasByCountry.get(item.country)?.grossSalary ?? 0"
-            :delta-paye="expenseDeltasByCountry.get(item.country)?.paye ?? 0"
-            :delta-overtime="expenseDeltasByCountry.get(item.country)?.overtime ?? 0"
-            :delta-vc="expenseDeltasByCountry.get(item.country)?.vc ?? 0"
-            :delta-health-surcharge="expenseDeltasByCountry.get(item.country)?.healthSurcharge ?? 0"
-            :delta-nis-company="expenseDeltasByCountry.get(item.country)?.nisCompany ?? 0"
-            :delta-total="expenseDeltasByCountry.get(item.country)?.total ?? 0"
+            :delta-gross-salary="convertUsd(expenseDeltasByCountry.get(item.country)?.grossSalary ?? 0)"
+            :delta-paye="convertUsd(expenseDeltasByCountry.get(item.country)?.paye ?? 0)"
+            :delta-overtime="convertUsd(expenseDeltasByCountry.get(item.country)?.overtime ?? 0)"
+            :delta-vc="convertUsd(expenseDeltasByCountry.get(item.country)?.vc ?? 0)"
+            :delta-health-surcharge="convertUsd(expenseDeltasByCountry.get(item.country)?.healthSurcharge ?? 0)"
+            :delta-nis-company="convertUsd(expenseDeltasByCountry.get(item.country)?.nisCompany ?? 0)"
+            :delta-total="convertUsd(expenseDeltasByCountry.get(item.country)?.total ?? 0)"
           />
         </div>
 
@@ -161,7 +240,7 @@
                 <p v-if="expenses?.month" class="mt-0.5 text-sm text-slate-400">{{ expenses.month }}</p>
               </div>
               <div class="text-right text-sm font-semibold tabular-nums text-emerald-400">
-                {{ formatCurrency(item.total) }}
+                {{ formatCurrency(convertUsd(item.total)) }}
               </div>
             </div>
           </section>
@@ -209,23 +288,6 @@
       <AverageAgeGroupedBarChart :items="analytics?.avgAgeByCountryGender ?? []" />
     </section>
 
-    <hr class="border-slate-800" />
-
-    <section class="space-y-3">
-      <div class="space-y-1">
-        <h2 class="text-lg font-semibold text-slate-200">Upcoming Contracts</h2>
-        <p class="text-sm text-slate-400">Contract/probation end dates within the next 60 days. Excludes resigned employees.</p>
-      </div>
-
-      <div v-if="analyticsPending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
-      <div v-else-if="analyticsError" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
-        Failed to load analytics.
-        <div v-if="analyticsErrorMessage" class="mt-2 text-sm text-red-200/80">
-          {{ analyticsErrorMessage }}
-        </div>
-      </div>
-      <UpcomingContractsTable v-else :items="analytics?.upcomingContracts ?? []" />
-    </section>
   </div>
 </template>
 
@@ -237,11 +299,19 @@ type HomeAnalytics = {
     months: string[]
     byMonth: Record<string, { resigned: number; retired: number; fired: number; headcountAfter: number }>
   }
+  separationsByYear: Array<{ year: number; count: number }>
+  separationsByYearByType: {
+    resigned: Array<{ year: number; count: number }>
+    retired: Array<{ year: number; count: number }>
+    fired: Array<{ year: number; count: number }>
+    separated: Array<{ year: number; count: number }>
+  }
   additions: {
     currentMonth: string
     months: string[]
     byMonth: Record<string, { hires: number }>
   }
+  additionsByYear: Array<{ year: number; count: number }>
   genderBreakdown: {
     overall: { male: number; female: number; total: number }
     byCountry: Array<{ country: string; male: number; female: number; total: number }>
@@ -315,6 +385,9 @@ const { data: analyticsData, pending: analyticsPending, error: analyticsError } 
 const analytics = computed(() => analyticsData.value ?? null)
 const analyticsErrorMessage = computed(() => getErrorMessage(analyticsError.value))
 
+const showSeparationsOverview = ref(false)
+const showAdditionsOverview = ref(false)
+
 const headcountAfterSeparations = computed(() => {
   const s = analytics.value?.separations
   if (!s) return 0
@@ -367,10 +440,30 @@ watchEffect(() => {
   compareToMonth.value = baselineMonthKey.value || ''
 })
 
-const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+type Currency = 'USD' | 'TTD' | 'GYD' | 'SRD' | 'MXN' | 'COP'
+const CURRENCIES: Currency[] = ['USD', 'TTD', 'GYD', 'SRD', 'MXN', 'COP']
+const USD_TO: Record<Currency, number> = {
+  USD: 1,
+  TTD: 6.8,
+  GYD: 209.21,
+  SRD: 37.64,
+  MXN: 17.15,
+  COP: 3696.24
+}
+
+const selectedCurrency = ref<Currency>('USD')
+const fmt = computed(
+  () => new Intl.NumberFormat('en-US', { style: 'currency', currency: selectedCurrency.value, currencyDisplay: 'code' })
+)
+
+function convertUsd(v: number) {
+  const n = Number.isFinite(v) ? v : 0
+  return n * (USD_TO[selectedCurrency.value] ?? 1)
+}
+
 function formatCurrency(v: number) {
   const n = Number.isFinite(v) ? v : 0
-  return fmt.format(n)
+  return fmt.value.format(n)
 }
 
 type ExpenseItem = ExpensesSnapshot['items'][number]

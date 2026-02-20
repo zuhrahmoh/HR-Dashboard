@@ -7,6 +7,7 @@ type CriticalRecruitment = {
   position: string
   country: string
   stage: string
+  notes?: string
   createdAt: string
 }
 
@@ -15,6 +16,13 @@ function requireNonEmptyString(value: unknown, field: string) {
     throw createError({ statusCode: 400, statusMessage: `${field} is required` })
   }
   return value.trim()
+}
+
+function optionalTrimmedString(value: unknown) {
+  if (value == null) return undefined
+  if (typeof value !== 'string') return undefined
+  const s = value.trim()
+  return s ? s : undefined
 }
 
 export default defineEventHandler(async (event) => {
@@ -26,6 +34,7 @@ export default defineEventHandler(async (event) => {
   const position = requireNonEmptyString(body?.position, 'position')
   const country = requireNonEmptyString(body?.country, 'country')
   const stage = requireNonEmptyString(body?.stage, 'stage')
+  const notes = optionalTrimmedString(body?.notes)
 
   const items = await readJsonArray<CriticalRecruitment>('critical-recruitment.json')
   const idx = items.findIndex((v) => v.id === id)
@@ -37,7 +46,8 @@ export default defineEventHandler(async (event) => {
     candidateName,
     position,
     country,
-    stage
+    stage,
+    notes
   }
 
   items[idx] = updated

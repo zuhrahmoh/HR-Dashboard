@@ -23,6 +23,33 @@ function utcTodayMs() {
   return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
 }
 
+function parseYmdUtcMs(ymd: string) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd.trim())
+  if (!m) return null
+  const y = Number(m[1])
+  const mo = Number(m[2])
+  const d = Number(m[3])
+  if (!Number.isFinite(y) || !Number.isFinite(mo) || !Number.isFinite(d)) return null
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null
+  const ms = Date.UTC(y, mo - 1, d)
+  const dt = new Date(ms)
+  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d) return null
+  return ms
+}
+
+function addMonthsClampedUtcMs(startUtcMs: number, months: number) {
+  const dt = new Date(startUtcMs)
+  const y = dt.getUTCFullYear()
+  const m0 = dt.getUTCMonth()
+  const d = dt.getUTCDate()
+  const target = new Date(Date.UTC(y, m0 + months, 1))
+  const ty = target.getUTCFullYear()
+  const tm0 = target.getUTCMonth()
+  const lastDay = new Date(Date.UTC(ty, tm0 + 1, 0)).getUTCDate()
+  const td = Math.min(d, lastDay)
+  return Date.UTC(ty, tm0, td)
+}
+
 function monthKeyFromUtcMs(utcMs: number) {
   const d = new Date(utcMs)
   const y = d.getUTCFullYear()
@@ -48,6 +75,8 @@ function monthKeyFromIndex(idx: number) {
 export default defineEventHandler(async (event): Promise<Response> => {
   const q = getQuery(event)
   const requestedMonth = typeof q.month === 'string' ? q.month.trim() : ''
+  const probation =
+    q.probation === '1' || q.probation === 'true' || q.probation === 'yes' || q.probation === 'on' || q.probation === 1
   const currentMonth = monthKeyFromUtcMs(utcTodayMs())
   const activeMonth = /^\d{4}-\d{2}$/.test(requestedMonth) ? requestedMonth : currentMonth
 
@@ -67,8 +96,17 @@ export default defineEventHandler(async (event): Promise<Response> => {
   const startIdx = nowIdx - (countMonths - 1)
   const months = Array.from({ length: countMonths }, (_, i) => monthKeyFromIndex(startIdx + i)).reverse()
 
-  const items: Row[] = employees
-    .filter((e) => (e.createdAt ?? '').slice(0, 7) === activeMonth)
+  const today = utcTodayMs()
+  const items: Row[] = (probation
+    ? employees.filter((e) => {
+        const start = (e.startDate ?? '').trim()
+        const startMs = start ? parseYmdUtcMs(start) : null
+        if (!startMs) return false
+        const probationEnd = addMonthsClampedUtcMs(startMs, 6)
+        return today < probationEnd
+      })
+    : employees.filter((e) => (e.createdAt ?? '').slice(0, 7) === activeMonth)
+  )
     .map((e) => ({
       employeeKey: e.employeeKey,
       name: e.name,

@@ -3,7 +3,15 @@ import { fileURLToPath } from 'node:url'
 import { inflateSync, deflateSync } from 'node:zlib'
 
 function pdfEscapeText(input: string) {
-  return input.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)')
+  return input
+    .replace(/\\/g, '\\\\')
+    .replace(/\(/g, '\\(')
+    .replace(/\)/g, '\\)')
+    // Render common punctuation that isn't safe as UTF-8 bytes in a Type1 font string.
+    // WinAnsi em-dash is 151 (octal 227).
+    .replace(/—/g, '\\227')
+    // WinAnsi en-dash is 150 (octal 226).
+    .replace(/–/g, '\\226')
 }
 
 export type PngDecoded = {
@@ -434,11 +442,11 @@ export function buildProfilePdfCardLayout(input: ProfileCardInput): Buffer {
   const shadowOff = 4
 
   const contentTopY = pageH - margin - 56
-  const gap = 24
-  const row1H = 168
-  const row2H = 108
-  const row3H = 78
-  const row4H = 58
+  const gap = 20
+  const row1H = 190
+  const row2H = 140
+  const row3H = 170
+  const row4H = 96
   const fullW = pageW - margin * 2
 
   const card1Y = contentTopY - row1H
@@ -498,6 +506,11 @@ export function buildProfilePdfCardLayout(input: ProfileCardInput): Buffer {
   const lineGap = 18
   const rowGap = 14
 
+  function dashify(value: unknown): string {
+    const s = String(value ?? '').trim()
+    return s ? s : '—'
+  }
+
   function row(
     font: 'F1' | 'F2',
     label: string,
@@ -505,77 +518,110 @@ export function buildProfilePdfCardLayout(input: ProfileCardInput): Buffer {
     lx: number,
     vx: number,
     y: number,
-    lineSpacing: number
+    lineSpacing: number,
+    maxChars: number,
+    maxLines: number
   ) {
     grayText(font, 9, lx, y, label)
-    const v = value || '—'
-    const lines = wrapText(v, 40)
-    text(font, 10, vx, y, lines[0])
-    return y - lineSpacing
+    const v = dashify(value)
+    const lines = wrapText(v, maxChars).slice(0, Math.max(1, maxLines))
+    text(font, 10, vx, y, lines[0] ?? '—')
+    let yy = y
+    for (let i = 1; i < lines.length; i += 1) {
+      yy -= 12
+      text(font, 10, vx, yy, lines[i] ?? '')
+    }
+    return yy - lineSpacing
   }
 
   const primaryLeft = margin + pad
-  const primaryRight = margin + fullW - pad
-  let y = card1Y + row1H - 22
-  text('F2', 11, primaryLeft, y, input.primary.initials)
-  y -= 16
-  text('F2', 12, primaryLeft + 24, y, input.primary.name)
-  grayText('F1', 9, primaryLeft + 24, y - 12, input.primary.position || '—')
-  y -= 28
-  text('F1', 9, primaryLeft, y, input.primary.employeeStatus || '—')
-  if (input.primary.employeeType) {
-    text('F1', 9, primaryLeft + 44, y, input.primary.employeeType)
-  }
-  y -= 28
-  const boxInset = 10
-  const boxX = primaryLeft + boxInset
-  const boxW = fullW - pad * 2 - boxInset * 2
-  const boxH = 72
-  const boxY = y - boxH
-  drawShadedBox(cmd, boxX, boxY, boxW, boxH, 6)
-  y = boxY + boxH - 16
-  y = row('F1', 'Department', input.primary.department, primaryLeft + boxInset + 8, primaryRight - boxInset - 120, y, rowGap)
-  y = row('F1', 'Country', input.primary.countryAssigned, primaryLeft + boxInset + 8, primaryRight - boxInset - 120, y, rowGap)
-  row('F1', 'Reporting To', input.primary.reportingTo, primaryLeft + boxInset + 8, primaryRight - boxInset - 120, y, rowGap)
+  const primaryTop = card1Y + row1H
+  // Panels first, then text (prevents panels painting over headings/titles)
+  const infoBoxX = margin + pad
+  const infoBoxY = card1Y + 18
+  const infoBoxW = fullW - pad * 2
+  const infoBoxH = 96
+  const infoTop = infoBoxY + infoBoxH
+  drawShadedBox(cmd, infoBoxX, infoBoxY, infoBoxW, infoBoxH, 8)
+
+  let y = primaryTop - 34
+  text('F2', 16, primaryLeft, y, dashify(input.primary.name))
+  grayText('F1', 10, primaryLeft, y - 16, dashify(input.primary.position))
+
+  // Info panel: Status/Type then Department/Country/Reporting To (kept below job title)
+  const colGap = 24
+  const colW = (infoBoxW - colGap) / 2
+  const m1x = infoBoxX + 14
+  const m2x = infoBoxX + colW + colGap + 14
+  let iy = infoTop - 18
+  grayText('F1', 9, m1x, iy, 'Status')
+  text('F1', 10, m1x, iy - 12, dashify(input.primary.employeeStatus))
+  grayText('F1', 9, m2x, iy, 'Type')
+  text('F1', 10, m2x, iy - 12, dashify(input.primary.employeeType))
+  iy -= 36
+
+  const bxLabel = infoBoxX + 14
+  const bxValue = infoBoxX + 180
+  iy = row('F1', 'Department', input.primary.department, bxLabel, bxValue, iy, rowGap, 42, 1)
+  iy = row('F1', 'Country', input.primary.countryAssigned, bxLabel, bxValue, iy, rowGap, 42, 1)
+  row('F1', 'Reporting To', input.primary.reportingTo, bxLabel, bxValue, iy, rowGap, 42, 1)
 
   const contactLeft = margin + pad
-  y = card2Y + row2H - 24
+  const contactTop = card2Y + row2H
+  y = contactTop - 28
+  const contactBoxX = margin + pad
+  const contactBoxY = card2Y + 18
+  const contactBoxW = fullW - pad * 2
+  const contactBoxTop = y - 18
+  const contactBoxH = Math.max(70, contactBoxTop - contactBoxY)
+  drawShadedBox(cmd, contactBoxX, contactBoxY, contactBoxW, contactBoxH, 8)
   text('F2', 12, contactLeft, y, 'Contact')
-  y -= lineGap
-  y = row('F1', 'Work Email', input.contact.workEmail, contactLeft, contactLeft + 90, y, rowGap)
-  y = row('F1', 'Work Phone', input.contact.workPhone, contactLeft, contactLeft + 90, y, rowGap)
-  row('F1', 'Personal Phone', input.contact.personalPhone, contactLeft, contactLeft + 90, y, rowGap)
+  y = contactBoxY + contactBoxH - 18
+  const cxLabel = contactBoxX + 14
+  const cxValue = contactBoxX + 120
+  y = row('F1', 'Work Email', input.contact.workEmail, cxLabel, cxValue, y, rowGap, 52, 2)
+  y = row('F1', 'Work Phone', input.contact.workPhone, cxLabel, cxValue, y, rowGap, 44, 1)
+  row('F1', 'Personal Phone', input.contact.personalPhone, cxLabel, cxValue, y, rowGap, 44, 1)
 
   const empLeft = margin + pad
-  y = card3Y + row3H - 24
+  const empTop = card3Y + row3H
+  y = empTop - 28
+  const empBoxX = margin + pad
+  const empBoxY = card3Y + 18
+  const empBoxW = fullW - pad * 2
+  const empBoxTop = y - 18
+  const empBoxH = Math.max(96, empBoxTop - empBoxY)
+  drawShadedBox(cmd, empBoxX, empBoxY, empBoxW, empBoxH, 8)
   text('F2', 12, empLeft, y, 'Employment')
-  y -= lineGap
-  const empW = fullW - pad * 2
-  const seg = empW / 5
-  const empX1 = empLeft
-  const empX2 = empLeft + seg
-  const empX3 = empLeft + seg * 2
-  const empX4 = empLeft + seg * 3
-  const empX5 = empLeft + seg * 4
-  grayText('F1', 9, empX1, y, 'Start Date')
-  text('F1', 10, empX1, y - 12, wrapText(input.employment.startDate, 12)[0])
-  grayText('F1', 9, empX2, y, 'Tenure')
-  text('F1', 10, empX2, y - 12, wrapText(input.employment.tenure, 12)[0])
-  grayText('F1', 9, empX3, y, 'Contract/Probation End')
-  text('F1', 10, empX3, y - 12, wrapText(input.employment.contractOrProbationEnd, 12)[0])
-  grayText('F1', 9, empX4, y, 'Gender')
-  text('F1', 10, empX4, y - 12, wrapText(input.employment.gender, 10)[0])
-  grayText('F1', 9, empX5, y, 'Employee Key')
-  text('F1', 10, empX5, y - 12, wrapText(input.employment.employeeKey, 14)[0])
+  y = empBoxY + empBoxH - 18
+  const exLabel = empBoxX + 14
+  const exValue = empBoxX + 180
+  y = row('F1', 'Start Date', input.employment.startDate, exLabel, exValue, y, rowGap, 52, 1)
+  y = row('F1', 'Tenure', input.employment.tenure, exLabel, exValue, y, rowGap, 52, 2)
+  y = row('F1', 'Contract/Probation End', input.employment.contractOrProbationEnd, exLabel, exValue, y, rowGap, 52, 1)
+  y = row('F1', 'Gender', input.employment.gender, exLabel, exValue, y, rowGap, 52, 1)
+  row('F1', 'Employee Key', input.employment.employeeKey, exLabel, exValue, y, rowGap, 52, 1)
 
   const talentLeft = margin + pad
-  y = card4Y + row4H - 20
+  const talentTop = card4Y + row4H
+  y = talentTop - 28
+  const talentBoxX = margin + pad
+  const talentBoxY = card4Y + 18
+  const talentBoxW = fullW - pad * 2
+  const talentBoxTop = y - 18
+  const talentBoxH = Math.max(44, talentBoxTop - talentBoxY)
+  drawShadedBox(cmd, talentBoxX, talentBoxY, talentBoxW, talentBoxH, 8)
   text('F2', 12, talentLeft, y, 'Talent')
-  y -= lineGap
-  grayText('F1', 10, talentLeft, y, 'Rating')
-  text('F1', 10, talentLeft + 44, y, input.talent.talentRating || '—')
+  y = talentBoxY + talentBoxH - 18
+  const txLabel = talentBoxX + 14
+  const txValue = talentBoxX + 120
+  row('F1', 'Rating', input.talent.talentRating, txLabel, txValue, y, 0, 52, 1)
 
-  grayText('F1', 8, margin, margin - 4, `Generated: ${input.generatedAtIso}`)
+  const genDt = new Date(input.generatedAtIso)
+  const genLabel = Number.isNaN(genDt.getTime())
+    ? input.generatedAtIso
+    : genDt.toISOString().replace('T', ' ').replace(/\.\d+Z$/, ' UTC')
+  grayText('F1', 8, margin, 18, `Generated: ${genLabel}`)
 
   const contentStream = Buffer.from(cmd.join('\n') + '\n', 'utf8')
   const contentLen = contentStream.length

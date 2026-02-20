@@ -105,36 +105,30 @@
                   <dd class="text-right text-slate-50">{{ employee.gender ?? '—' }}</dd>
                 </div>
                 <div class="flex justify-between gap-4">
-                  <dt class="text-slate-400">Employee Key</dt>
-                  <dd class="text-right font-mono text-slate-400">{{ employee.employeeKey }}</dd>
-                </div>
-                <div class="flex justify-between gap-4">
                   <dt class="text-slate-400">Employment Status</dt>
                   <dd class="text-right text-slate-50">{{ employee.employmentStatus ?? '—' }}</dd>
                 </div>
               </dl>
             </div>
-          </section>
 
-          <section class="rounded-xl border border-slate-800 bg-slate-900 p-4 shadow-lg shadow-black/30">
-            <h2 class="text-sm font-semibold text-slate-200">Compensation</h2>
-            <div class="mt-3 rounded-lg bg-slate-950/40 p-3 ring-1 ring-slate-800/60">
+            <div class="mt-4 rounded-lg bg-slate-950/40 p-3 ring-1 ring-slate-800/60">
+              <div class="mb-2 text-sm font-semibold text-slate-200">Compensation</div>
               <dl class="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
                 <div class="flex justify-between gap-4">
+                  <dt class="text-slate-400">Currency</dt>
+                  <dd class="text-right text-slate-50">{{ compensation?.currency ?? '—' }}</dd>
+                </div>
+                <div class="flex justify-between gap-4">
                   <dt class="text-slate-400">Monthly Salary</dt>
-                  <dd class="text-right text-slate-50">{{ employee.monthlySalary ?? '—' }}</dd>
+                  <dd class="text-right text-slate-50">{{ formatMoney(compensation?.monthlySalary, compensation?.currency) }}</dd>
                 </div>
                 <div class="flex justify-between gap-4">
-                  <dt class="text-slate-400">Allowances</dt>
-                  <dd class="text-right text-slate-50">{{ employee.allowances ?? '—' }}</dd>
-                </div>
-                <div class="flex justify-between gap-4">
-                  <dt class="text-slate-400">Type of Allowance</dt>
-                  <dd class="text-right text-slate-50">{{ employee.typeOfAllowance ?? '—' }}</dd>
+                  <dt class="text-slate-400">Allowance</dt>
+                  <dd class="text-right text-slate-50">{{ formatMoney(compensation?.allowance, compensation?.currency) }}</dd>
                 </div>
                 <div class="flex justify-between gap-4">
                   <dt class="text-slate-400">Gross Salary</dt>
-                  <dd class="text-right text-slate-50">{{ employee.grossSalary ?? '—' }}</dd>
+                  <dd class="text-right text-slate-50">{{ formatMoney(compensation?.grossSalary, compensation?.currency) }}</dd>
                 </div>
               </dl>
             </div>
@@ -163,10 +157,6 @@ type Employee = {
   employeeType?: string
   employmentStatus?: string
   contractOrProbationEndDate?: string | null
-  monthlySalary?: string
-  allowances?: string
-  grossSalary?: string
-  typeOfAllowance?: string
 }
 
 const route = useRoute()
@@ -174,6 +164,22 @@ const employeeKey = computed(() => String(route.params.employeeKey || ''))
 
 const { data, pending, error } = await useFetch<Employee>(() => `/api/employees/${employeeKey.value}`)
 const employee = computed(() => data.value ?? null)
+
+type EmployeeCompensation = {
+  name: string
+  monthlySalary: number | null
+  allowance: number | null
+  currency: string | null
+  grossSalary: number | null
+}
+
+const compensationQuery = computed(() => ({ name: employee.value?.name || '' }))
+const { data: compensationData } = await useFetch<EmployeeCompensation | null>('/api/compensation', {
+  query: compensationQuery,
+  watch: [compensationQuery],
+  default: () => null
+})
+const compensation = computed(() => compensationData.value ?? null)
 
 const initials = computed(() => {
   const name = (employee.value?.name ?? '').trim()
@@ -183,5 +189,16 @@ const initials = computed(() => {
   const b = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? '' : ''
   return (a + b).toUpperCase() || '—'
 })
+
+function formatMoney(amount: number | null | undefined, currency: string | null | undefined) {
+  if (amount == null || !Number.isFinite(amount)) return '—'
+  const code = (currency || '').trim().toUpperCase()
+  try {
+    if (code && /^[A-Z]{3}$/.test(code)) {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: code }).format(amount)
+    }
+  } catch {}
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)
+}
 </script>
 

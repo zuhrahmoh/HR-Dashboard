@@ -199,6 +199,14 @@ const countriesGridStyle = computed(() => {
 function shortCountryLabel(input: string) {
   const s = (input ?? '').trim()
   if (!s) return '—'
+  if (s === 'Trinidad and Tobago') return 'TT'
+  if (s === 'Guyana') return 'GUY'
+  if (s === 'Houston') return 'HOU'
+  if (s === 'Suriname') return 'SUR'
+  if (s === 'El Dorado Offshore GY') return 'EDO GUY'
+  if (s === 'El Dorado Offshore TT') return 'EDO TT'
+  if (s === 'Mexico') return 'MEX'
+  if (s === 'Colombia') return 'COL'
   if (s.length <= 10) return s
   // Prefer "X&Y" when the name contains '&' (e.g., "Trinidad & Tobago" -> "T&T").
   if (s.includes('&')) {
@@ -218,9 +226,24 @@ function shortCountryLabel(input: string) {
   return initials.join('')
 }
 
+const BRANCH_ORDER = [
+  'Trinidad and Tobago',
+  'Guyana',
+  'Houston',
+  'Suriname',
+  'El Dorado Offshore GY',
+  'El Dorado Offshore TT',
+  'Mexico',
+  'Colombia'
+] as const
+
+function branchIndex(label: string) {
+  return BRANCH_ORDER.indexOf((label ?? '').trim() as any)
+}
+
 const columns = computed(() => {
   const denom = maxAvg.value > 0 ? maxAvg.value : 1
-  return (props.items ?? [])
+  const base = (props.items ?? [])
     .map((i) => {
       const countryLabel = labelCountry(i.country)
       const male = i.maleAvgAge
@@ -242,7 +265,11 @@ const columns = computed(() => {
         femaleTitle: `Female Avg: ${fmtAge(female)} | Count: ${Number.isFinite(i.femaleCount) ? i.femaleCount : 0}`
       }
     })
-    .sort((a, b) => b.totalCount - a.totalCount || a.countryLabel.localeCompare(b.countryLabel))
+
+  const isBranchOnly = base.length > 0 && base.every((c) => branchIndex(c.countryLabel) >= 0)
+  if (isBranchOnly) return base.slice().sort((a, b) => branchIndex(a.countryLabel) - branchIndex(b.countryLabel))
+
+  return base.slice().sort((a, b) => b.totalCount - a.totalCount || a.countryLabel.localeCompare(b.countryLabel))
 })
 </script>
 

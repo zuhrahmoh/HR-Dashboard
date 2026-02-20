@@ -60,6 +60,7 @@ function normalizeSeparationType(status: string): Row['separationType'] {
   if (v === 'resigned') return 'resigned'
   if (v === 'retired') return 'retired'
   if (v === 'fired') return 'fired'
+  if (v === 'terminated' || v.includes('terminate') || v.includes('termination')) return 'fired'
   return 'separated'
 }
 

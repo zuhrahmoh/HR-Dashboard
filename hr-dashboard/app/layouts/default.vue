@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-slate-950 text-slate-100">
-    <div class="flex min-h-screen">
+    <div class="flex min-h-screen min-w-0">
       <aside class="w-56 shrink-0 border-r border-slate-800/80 bg-slate-950">
         <div class="px-4 py-4">
           <div class="text-base font-semibold tracking-tight text-slate-50">HR Dashboard</div>
@@ -22,7 +22,7 @@
         </nav>
       </aside>
 
-      <main class="flex-1 p-6">
+      <main class="min-w-0 flex-1 p-6">
         <slot />
       </main>
     </div>
@@ -36,8 +36,9 @@ const navItems = [
   { label: 'Home (Odoo)', to: '/odoo' },
   { label: 'Employees (Odoo)', to: '/odoo/employees' },
   { label: 'Recruitment & Onboarding', to: '/recruitment' },
-  { label: 'Performance Management', to: '/performance' },
-  { label: 'Disciplinary Matters', to: '/disciplinary' }
+  { label: 'Contract Management', to: '/contracts' },
+  { label: 'Medical Enrollments & EAP', to: '/medical-enrollments-eap' },
+  { label: 'Progressive Discipline', to: '/disciplinary' }
 ]
 </script>
 

@@ -8,6 +8,7 @@ type CriticalRecruitment = {
   position: string
   country: string
   stage: string
+  notes?: string
   createdAt: string
 }
 
@@ -18,12 +19,20 @@ function requireNonEmptyString(value: unknown, field: string) {
   return value.trim()
 }
 
+function optionalTrimmedString(value: unknown) {
+  if (value == null) return undefined
+  if (typeof value !== 'string') return undefined
+  const s = value.trim()
+  return s ? s : undefined
+}
+
 export default defineEventHandler(async (event) => {
   const body = (await readBody(event)) as Record<string, unknown> | null
   const candidateName = requireNonEmptyString(body?.candidateName, 'candidateName')
   const position = requireNonEmptyString(body?.position, 'position')
   const country = requireNonEmptyString(body?.country, 'country')
   const stage = requireNonEmptyString(body?.stage, 'stage')
+  const notes = optionalTrimmedString(body?.notes)
 
   const items = await readJsonArray<CriticalRecruitment>('critical-recruitment.json')
 
@@ -33,6 +42,7 @@ export default defineEventHandler(async (event) => {
     position,
     country,
     stage,
+    notes,
     createdAt: new Date().toISOString()
   }
 

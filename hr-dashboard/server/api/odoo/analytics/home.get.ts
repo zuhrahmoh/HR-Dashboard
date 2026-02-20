@@ -1,4 +1,5 @@
 import { loadEmployeesFromOdoo } from '../../../utils/odooEmployees'
+import { BRANCH_COUNTRIES } from '../../../utils/branchClassification'
 
 type HomeAnalytics = {
   headcountByCountry: Array<{ country: string; headcount: number }>
@@ -15,11 +16,19 @@ type HomeAnalytics = {
       }
     >
   }
+  separationsByYear: Array<{ year: number; count: number }>
+  separationsByYearByType: {
+    resigned: Array<{ year: number; count: number }>
+    retired: Array<{ year: number; count: number }>
+    fired: Array<{ year: number; count: number }>
+    separated: Array<{ year: number; count: number }>
+  }
   additions: {
     currentMonth: string
     months: string[]
     byMonth: Record<string, { hires: number }>
   }
+  additionsByYear: Array<{ year: number; count: number }>
   genderBreakdown: {
     overall: { male: number; female: number; total: number }
     byCountry: Array<{ country: string; male: number; female: number; total: number }>
@@ -60,6 +69,7 @@ function normalizeSeparatedStatus(status: string): 'resigned' | 'retired' | 'fir
   if (v === 'resigned') return 'resigned'
   if (v === 'retired') return 'retired'
   if (v === 'fired') return 'fired'
+  if (v === 'terminated' || v.includes('terminate') || v.includes('termination')) return 'fired'
   return null
 }
 
@@ -162,6 +172,16 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
     })
     .filter((v): v is NonNullable<typeof v> => v !== null)
 
+  const additionsByYearMap = new Map<number, number>()
+  for (const r of createdRows) {
+    const year = Number(r.monthKey.slice(0, 4))
+    if (!Number.isFinite(year)) continue
+    additionsByYearMap.set(year, (additionsByYearMap.get(year) ?? 0) + 1)
+  }
+  const additionsByYear = Array.from(additionsByYearMap.entries())
+    .map(([year, count]) => ({ year, count }))
+    .sort((a, b) => a.year - b.year)
+
   const separatedRows = employees
     .filter((e) => isSeparatedStatus(e.employeeStatus))
     .map((e) => {
@@ -173,6 +193,32 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
       return { monthKey, ms, bucket }
     })
     .filter((v): v is NonNullable<typeof v> => v !== null)
+
+  const separationsByYearMap = new Map<number, number>()
+  const separationsByYearTypeMaps = {
+    resigned: new Map<number, number>(),
+    retired: new Map<number, number>(),
+    fired: new Map<number, number>(),
+    separated: new Map<number, number>()
+  }
+  for (const r of separatedRows) {
+    const year = Number(r.monthKey.slice(0, 4))
+    if (!Number.isFinite(year)) continue
+    separationsByYearMap.set(year, (separationsByYearMap.get(year) ?? 0) + 1)
+    const key = (r.bucket ?? 'separated') as 'resigned' | 'retired' | 'fired' | 'separated'
+    const m = separationsByYearTypeMaps[key]
+    m.set(year, (m.get(year) ?? 0) + 1)
+  }
+  const separationsByYear = Array.from(separationsByYearMap.entries())
+    .map(([year, count]) => ({ year, count }))
+    .sort((a, b) => a.year - b.year)
+
+  const separationsByYearByType: HomeAnalytics['separationsByYearByType'] = {
+    resigned: Array.from(separationsByYearTypeMaps.resigned.entries()).map(([year, count]) => ({ year, count })).sort((a, b) => a.year - b.year),
+    retired: Array.from(separationsByYearTypeMaps.retired.entries()).map(([year, count]) => ({ year, count })).sort((a, b) => a.year - b.year),
+    fired: Array.from(separationsByYearTypeMaps.fired.entries()).map(([year, count]) => ({ year, count })).sort((a, b) => a.year - b.year),
+    separated: Array.from(separationsByYearTypeMaps.separated.entries()).map(([year, count]) => ({ year, count })).sort((a, b) => a.year - b.year)
+  }
 
   const nowMonthKey = monthKeyFromUtcMs(utcTodayMs())
   const nowMonthIdx = monthIndexFromKey(nowMonthKey) ?? 0
@@ -293,7 +339,11 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
 
   const headcountByCountry = Array.from(headcountMap.entries())
     .map(([country, headcount]) => ({ country, headcount }))
-    .sort((a, b) => b.headcount - a.headcount || a.country.localeCompare(b.country))
+
+  const headcountByCountryOrdered: HomeAnalytics['headcountByCountry'] = BRANCH_COUNTRIES.map((country) => ({
+    country,
+    headcount: headcountMap.get(country) ?? 0
+  }))
 
   const genderByCountryList = Array.from(genderByCountry.entries())
     .map(([country, counts]) => ({
@@ -302,7 +352,13 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
       female: counts.female,
       total: counts.male + counts.female
     }))
-    .sort((a, b) => b.total - a.total || a.country.localeCompare(b.country))
+
+  const genderByCountryOrdered: HomeAnalytics['genderBreakdown']['byCountry'] = BRANCH_COUNTRIES.map(
+    (country) => {
+      const counts = genderByCountry.get(country) ?? { male: 0, female: 0 }
+      return { country, male: counts.male, female: counts.female, total: counts.male + counts.female }
+    }
+  )
 
   const avgAgeByCountryGender = Array.from(ageByCountry.entries())
     .map(([country, acc]) => ({
@@ -312,7 +368,19 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
       maleCount: acc.maleCount,
       femaleCount: acc.femaleCount
     }))
-    .sort((a, b) => (b.maleCount + b.femaleCount) - (a.maleCount + a.femaleCount) || a.country.localeCompare(b.country))
+
+  const avgAgeByCountryGenderOrdered: HomeAnalytics['avgAgeByCountryGender'] = BRANCH_COUNTRIES.map(
+    (country) => {
+      const acc = ageByCountry.get(country) ?? null
+      return {
+        country,
+        maleAvgAge: acc && acc.maleCount > 0 ? acc.maleSum / acc.maleCount : null,
+        femaleAvgAge: acc && acc.femaleCount > 0 ? acc.femaleSum / acc.femaleCount : null,
+        maleCount: acc ? acc.maleCount : 0,
+        femaleCount: acc ? acc.femaleCount : 0
+      }
+    }
+  )
 
   const leaderBuckets: Array<'A' | 'B+' | 'B' | 'B-'> = ['A', 'B+', 'B', 'B-']
   const playerBuckets: Array<'A' | 'B+' | 'B' | 'B-' | 'C'> = ['A', 'B+', 'B', 'B-', 'C']
@@ -370,14 +438,17 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
     )
 
   return {
-    headcountByCountry,
+    headcountByCountry: headcountByCountryOrdered,
     separations: { currentMonth: nowMonthKey, months, byMonth: separationsByMonth },
+    separationsByYear,
+    separationsByYearByType,
     additions: { currentMonth: nowMonthKey, months: createMonths, byMonth: additionsByMonth },
+    additionsByYear,
     genderBreakdown: {
       overall: { male: maleOverall, female: femaleOverall, total: maleOverall + femaleOverall },
-      byCountry: genderByCountryList
+      byCountry: genderByCountryOrdered
     },
-    avgAgeByCountryGender,
+    avgAgeByCountryGender: avgAgeByCountryGenderOrdered,
     talentDensity,
     upcomingContracts
   }

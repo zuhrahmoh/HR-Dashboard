@@ -329,3 +329,72 @@ Important: **Totals are not calculated by the app**. The visualization displays 
 - If `/api/expenses` returns `source: "csv"` with a `warning`, Graph/permissions are failing and the API fell back to CSV.
 - If a column shows `0` unexpectedly, verify the internal field key via `GET /api/expenses/fields` and update the mapping in `hr-dashboard/server/utils/sharepointExpenses.ts`.
 
+---
+
+## Addendum — Employee Compensation SharePoint List (as-built)
+
+### Objective
+
+Add a server-side Microsoft Graph integration to a second SharePoint list (**Job Letter Salary Info**) and render compensation fields on the Employee Profile pages.
+
+### Endpoints
+
+- `GET /api/compensation?name=<employee name>`
+  - Looks up a single employee’s compensation by exact name match (case/whitespace normalized).
+  - Returns `null` if no match or if SharePoint config is missing.
+
+- `GET /api/compensation/fields` (dev/debug)
+  - Returns a union of observed Graph `fields` keys (sampled from first 50 items).
+  - Used to confirm internal field names.
+
+- `GET /api/sharepoint/root-lists` (dev/debug)
+  - Lists available lists on the root site to confirm list IDs / display names.
+
+### Environment variables (server-only)
+
+Configured in `hr-dashboard/.env` and consumed via `runtimeConfig.sharepointSalary`:
+
+- `NUXT_SHAREPOINT_SITE_ID`
+  - Note: in our tenant, the salary list is on the **root site**, so `root` is a valid site target.
+- `NUXT_SHAREPOINT_SALARY_LIST_ID` (GUID)
+- `NUXT_SHAREPOINT_SALARY_CACHE_TTL_MS`
+
+### Field mapping (Graph `fields` keys)
+
+As observed via `GET /api/compensation/fields`, the salary list uses:
+
+- **Name** ← `Name`
+- **Monthly Salary** ← `Salary`
+- **Allowance** ← `Allowance`
+- **Gross Salary** ← `GrossSalary`
+- **Currency**: not present in observed `fields` keys at time of implementation (may require adding/populating the column).
+
+### UI integration
+
+- CSV employee profile: `hr-dashboard/app/pages/employees/[employeeKey].vue`
+- Odoo employee profile: `hr-dashboard/app/pages/odoo/employees/[employeeKey].vue`
+
+Both pages request compensation from `GET /api/compensation` and display a **Compensation** section (with the employee name omitted to avoid duplication in the profile header).
+
+### Permissions (Selected scopes)
+
+If using `Lists.SelectedOperations.Selected`, the app must be explicitly granted access to the salary list.
+Graph Explorer (admin account) grant request:
+
+- `POST https://graph.microsoft.com/v1.0/sites/root/lists/<NUXT_SHAREPOINT_SALARY_LIST_ID>/permissions`
+
+Body:
+
+```json
+{
+  "roles": ["read"],
+  "grantedToIdentities": [
+    {
+      "application": {
+        "id": "<GRAPH_CLIENT_ID>",
+        "displayName": "HR Dashboard"
+      }
+    }
+  ]
+}
+```

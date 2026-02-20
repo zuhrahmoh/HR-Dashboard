@@ -3,7 +3,9 @@ import { readJsonArray } from '../utils/jsonStore'
 type DisciplinaryCase = {
   id: string
   employeeName: string
-  caseType: string
+  department?: string
+  caseType?: string
+  country?: string
   summary: string
   status: string
   createdAt: string

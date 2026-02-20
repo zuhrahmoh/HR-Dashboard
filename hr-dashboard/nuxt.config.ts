@@ -4,6 +4,10 @@ export default defineNuxtConfig({
   devServer: { host: '127.0.0.1', port: 3000 },
   devtools: { enabled: true },
   modules: ['@nuxtjs/tailwindcss'],
+  css: ['~/assets/css/tailwind.css'],
+  routeRules: {
+    '/performance': { redirect: '/contracts' }
+  },
   vite: {
     server: {
       hmr: { port: 24679 }
@@ -21,6 +25,11 @@ export default defineNuxtConfig({
       sitePath: process.env.SP_SITE_PATH || '',
       listId: process.env.SP_LIST_ID || '',
       cacheTtlMs: Number(process.env.SP_CACHE_TTL_MS || '600000')
+    },
+    sharepointSalary: {
+      siteId: process.env.NUXT_SHAREPOINT_SITE_ID || 'root',
+      listId: process.env.NUXT_SHAREPOINT_SALARY_LIST_ID || '',
+      cacheTtlMs: Number(process.env.NUXT_SHAREPOINT_SALARY_CACHE_TTL_MS || '600000')
     },
     odoo: {
       url: process.env.ODOO_URL || '',

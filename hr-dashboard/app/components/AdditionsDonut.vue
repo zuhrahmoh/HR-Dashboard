@@ -1,7 +1,7 @@
 <template>
-  <div class="mt-6 grid gap-6 sm:grid-cols-[10rem_1fr] sm:items-start">
+  <div class="mt-4 grid gap-4 sm:grid-cols-[9rem_1fr] sm:items-start">
     <div class="flex justify-center sm:justify-start">
-      <div class="relative h-40 w-40">
+      <div class="relative h-36 w-36">
         <svg class="h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
           <circle cx="50" cy="50" r="42" fill="none" stroke="rgb(30 41 59)" stroke-width="10" />
           <circle

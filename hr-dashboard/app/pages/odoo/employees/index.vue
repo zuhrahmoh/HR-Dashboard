@@ -25,7 +25,7 @@
             v-model="search"
             type="text"
             class="w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 pl-9 text-sm text-slate-50 placeholder:text-slate-500"
-            placeholder="Type a name…"
+            placeholder="Type a name or Odoo ID…"
           />
         </div>
       </label>
@@ -210,15 +210,31 @@ function uniqueSorted(values: string[]) {
   return Array.from(new Set(values.map((v) => v.trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b))
 }
 
-const countries = computed(() => uniqueSorted(employees.value.map((e) => e.countryAssigned)))
+const BRANCH_COUNTRIES = [
+  'Trinidad and Tobago',
+  'Guyana',
+  'Houston',
+  'Suriname',
+  'El Dorado Offshore GY',
+  'El Dorado Offshore TT',
+  'Mexico',
+  'Colombia'
+] as const
+
+const countries = computed(() => {
+  const present = new Set(uniqueSorted(employees.value.map((e) => e.countryAssigned)))
+  return BRANCH_COUNTRIES.filter((c) => present.has(c))
+})
 const departments = computed(() => uniqueSorted(employees.value.map((e) => e.department)))
 const employmentTypes = computed(() => uniqueSorted(employees.value.map((e) => e.employeeType ?? '')))
 const statuses = computed(() => uniqueSorted(employees.value.map((e) => e.employeeStatus)))
 
 const filteredEmployees = computed(() => {
-  const q = search.value.trim().toLowerCase()
+  const qRaw = search.value.trim()
+  const q = qRaw.toLowerCase()
+  const qKey = /^\d+$/.test(qRaw) ? `odoo-${qRaw}` : /^odoo-\d+$/.test(q) ? q : null
   return employees.value
-    .filter((e) => (q ? e.name.toLowerCase().includes(q) : true))
+    .filter((e) => (q ? e.name.toLowerCase().includes(q) || (qKey ? e.employeeKey === qKey : false) : true))
     .filter((e) => (country.value ? e.countryAssigned === country.value : true))
     .filter((e) => (department.value ? e.department === department.value : true))
     .filter((e) => (employmentType.value ? (e.employeeType ?? '') === employmentType.value : true))

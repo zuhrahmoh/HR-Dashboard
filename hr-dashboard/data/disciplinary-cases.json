@@ -1,10 +1,29 @@
 [
   {
-    "id": "7e16cb78-b9ce-41e2-8b37-c8fcc301e1b1",
-    "employeeName": "Tia",
-    "caseType": "Disciplinary",
-    "summary": "Arrived at work late for two weeks in a row even when advised against it. Must be in office earlier. Testing how different length of texts will look",
-    "status": "Review",
-    "createdAt": "2026-01-23T20:01:04.424Z"
+    "id": "55246882-8a0e-4a7c-acb8-0fd0fae7d0eb",
+    "employeeName": "Girl",
+    "department": "Brokerage",
+    "summary": "something",
+    "status": "Investigation",
+    "createdAt": "2026-02-13T14:42:56.784Z",
+    "country": "SUR"
+  },
+  {
+    "id": "3a43db67-5bf0-40a5-b265-668c01b1130e",
+    "employeeName": "Boy",
+    "department": "Business Development",
+    "summary": "idk",
+    "status": "Disciplinary meeting",
+    "createdAt": "2026-02-13T14:43:17.653Z",
+    "country": "TT"
+  },
+  {
+    "id": "add31be4-2a1e-46ad-9210-492228c51be5",
+    "employeeName": "Max",
+    "department": "GLU",
+    "country": "TT",
+    "summary": "finalized",
+    "status": "Finalize Outcome",
+    "createdAt": "2026-02-18T14:14:44.652Z"
   }
 ]

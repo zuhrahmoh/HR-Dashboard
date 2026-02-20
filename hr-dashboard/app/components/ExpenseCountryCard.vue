@@ -7,17 +7,17 @@
       </div>
       <div class="text-right">
         <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Total Outgoing Expenses</div>
-        <div class="text-base font-semibold tabular-nums text-emerald-400">
+        <div class="text-sm font-semibold tabular-nums text-emerald-400">
           {{ formatCurrency(total) }}
         </div>
-        <div v-if="showDeltas" class="mt-0.5 text-sm font-semibold tabular-nums" :class="deltaTextClass(deltaTotal)">
+        <div v-if="showDeltas" class="mt-0.5 text-xs font-semibold tabular-nums" :class="deltaTextClass(deltaTotal)">
           {{ formatDelta(deltaTotal) }}
         </div>
       </div>
     </div>
 
     <dl
-      class="mt-4 grid grid-cols-[8.5rem_6.5rem_max-content] items-center gap-x-1 gap-y-1.5 overflow-hidden rounded-md bg-slate-950/20 p-2.5 text-xs text-slate-200 shadow-lg shadow-black/20"
+      class="mt-4 grid grid-cols-[8.5rem_6.5rem_minmax(0,1fr)] items-center gap-x-1 gap-y-1.5 overflow-hidden rounded-md bg-slate-950/20 p-2.5 text-xs text-slate-200 shadow-lg shadow-black/20"
     >
       <div v-for="row in breakdownRows" :key="row.key" class="contents">
         <dt class="min-w-0 truncate text-slate-400" :title="row.label">{{ row.label }}</dt>
@@ -26,10 +26,10 @@
             <div class="h-full rounded bg-slate-200" :style="{ width: row.widthPct }" />
           </div>
         </dd>
-        <dd class="justify-self-end whitespace-nowrap text-right tabular-nums text-[13px] font-semibold text-slate-100">
+        <dd class="min-w-0 justify-self-end break-words text-right tabular-nums text-xs font-semibold leading-tight text-slate-100">
           <div class="flex flex-col items-end">
             <div>{{ formatCurrency(row.value) }}</div>
-            <div v-if="showDeltas" class="text-[11px] font-semibold tabular-nums" :class="deltaTextClass(row.delta)">
+            <div v-if="showDeltas" class="text-[11px] font-semibold tabular-nums leading-tight" :class="deltaTextClass(row.delta)">
               {{ formatDelta(row.delta) }}
             </div>
           </div>
@@ -43,6 +43,7 @@
 const props = defineProps<{
   country: string
   month: string | null
+  currency?: string
   grossSalary: number
   paye: number
   overtime: number
@@ -60,11 +61,26 @@ const props = defineProps<{
   deltaTotal?: number
 }>()
 
-const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+const currency = computed(() => props.currency || 'USD')
+const fmtFull = computed(
+  () => new Intl.NumberFormat('en-US', { style: 'currency', currency: currency.value, currencyDisplay: 'code' })
+)
+const fmtCompact = computed(
+  () =>
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency.value,
+      currencyDisplay: 'code',
+      notation: 'compact',
+      compactDisplay: 'short'
+    })
+)
 
 function formatCurrency(v: number) {
   const n = Number.isFinite(v) ? v : 0
-  return fmt.format(n)
+  const full = fmtFull.value.format(n)
+  if (full.length > 16) return fmtCompact.value.format(n)
+  return full
 }
 
 function formatDelta(v: number) {

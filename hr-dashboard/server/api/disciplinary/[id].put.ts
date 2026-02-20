@@ -4,7 +4,8 @@ import { readJsonArray, writeJsonArray } from '../../utils/jsonStore'
 type DisciplinaryCase = {
   id: string
   employeeName: string
-  caseType: string
+  department: string
+  country: string
   summary: string
   status: string
   createdAt: string
@@ -23,7 +24,8 @@ export default defineEventHandler(async (event) => {
 
   const body = (await readBody(event)) as Record<string, unknown> | null
   const employeeName = requireNonEmptyString(body?.employeeName, 'employeeName')
-  const caseType = requireNonEmptyString(body?.caseType, 'caseType')
+  const department = requireNonEmptyString(body?.department, 'department')
+  const country = requireNonEmptyString(body?.country, 'country')
   const summary = requireNonEmptyString(body?.summary, 'summary')
   const status = requireNonEmptyString(body?.status, 'status')
 
@@ -35,7 +37,8 @@ export default defineEventHandler(async (event) => {
   const updated: DisciplinaryCase = {
     ...existing,
     employeeName,
-    caseType,
+    department,
+    country,
     summary,
     status
   }

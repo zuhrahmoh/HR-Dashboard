@@ -61,6 +61,7 @@ type StatusKey = 'no_action' | 'in_progress' | 'completed'
 
 const props = defineProps<{
   items: NewHire[]
+  checkinFilter?: 'all' | '1' | '2-3' | '4-6'
 }>()
 
 const STORAGE_KEY = 'hr-dashboard:new-hire-checkins-status:v1'
@@ -131,8 +132,8 @@ function utcTodayMs() {
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000
-const APPROACH_WINDOW_DAYS = 7
-const CHECKIN_MONTHS = [1, 2, 3] as const
+const APPROACH_WINDOW_DAYS = 14
+const CHECKIN_MONTHS = [1, 2, 3, 4, 5, 6] as const
 
 type Row = {
   key: string
@@ -144,6 +145,14 @@ type Row = {
   tenure?: string
   months: (typeof CHECKIN_MONTHS)[number]
   daysUntil: number
+}
+
+function monthAllowed(months: Row['months']) {
+  const f = props.checkinFilter ?? 'all'
+  if (f === '1') return months === 1
+  if (f === '2-3') return months === 2 || months === 3
+  if (f === '4-6') return months === 4 || months === 5 || months === 6
+  return true
 }
 
 function storageKeyForRow(row: Row) {
@@ -162,13 +171,16 @@ function setStatusForRow(row: Row, status: StatusKey) {
 }
 
 function checkinLabel(months: number) {
-  return `${months} month`
+  return `${months} month${months === 1 ? '' : 's'}`
 }
 
 function checkinBadgeClass(months: number) {
   if (months === 1) return 'border-sky-400/30 bg-sky-500/10 text-sky-200'
   if (months === 2) return 'border-amber-400/30 bg-amber-500/10 text-amber-200'
-  return 'border-violet-400/30 bg-violet-500/10 text-violet-200'
+  if (months === 3) return 'border-violet-400/30 bg-violet-500/10 text-violet-200'
+  if (months === 4) return 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200'
+  if (months === 5) return 'border-fuchsia-400/30 bg-fuchsia-500/10 text-fuchsia-200'
+  return 'border-rose-400/30 bg-rose-500/10 text-rose-200'
 }
 
 const rows = computed<Row[]>(() => {
@@ -178,13 +190,17 @@ const rows = computed<Row[]>(() => {
     const start = (i.startDate ?? '').trim()
     const startMs = start ? parseYmdUtcMs(start) : null
     if (!startMs) continue
+    const probationEnd = addMonthsClampedUtcMs(startMs, 6)
+    if (today >= probationEnd) continue
     for (const months of CHECKIN_MONTHS) {
+      if (!monthAllowed(months)) continue
       const dueMs = addMonthsClampedUtcMs(startMs, months)
       const daysUntil = Math.ceil((dueMs - today) / DAY_MS)
-      const shouldShow = today >= dueMs - APPROACH_WINDOW_DAYS * DAY_MS
+      const shouldShow = daysUntil >= 0 && daysUntil <= APPROACH_WINDOW_DAYS
       const key = `emp:${i.employeeKey}|start:${start}|checkin:${months}`
       const status = statusByRowKey.value[key] ?? 'no_action'
-      if (!shouldShow || status === 'completed') continue
+      if (!shouldShow) continue
+      // if (!shouldShow || status === 'completed') continue
       out.push({
         key,
         employeeKey: i.employeeKey,

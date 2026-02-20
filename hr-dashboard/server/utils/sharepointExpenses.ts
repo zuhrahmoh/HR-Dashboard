@@ -180,7 +180,13 @@ async function resolveSiteId(input: { accessToken: string; hostname: string; sit
 
 async function loadAllListItems(input: { accessToken: string; siteId: string; listId: string }) {
   const items: Array<{ id: string; fields?: Record<string, unknown> }> = []
-  let url = `https://graph.microsoft.com/v1.0/sites/${encodeURIComponent(input.siteId)}/lists/${encodeURIComponent(input.listId)}/items?$expand=fields&$top=200`
+  const siteIdPath = input.siteId.includes(',')
+    ? input.siteId
+        .split(',')
+        .map((p) => encodeURIComponent(p))
+        .join(',')
+    : encodeURIComponent(input.siteId)
+  let url = `https://graph.microsoft.com/v1.0/sites/${siteIdPath}/lists/${encodeURIComponent(input.listId)}/items?$expand=fields&$top=200`
 
   for (let i = 0; i < 50; i++) {
     const page = await graphGetJson<GraphListItemsResponse>({ accessToken: input.accessToken, url })

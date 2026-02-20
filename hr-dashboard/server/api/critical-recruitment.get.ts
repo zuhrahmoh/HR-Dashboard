@@ -6,6 +6,7 @@ type CriticalRecruitment = {
   position: string
   country: string
   stage: string
+  notes?: string
   createdAt: string
 }
 

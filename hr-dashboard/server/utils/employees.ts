@@ -12,6 +12,8 @@ export type Employee = {
   startDate: string | null
   birthDate?: string | null
   countryAssigned: string
+  companyName?: string
+  workAddress?: string
   employeeStatus: string
   // Common extra CSV fields (read-only; optional)
   gender?: string
