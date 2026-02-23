@@ -32,9 +32,8 @@
 <script setup lang="ts">
 const navItems = [
   { label: 'Home', to: '/' },
-  { label: 'Employees', to: '/employees' },
   { label: 'Home (Odoo)', to: '/odoo' },
-  { label: 'Employees (Odoo)', to: '/odoo/employees' },
+  { label: 'Employees', to: '/odoo/employees' },
   { label: 'Recruitment & Onboarding', to: '/recruitment' },
   { label: 'Contract Management', to: '/contracts' },
   { label: 'Medical Enrollments & EAP', to: '/medical-enrollments-eap' },
