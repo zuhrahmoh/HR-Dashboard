@@ -456,9 +456,25 @@
     <hr class="border-slate-800" />
 
     <section class="space-y-3">
-      <div class="space-y-1">
-        <h2 class="text-base font-semibold text-slate-200">Upcoming Contracts</h2>
-        <p class="text-xs text-slate-400">Contract/probation end dates within the next 60 days (approximately 2 months). 6 week notices highlighted.</p>
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div class="space-y-1">
+          <h2 class="text-lg font-semibold text-slate-200">Upcoming Contract End Dates</h2>
+          <p class="text-xs text-slate-400">
+            Contract/probation end dates within the next {{ upcomingWindowDays }} days. 6 week notices highlighted.
+          </p>
+        </div>
+
+        <label class="space-y-1">
+          <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">Window</div>
+          <select
+            v-model="upcomingWindowDays"
+            class="h-9 rounded-md border border-slate-700 bg-slate-950/40 px-2 text-sm text-slate-200 focus:border-slate-500 focus:outline-none"
+          >
+            <option value="30">Next 30 days</option>
+            <option value="60">Next 60 days</option>
+            <option value="90">Next 90 days</option>
+          </select>
+        </label>
       </div>
 
       <div v-if="upcomingPending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
@@ -466,12 +482,18 @@
         Failed to load upcoming contracts.
         <div v-if="upcomingErrorMessage" class="mt-2 text-xs text-red-200/80">{{ upcomingErrorMessage }}</div>
       </div>
-      <UpcomingContractsTable v-else :items="upcomingContracts" />
+      <UpcomingContractsTable
+        v-else
+        :upcoming-contract-items="upcomingContractExpiries"
+        :upcoming-probation-items="upcomingProbations"
+        :expired-contract-items="expiredContracts"
+      />
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ensureUsaOption } from '~/utils/countryOptions'
 type ChangeType = 'Salary' | 'Role' | 'Reporting' | 'Job Title' | 'Contract Extension' | 'Non-Renewal'
 type Status = 'Approval required' | 'Approved' | 'On Hold'
 
@@ -490,7 +512,27 @@ type ContractChange = {
 type Employee = { department: string; countryAssigned: string }
 
 type HomeAnalytics = {
-  upcomingContracts: Array<{
+  upcomingContractExpiries: Array<{
+    employeeKey: string
+    name: string
+    department: string
+    position: string
+    reportingTo: string
+    countryAssigned: string
+    contractOrProbationEndDate: string
+    daysRemaining: number
+  }>
+  upcomingProbations: Array<{
+    employeeKey: string
+    name: string
+    department: string
+    position: string
+    reportingTo: string
+    countryAssigned: string
+    contractOrProbationEndDate: string
+    daysRemaining: number
+  }>
+  expiredContracts: Array<{
     employeeKey: string
     name: string
     department: string
@@ -553,17 +595,20 @@ const {
 const contractChanges = computed(() => data.value ?? [])
 const errorMessage = computed(() => getErrorMessage(error.value))
 
-const {
-  data: upcomingData,
-  pending: upcomingPending,
-  error: upcomingError
-} = await useFetch<HomeAnalytics>('/api/analytics/home')
+const upcomingWindowDays = ref<'30' | '60' | '90'>('60')
+const upcomingQuery = computed(() => ({ upcomingDays: upcomingWindowDays.value }))
+const { data: upcomingData, pending: upcomingPending, error: upcomingError } = await useFetch<HomeAnalytics>('/api/odoo/analytics/home', {
+  query: upcomingQuery,
+  watch: [upcomingQuery]
+})
 const upcomingErrorMessage = computed(() => getErrorMessage(upcomingError.value))
-const upcomingContracts = computed(() => upcomingData.value?.upcomingContracts ?? [])
+const upcomingContractExpiries = computed(() => upcomingData.value?.upcomingContractExpiries ?? [])
+const upcomingProbations = computed(() => upcomingData.value?.upcomingProbations ?? [])
+const expiredContracts = computed(() => upcomingData.value?.expiredContracts ?? [])
 
-const { data: employeesData } = await useFetch<Employee[]>('/api/employees')
+const { data: employeesData } = await useFetch<Employee[]>('/api/odoo/employees')
 const departments = computed(() => uniqueSorted((employeesData.value ?? []).map((e) => e.department)))
-const countries = computed(() => uniqueSorted((employeesData.value ?? []).map((e) => e.countryAssigned)))
+const countries = computed(() => ensureUsaOption(uniqueSorted((employeesData.value ?? []).map((e) => e.countryAssigned))))
 
 const filters = reactive({
   country: ''

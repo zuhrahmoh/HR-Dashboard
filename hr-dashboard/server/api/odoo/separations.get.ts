@@ -64,6 +64,34 @@ function normalizeSeparationType(status: string): Row['separationType'] {
   return 'separated'
 }
 
+function normName(input: string) {
+  return (input ?? '')
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+// TEMP (one-time): exclude mistakenly archived employees from separations tables.
+const TEMP_EXCLUDED_SEPARATION_NAMES = new Set(['Jared Rogers', 'Joshua Phillips'].map(normName))
+
+// TEMP (one-time): exclude specific separations in specific months.
+const TEMP_EXCLUDED_SEPARATION_NAMES_BY_MONTH = new Map<string, Set<string>>([
+  ['2026-02', new Set(['Raj Mahabir'].map(normName))]
+])
+
+function isTempExcludedSeparationName(name: string, monthKey?: string) {
+  const n = normName(name)
+  if (!n) return false
+  if (TEMP_EXCLUDED_SEPARATION_NAMES.has(n)) return true
+  if (monthKey) {
+    const set = TEMP_EXCLUDED_SEPARATION_NAMES_BY_MONTH.get(monthKey)
+    if (set?.has(n)) return true
+  }
+  return false
+}
+
 export default defineEventHandler(async (event): Promise<Response> => {
   const q = getQuery(event)
   const requestedMonth = typeof q.month === 'string' ? q.month.trim() : ''
@@ -74,6 +102,7 @@ export default defineEventHandler(async (event): Promise<Response> => {
 
   const separatedRows = employees
     .filter((e) => (e.employeeStatus ?? '').trim().toLowerCase() !== 'active')
+    .filter((e) => !isTempExcludedSeparationName(e.name))
     .map((e) => {
       const ymd = (e.separatedAt ?? '').trim()
       const ms = ymd ? parseYmdToUtcMs(ymd) : null
@@ -95,6 +124,7 @@ export default defineEventHandler(async (event): Promise<Response> => {
 
   const items: Row[] = employees
     .filter((e) => (e.employeeStatus ?? '').trim().toLowerCase() !== 'active')
+    .filter((e) => !isTempExcludedSeparationName(e.name, activeMonth))
     .map((e) => {
       const separatedAt = (e.separatedAt ?? '').trim()
       if (!separatedAt) return null

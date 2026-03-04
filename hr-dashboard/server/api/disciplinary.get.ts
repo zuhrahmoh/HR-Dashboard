@@ -1,4 +1,4 @@
-import { readJsonArray } from '../utils/jsonStore'
+import { prisma } from '../utils/db'
 
 type DisciplinaryCase = {
   id: string
@@ -8,11 +8,12 @@ type DisciplinaryCase = {
   country?: string
   summary: string
   status: string
+  includeInReport: boolean
   createdAt: string
 }
 
 export default defineEventHandler(async () => {
-  const items = await readJsonArray<DisciplinaryCase>('disciplinary-cases.json')
-  return items.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  const items = await prisma.disciplinaryCase.findMany({ orderBy: { createdAt: 'desc' } })
+  return items.map((v) => ({ ...v, createdAt: v.createdAt.toISOString() }))
 })
 

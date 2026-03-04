@@ -72,6 +72,14 @@ function monthKeyFromIndex(idx: number) {
   return `${y}-${String(m0 + 1).padStart(2, '0')}`
 }
 
+function isReasonableAdditionYmd(ymd: string) {
+  const y = Number(ymd.slice(0, 4))
+  if (!Number.isFinite(y)) return false
+  const currentYear = new Date().getUTCFullYear()
+  // Historical reporting & headcount snapshots begin in 2022; older Odoo dates are often placeholders/import artefacts.
+  return y >= 2022 && y <= currentYear + 1
+}
+
 export default defineEventHandler(async (event): Promise<Response> => {
   const q = getQuery(event)
   const requestedMonth = typeof q.month === 'string' ? q.month.trim() : ''
@@ -82,14 +90,15 @@ export default defineEventHandler(async (event): Promise<Response> => {
 
   const employees = await loadEmployeesFromOdoo({ includeInactive: true })
 
-  const createdMonths = employees
-    .map((e) => (e.createdAt ?? '').trim())
+  const additionMonths = employees
+    .map((e) => ((e.startDate ?? '').trim() || (e.createdAt ?? '').trim() || '').trim())
     .filter(Boolean)
+    .filter((ymd) => isReasonableAdditionYmd(ymd))
     .map((ymd) => ymd.slice(0, 7))
     .filter((m) => /^\d{4}-\d{2}$/.test(m))
 
   const nowIdx = monthIndexFromKey(currentMonth) ?? 0
-  const minCreateIdx = createdMonths.length > 0 ? Math.min(...createdMonths.map((m) => monthIndexFromKey(m) ?? nowIdx)) : nowIdx
+  const minCreateIdx = additionMonths.length > 0 ? Math.min(...additionMonths.map((m) => monthIndexFromKey(m) ?? nowIdx)) : nowIdx
   const MAX_MONTHS = 48
   const span = Math.max(0, nowIdx - minCreateIdx) + 1
   const countMonths = Math.min(MAX_MONTHS, span)
@@ -105,7 +114,11 @@ export default defineEventHandler(async (event): Promise<Response> => {
         const probationEnd = addMonthsClampedUtcMs(startMs, 6)
         return today < probationEnd
       })
-    : employees.filter((e) => (e.createdAt ?? '').slice(0, 7) === activeMonth)
+    : employees.filter((e) => {
+        const ymd = ((e.startDate ?? '').trim() || (e.createdAt ?? '').trim() || '').trim()
+        if (!ymd || !isReasonableAdditionYmd(ymd)) return false
+        return ymd.slice(0, 7) === activeMonth
+      })
   )
     .map((e) => ({
       employeeKey: e.employeeKey,

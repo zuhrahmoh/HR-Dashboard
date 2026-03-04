@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { createError, readBody } from 'h3'
-import { readJsonArray, writeJsonArray } from '../utils/jsonStore'
+import { prisma } from '../utils/db'
 
 const CHANGE_TYPES = ['Salary', 'Role', 'Reporting', 'Job Title', 'Contract Extension', 'Non-Renewal'] as const
 type ChangeType = (typeof CHANGE_TYPES)[number]
@@ -73,22 +73,21 @@ export default defineEventHandler(async (event) => {
   const status = requireStatus(body?.status)
   const description = requireNonEmptyString(body?.description, 'description')
 
-  const items = await readJsonArray<ContractChange>('contract-changes.json')
+  const createdAt = new Date()
+  const created = await prisma.contractChange.create({
+    data: {
+      id: randomUUID(),
+      employeeName,
+      country,
+      department,
+      position,
+      changeTypes,
+      status,
+      description,
+      createdAt
+    }
+  })
 
-  const created: ContractChange = {
-    id: randomUUID(),
-    employeeName,
-    country,
-    department,
-    position,
-    changeTypes,
-    status,
-    description,
-    createdAt: new Date().toISOString()
-  }
-
-  items.push(created)
-  await writeJsonArray('contract-changes.json', items)
-  return created
+  return { ...created, createdAt: createdAt.toISOString() }
 })
 

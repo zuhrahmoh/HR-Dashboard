@@ -1,8 +1,13 @@
+import { getQuery } from 'h3'
 import { loadEmployeesFromOdoo } from '../../../utils/odooEmployees'
 import { BRANCH_COUNTRIES } from '../../../utils/branchClassification'
 
 type HomeAnalytics = {
   headcountByCountry: Array<{ country: string; headcount: number }>
+  employmentTypeBreakdown: {
+    overall: { permanent: number; contracted: number; total: number }
+    byCountry: Array<{ country: string; permanent: number; contracted: number; total: number }>
+  }
   separations: {
     currentMonth: string
     months: string[]
@@ -44,7 +49,27 @@ type HomeAnalytics = {
     leaders: Array<{ bucket: 'A' | 'B+' | 'B' | 'B-'; count: number }>
     players: Array<{ bucket: 'A' | 'B+' | 'B' | 'B-' | 'C'; count: number }>
   }
-  upcomingContracts: Array<{
+  upcomingContractExpiries: Array<{
+    employeeKey: string
+    name: string
+    department: string
+    position: string
+    reportingTo: string
+    countryAssigned: string
+    contractOrProbationEndDate: string
+    daysRemaining: number
+  }>
+  upcomingProbations: Array<{
+    employeeKey: string
+    name: string
+    department: string
+    position: string
+    reportingTo: string
+    countryAssigned: string
+    contractOrProbationEndDate: string
+    daysRemaining: number
+  }>
+  expiredContracts: Array<{
     employeeKey: string
     name: string
     department: string
@@ -79,6 +104,18 @@ function normalizeGender(raw: string | undefined): 'male' | 'female' | null {
   if (v.startsWith('m')) return 'male'
   if (v.startsWith('f')) return 'female'
   return null
+}
+
+function normalizeEmploymentType(raw: string | undefined): 'permanent' | 'contracted' {
+  const v = (raw ?? '').trim().toLowerCase()
+  if (!v) return 'permanent'
+  if (v.includes('intern')) return 'contracted'
+  if (v.includes('contract')) return 'contracted'
+  if (v.includes('fixed')) return 'contracted'
+  if (v.includes('temp')) return 'contracted'
+  if (v.includes('casual')) return 'contracted'
+  if (v.includes('permanent') || v.includes('perm')) return 'permanent'
+  return 'permanent'
 }
 
 function parseYmdToUtcMs(ymd: string): number | null {
@@ -157,15 +194,57 @@ function extractBucket(rating: string): 'A' | 'B+' | 'B' | 'B-' | 'C' | null {
   return null
 }
 
-export default defineEventHandler(async (): Promise<HomeAnalytics> => {
+function normName(input: string) {
+  return (input ?? '')
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function isReasonableAdditionYmd(ymd: string) {
+  const y = Number(ymd.slice(0, 4))
+  if (!Number.isFinite(y)) return false
+  const currentYear = new Date().getUTCFullYear()
+  // Historical reporting & headcount snapshots begin in 2022; older Odoo dates are often placeholders/import artefacts.
+  return y >= 2022 && y <= currentYear + 1
+}
+
+// TEMP (one-time): exclude mistakenly archived employees from separations visuals/tables.
+const TEMP_EXCLUDED_SEPARATION_NAMES = new Set(['Jared Rogers', 'Joshua Phillips'].map(normName))
+function isTempExcludedSeparationName(name: string) {
+  const n = normName(name)
+  return n ? TEMP_EXCLUDED_SEPARATION_NAMES.has(n) : false
+}
+
+// TEMP (manual inclusion): ensure specific recently expired contracts still show.
+const TEMP_FORCE_EXPIRED_CONTRACT_NAMES = new Set(
+  ['Anuska Bahal', 'Xue Xiang', 'Justin Jagnarine', 'Kevyn Des Vignes'].map(normName)
+)
+function isTempForcedExpiredContractName(name: string) {
+  const n = normName(name)
+  return n ? TEMP_FORCE_EXPIRED_CONTRACT_NAMES.has(n) : false
+}
+
+export default defineEventHandler(async (event): Promise<HomeAnalytics> => {
+  const q = getQuery(event)
+  const upcomingDaysRaw = typeof q.upcomingDays === 'string' ? q.upcomingDays : ''
+  const upcomingDaysNum = Number(upcomingDaysRaw)
+  const upcomingDays =
+    Number.isFinite(upcomingDaysNum) && (upcomingDaysNum === 30 || upcomingDaysNum === 60 || upcomingDaysNum === 90)
+      ? upcomingDaysNum
+      : 60
+
   const employees = await loadEmployeesFromOdoo({ includeInactive: true })
 
   const activeNowCount = employees.reduce((acc, e) => acc + (isActiveStatus(e.employeeStatus) ? 1 : 0), 0)
 
-  // Additions (monthly new hires, from create_date)
-  const createdRows = employees
+  // Additions (monthly new hires): prefer start date/date hired; fall back to create_date.
+  const additionRows = employees
     .map((e) => {
-      const ymd = e.createdAt ?? null
+      const ymd = (e.startDate ?? '').trim() || (e.createdAt ?? '').trim() || null
+      if (!ymd || !isReasonableAdditionYmd(ymd)) return null
       const ms = ymd ? parseYmdToUtcMs(ymd) : null
       if (!ymd || ms === null) return null
       return { monthKey: ymd.slice(0, 7), ms }
@@ -173,7 +252,7 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
     .filter((v): v is NonNullable<typeof v> => v !== null)
 
   const additionsByYearMap = new Map<number, number>()
-  for (const r of createdRows) {
+  for (const r of additionRows) {
     const year = Number(r.monthKey.slice(0, 4))
     if (!Number.isFinite(year)) continue
     additionsByYearMap.set(year, (additionsByYearMap.get(year) ?? 0) + 1)
@@ -184,6 +263,7 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
 
   const separatedRows = employees
     .filter((e) => isSeparatedStatus(e.employeeStatus))
+    .filter((e) => !isTempExcludedSeparationName(e.name))
     .map((e) => {
       const ymd = e.separatedAt ?? null
       const ms = ymd ? parseYmdToUtcMs(ymd) : null
@@ -269,8 +349,8 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
   }
 
   const minCreateIdx =
-    createdRows.length > 0
-      ? Math.min(...createdRows.map((r) => monthIndexFromKey(r.monthKey) ?? nowMonthIdx))
+    additionRows.length > 0
+      ? Math.min(...additionRows.map((r) => monthIndexFromKey(r.monthKey) ?? nowMonthIdx))
       : nowMonthIdx
   const spanCreate = Math.max(0, nowMonthIdx - minCreateIdx) + 1
   const countCreateMonths = Math.min(MAX_MONTHS, spanCreate)
@@ -278,7 +358,7 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
   const createMonths = Array.from({ length: countCreateMonths }, (_, i) => monthKeyFromIndex(startCreateIdx + i)).reverse()
 
   const hiresByMonthMap = new Map<string, number>()
-  for (const r of createdRows) {
+  for (const r of additionRows) {
     hiresByMonthMap.set(r.monthKey, (hiresByMonthMap.get(r.monthKey) ?? 0) + 1)
   }
 
@@ -289,6 +369,7 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
 
   const headcountMap = new Map<string, number>()
   const genderByCountry = new Map<string, { male: number; female: number }>()
+  const employmentByCountry = new Map<string, { permanent: number; contracted: number }>()
   const ageByCountry = new Map<
     string,
     {
@@ -300,12 +381,25 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
   >()
   let maleOverall = 0
   let femaleOverall = 0
+  let permanentOverall = 0
+  let contractedOverall = 0
   const todayUtcMs = utcTodayMs()
 
   for (const e of employees) {
     if (!isActiveStatus(e.employeeStatus)) continue
     const country = (e.countryAssigned ?? '').trim()
     headcountMap.set(country, (headcountMap.get(country) ?? 0) + 1)
+
+    const empType = normalizeEmploymentType((e as any).employeeType as string | undefined)
+    const empCurrent = employmentByCountry.get(country) ?? { permanent: 0, contracted: 0 }
+    if (empType === 'contracted') {
+      empCurrent.contracted += 1
+      contractedOverall += 1
+    } else {
+      empCurrent.permanent += 1
+      permanentOverall += 1
+    }
+    employmentByCountry.set(country, empCurrent)
 
     const g = normalizeGender(e.gender)
     if (g) {
@@ -344,6 +438,11 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
     country,
     headcount: headcountMap.get(country) ?? 0
   }))
+
+  const employmentTypeByCountryOrdered: HomeAnalytics['employmentTypeBreakdown']['byCountry'] = BRANCH_COUNTRIES.map((country) => {
+    const counts = employmentByCountry.get(country) ?? { permanent: 0, contracted: 0 }
+    return { country, permanent: counts.permanent, contracted: counts.contracted, total: counts.permanent + counts.contracted }
+  })
 
   const genderByCountryList = Array.from(genderByCountry.entries())
     .map(([country, counts]) => ({
@@ -409,27 +508,29 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
 
   const todayMs = utcTodayMs()
   const DAY_MS = 24 * 60 * 60 * 1000
-  const upcomingContracts = employees
+  function toEndRow(e: (typeof employees)[number], endYmd: string | null) {
+    if (!endYmd) return null
+    const endMs = parseYmdToUtcMs(endYmd)
+    if (endMs === null) return null
+    const daysRemaining = Math.floor((endMs - todayMs) / DAY_MS)
+    return {
+      employeeKey: e.employeeKey,
+      name: e.name,
+      department: e.department,
+      position: e.position,
+      reportingTo: e.reportingTo ?? '',
+      countryAssigned: e.countryAssigned,
+      contractOrProbationEndDate: endYmd,
+      daysRemaining
+    }
+  }
+
+  const upcomingContractExpiries = employees
     .filter((e) => isActiveStatus(e.employeeStatus))
-    .map((e) => {
-      const ymd = e.contractOrProbationEndDate ?? null
-      if (!ymd) return null
-      const endMs = parseYmdToUtcMs(ymd)
-      if (endMs === null) return null
-      const daysRemaining = Math.floor((endMs - todayMs) / DAY_MS)
-      if (daysRemaining < 0 || daysRemaining > 60) return null
-      return {
-        employeeKey: e.employeeKey,
-        name: e.name,
-        department: e.department,
-        position: e.position,
-        reportingTo: e.reportingTo ?? '',
-        countryAssigned: e.countryAssigned,
-        contractOrProbationEndDate: ymd,
-        daysRemaining
-      }
-    })
+    .filter((e) => normalizeEmploymentType(e.employeeType) === 'contracted')
+    .map((e) => toEndRow(e, e.contractEndDate ?? null))
     .filter((v): v is NonNullable<typeof v> => v !== null)
+    .filter((r) => r.daysRemaining >= 0 && r.daysRemaining <= upcomingDays)
     .sort(
       (a, b) =>
         a.contractOrProbationEndDate.localeCompare(b.contractOrProbationEndDate) ||
@@ -437,8 +538,64 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
         a.employeeKey.localeCompare(b.employeeKey)
     )
 
+  const upcomingProbations = employees
+    .filter((e) => isActiveStatus(e.employeeStatus))
+    .map((e) => toEndRow(e, e.probationEndDate ?? null))
+    .filter((v): v is NonNullable<typeof v> => v !== null)
+    .filter((r) => r.daysRemaining >= 0 && r.daysRemaining <= upcomingDays)
+    .sort(
+      (a, b) =>
+        a.contractOrProbationEndDate.localeCompare(b.contractOrProbationEndDate) ||
+        a.name.localeCompare(b.name) ||
+        a.employeeKey.localeCompare(b.employeeKey)
+    )
+
+  // Expired contracts: ONLY consider actual contract end dates (not probation end dates).
+  const baseExpiredContracts = employees
+    .filter((e) => isActiveStatus(e.employeeStatus))
+    .filter((e) => normalizeEmploymentType(e.employeeType) === 'contracted')
+    .map((e) => {
+      const row = toEndRow(e, e.contractEndDate ?? null)
+      if (!row) return null
+      if (row.daysRemaining >= 0) return null
+      return row
+    })
+    .filter((v): v is NonNullable<typeof v> => v !== null)
+  
+  const forcedExpiredContracts = employees
+    .filter((e) => isTempForcedExpiredContractName(e.name))
+    .map((e) => {
+      const end = e.contractEndDate ?? e.contractOrProbationEndDate ?? null
+      const row = toEndRow(e, end)
+      if (!row) return null
+      if (row.daysRemaining >= 0) return null
+      return row
+    })
+    .filter((v): v is NonNullable<typeof v> => v !== null)
+
+  const expiredContracts = (() => {
+    const seen = new Set<string>()
+    const out: typeof baseExpiredContracts = []
+    for (const r of [...baseExpiredContracts, ...forcedExpiredContracts]) {
+      const k = `${r.employeeKey}__${r.contractOrProbationEndDate}`
+      if (seen.has(k)) continue
+      seen.add(k)
+      out.push(r)
+    }
+    return out.sort(
+      (a, b) =>
+        b.contractOrProbationEndDate.localeCompare(a.contractOrProbationEndDate) ||
+        a.name.localeCompare(b.name) ||
+        a.employeeKey.localeCompare(b.employeeKey)
+    )
+  })()
+
   return {
     headcountByCountry: headcountByCountryOrdered,
+    employmentTypeBreakdown: {
+      overall: { permanent: permanentOverall, contracted: contractedOverall, total: permanentOverall + contractedOverall },
+      byCountry: employmentTypeByCountryOrdered
+    },
     separations: { currentMonth: nowMonthKey, months, byMonth: separationsByMonth },
     separationsByYear,
     separationsByYearByType,
@@ -450,7 +607,9 @@ export default defineEventHandler(async (): Promise<HomeAnalytics> => {
     },
     avgAgeByCountryGender: avgAgeByCountryGenderOrdered,
     talentDensity,
-    upcomingContracts
+    upcomingContractExpiries,
+    upcomingProbations,
+    expiredContracts
   }
 })
 

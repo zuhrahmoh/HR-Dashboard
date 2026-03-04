@@ -1,5 +1,5 @@
 import { createError, getRouterParam } from 'h3'
-import { readJsonArray, writeJsonArray } from '../../utils/jsonStore'
+import { prisma } from '../../utils/db'
 
 type MedicalEnrollment = {
   id: string
@@ -9,12 +9,10 @@ export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
   if (!id) throw createError({ statusCode: 400, statusMessage: 'id is required' })
 
-  const items = await readJsonArray<MedicalEnrollment>('medical-enrollments.json')
-  const idx = items.findIndex((v) => v.id === id)
-  if (idx === -1) throw createError({ statusCode: 404, statusMessage: 'Medical enrollment not found' })
+  const existing = await prisma.medicalEnrollment.findUnique({ where: { id } })
+  if (!existing) throw createError({ statusCode: 404, statusMessage: 'Medical enrollment not found' })
 
-  items.splice(idx, 1)
-  await writeJsonArray('medical-enrollments.json', items)
+  await prisma.medicalEnrollment.delete({ where: { id } })
   return { ok: true }
 })
 

@@ -1,5 +1,5 @@
 import { createError, getRouterParam, readBody } from 'h3'
-import { readJsonArray, writeJsonArray } from '../../utils/jsonStore'
+import { prisma } from '../../utils/db'
 
 const CHANGE_TYPES = ['Salary', 'Role', 'Reporting', 'Job Title', 'Contract Extension', 'Non-Renewal'] as const
 type ChangeType = (typeof CHANGE_TYPES)[number]
@@ -75,24 +75,14 @@ export default defineEventHandler(async (event) => {
   const status = requireStatus(body?.status)
   const description = requireNonEmptyString(body?.description, 'description')
 
-  const items = await readJsonArray<ContractChange>('contract-changes.json')
-  const idx = items.findIndex((v) => v.id === id)
-  if (idx === -1) throw createError({ statusCode: 404, statusMessage: 'Contract change not found' })
+  const existing = await prisma.contractChange.findUnique({ where: { id } })
+  if (!existing) throw createError({ statusCode: 404, statusMessage: 'Contract change not found' })
 
-  const existing = items[idx]
-  const updated: ContractChange = {
-    ...existing,
-    employeeName,
-    country,
-    department,
-    position,
-    changeTypes,
-    status,
-    description
-  }
+  const updated = await prisma.contractChange.update({
+    where: { id },
+    data: { employeeName, country, department, position, changeTypes, status, description }
+  })
 
-  items[idx] = updated
-  await writeJsonArray('contract-changes.json', items)
-  return updated
+  return { ...updated, createdAt: updated.createdAt.toISOString() }
 })
 

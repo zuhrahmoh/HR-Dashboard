@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { createError, readBody } from 'h3'
-import { readJsonArray, writeJsonArray } from '../utils/jsonStore'
+import { prisma } from '../utils/db'
 
 type MedicalEnrollment = {
   id: string
@@ -46,27 +46,25 @@ export default defineEventHandler(async (event) => {
   const notes = optionalTrimmedString(body?.notes)
   const attachmentsUrl = optionalTrimmedString(body?.attachmentsUrl)
 
-  const items = await readJsonArray<MedicalEnrollment>('medical-enrollments.json')
+  const now = new Date()
+  const created = await prisma.medicalEnrollment.create({
+    data: {
+      id: randomUUID(),
+      employeeName,
+      country,
+      enrollmentType,
+      vendor,
+      stage,
+      dateInitiated,
+      nextAction,
+      hrRepresentative,
+      notes,
+      attachmentsUrl,
+      createdAt: now,
+      updatedAt: now
+    }
+  })
 
-  const now = new Date().toISOString()
-  const created: MedicalEnrollment = {
-    id: randomUUID(),
-    employeeName,
-    country,
-    enrollmentType,
-    vendor,
-    stage,
-    dateInitiated,
-    nextAction,
-    hrRepresentative,
-    notes,
-    attachmentsUrl,
-    createdAt: now,
-    updatedAt: now
-  }
-
-  items.push(created)
-  await writeJsonArray('medical-enrollments.json', items)
-  return created
+  return { ...created, createdAt: created.createdAt.toISOString(), updatedAt: created.updatedAt.toISOString() }
 })
 

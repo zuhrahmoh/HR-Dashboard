@@ -1,0 +1,25 @@
+[phases.setup]
+aptPkgs = [
+  "...",
+  "ca-certificates",
+  "fonts-liberation",
+  "libnss3",
+  "libatk-bridge2.0-0",
+  "libgtk-3-0",
+  "libx11-xcb1",
+  "libxcomposite1",
+  "libxdamage1",
+  "libxrandr2",
+  "libgbm1",
+  "libasound2",
+  "libdrm2",
+  "libxshmfence1"
+]
+
+[phases.build]
+cmds = [
+  "npm ci",
+  "PLAYWRIGHT_BROWSERS_PATH=0 NODE_OPTIONS=--dns-result-order=ipv4first npx playwright install chromium",
+  "npm run build"
+]
+

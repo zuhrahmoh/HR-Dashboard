@@ -6,6 +6,7 @@ export default defineNuxtConfig({
   modules: ['@nuxtjs/tailwindcss'],
   css: ['~/assets/css/tailwind.css'],
   routeRules: {
+    '/': { redirect: '/odoo' },
     '/performance': { redirect: '/contracts' }
   },
   vite: {

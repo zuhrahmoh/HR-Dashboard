@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { createError, readBody } from 'h3'
-import { readJsonArray, writeJsonArray } from '../utils/jsonStore'
+import { prisma } from '../utils/db'
 
 type EapReferral = {
   id: string
@@ -56,32 +56,30 @@ export default defineEventHandler(async (event) => {
   const closeDate = optionalTrimmedString(body?.closeDate)
   const closedReason = optionalTrimmedString(body?.closedReason)
 
-  const items = await readJsonArray<EapReferral>('eap-referrals.json')
+  const now = new Date()
+  const created = await prisma.eapReferral.create({
+    data: {
+      id: randomUUID(),
+      employeeName,
+      country,
+      referralSource,
+      referralDate,
+      reasonCategory,
+      reasonDetails,
+      programStatus,
+      startDate,
+      lastFollowUpDate,
+      nextFollowUpDate,
+      outcomeNotes,
+      ownerHr,
+      referralDocsUrl,
+      closeDate,
+      closedReason,
+      createdAt: now,
+      updatedAt: now
+    }
+  })
 
-  const now = new Date().toISOString()
-  const created: EapReferral = {
-    id: randomUUID(),
-    employeeName,
-    country,
-    referralSource,
-    referralDate,
-    reasonCategory,
-    reasonDetails,
-    programStatus,
-    startDate,
-    lastFollowUpDate,
-    nextFollowUpDate,
-    outcomeNotes,
-    ownerHr,
-    referralDocsUrl,
-    closeDate,
-    closedReason,
-    createdAt: now,
-    updatedAt: now
-  }
-
-  items.push(created)
-  await writeJsonArray('eap-referrals.json', items)
-  return created
+  return { ...created, createdAt: created.createdAt.toISOString(), updatedAt: created.updatedAt.toISOString() }
 })
 

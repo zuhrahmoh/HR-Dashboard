@@ -1,5 +1,5 @@
 import { createError, getRouterParam, readBody } from 'h3'
-import { readJsonArray, writeJsonArray } from '../../utils/jsonStore'
+import { prisma } from '../../utils/db'
 
 type DisciplinaryCase = {
   id: string
@@ -8,6 +8,7 @@ type DisciplinaryCase = {
   country: string
   summary: string
   status: string
+  includeInReport: boolean
   createdAt: string
 }
 
@@ -18,33 +19,41 @@ function requireNonEmptyString(value: unknown, field: string) {
   return value.trim()
 }
 
+function optionalString(value: unknown) {
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function optionalBoolean(value: unknown) {
+  return typeof value === 'boolean' ? value : null
+}
+
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
   if (!id) throw createError({ statusCode: 400, statusMessage: 'id is required' })
 
   const body = (await readBody(event)) as Record<string, unknown> | null
-  const employeeName = requireNonEmptyString(body?.employeeName, 'employeeName')
-  const department = requireNonEmptyString(body?.department, 'department')
-  const country = requireNonEmptyString(body?.country, 'country')
-  const summary = requireNonEmptyString(body?.summary, 'summary')
-  const status = requireNonEmptyString(body?.status, 'status')
+  const employeeNameRaw = body?.employeeName
+  const departmentRaw = body?.department
+  const countryRaw = body?.country
+  const summaryRaw = body?.summary
+  const statusRaw = body?.status
+  const includeInReportRaw = body?.includeInReport
 
-  const items = await readJsonArray<DisciplinaryCase>('disciplinary-cases.json')
-  const idx = items.findIndex((v) => v.id === id)
-  if (idx === -1) throw createError({ statusCode: 404, statusMessage: 'Disciplinary case not found' })
+  const existing = await prisma.disciplinaryCase.findUnique({ where: { id } })
+  if (!existing) throw createError({ statusCode: 404, statusMessage: 'Disciplinary case not found' })
 
-  const existing = items[idx]
-  const updated: DisciplinaryCase = {
-    ...existing,
-    employeeName,
-    department,
-    country,
-    summary,
-    status
-  }
+  const employeeName = employeeNameRaw === undefined ? existing.employeeName : requireNonEmptyString(employeeNameRaw, 'employeeName')
+  const department = departmentRaw === undefined ? existing.department : optionalString(departmentRaw)
+  const country = countryRaw === undefined ? existing.country : requireNonEmptyString(countryRaw, 'country')
+  const summary = summaryRaw === undefined ? existing.summary : requireNonEmptyString(summaryRaw, 'summary')
+  const status = statusRaw === undefined ? existing.status : requireNonEmptyString(statusRaw, 'status')
+  const includeInReport = includeInReportRaw === undefined ? existing.includeInReport : (optionalBoolean(includeInReportRaw) ?? existing.includeInReport)
 
-  items[idx] = updated
-  await writeJsonArray('disciplinary-cases.json', items)
-  return updated
+  const updated = await prisma.disciplinaryCase.update({
+    where: { id },
+    data: { employeeName, department, country, summary, status, includeInReport }
+  })
+
+  return { ...updated, createdAt: updated.createdAt.toISOString() }
 })
 

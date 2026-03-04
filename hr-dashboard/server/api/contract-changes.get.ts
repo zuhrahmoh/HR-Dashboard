@@ -1,4 +1,4 @@
-import { readJsonArray } from '../utils/jsonStore'
+import { prisma } from '../utils/db'
 
 type ChangeType = 'Salary' | 'Role' | 'Reporting' | 'Job Title' | 'Contract Extension' | 'Non-Renewal'
 type Status = 'Approval required' | 'Approved' | 'On Hold'
@@ -16,15 +16,14 @@ type ContractChange = {
 }
 
 export default defineEventHandler(async () => {
-  const items = await readJsonArray<ContractChange>('contract-changes.json')
-  return items
-    .map((v) => ({
-      ...v,
-      status: v.status ?? 'Approval required',
-      changeTypes: Array.isArray(v.changeTypes)
-        ? v.changeTypes.flatMap((t) => (t === ('Role, Reporting' as any) ? (['Role', 'Reporting'] as any) : [t]))
-        : []
-    }))
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  const items = await prisma.contractChange.findMany({ orderBy: { createdAt: 'desc' } })
+  return items.map((v) => ({
+    ...v,
+    createdAt: v.createdAt.toISOString(),
+    status: (v.status as any) ?? 'Approval required',
+    changeTypes: Array.isArray(v.changeTypes)
+      ? v.changeTypes.flatMap((t) => (t === ('Role, Reporting' as any) ? (['Role', 'Reporting'] as any) : [t]))
+      : []
+  }))
 })
 

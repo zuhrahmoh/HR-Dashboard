@@ -3,6 +3,7 @@ import type { Employee } from './employees'
 import { getOdooClient } from './odoo'
 import { classifyBranchCountry } from './branchClassification'
 import { dedupeOdooEmployees } from './dedupeOdooEmployees'
+import { shouldExcludeOdooEmployee } from './odooEmployeeExclusions'
 
 type CachedEmployees = { fetchedAtMs: number; employees: Employee[] }
 let cachedActiveOnly: CachedEmployees | null = null
@@ -40,6 +41,66 @@ function safeString(v: unknown) {
   return typeof v === 'string' ? v : v == null ? '' : String(v)
 }
 
+function normalizeEmployeeType(raw: string | undefined) {
+  const v = (raw ?? '').trim().toLowerCase()
+  if (!v) return null
+  if (v.includes('intern')) return 'intern'
+  if (v.includes('contract')) return 'contract'
+  if (v.includes('temporary') || v.includes('temp')) return 'contract'
+  if (v.includes('fixed term') || v.includes('fixed-term')) return 'contract'
+  if (v.includes('permanent') || v.includes('full time') || v.includes('full-time')) return 'permanent'
+  return null
+}
+
+function normalizeTalentRole(raw: string | undefined) {
+  const v = (raw ?? '').trim().toLowerCase()
+  if (!v) return null
+  if (v === 'l' || v === 'ldr') return 'leader'
+  if (v === 'p' || v === 'plyr') return 'player'
+  if (v.includes('leader')) return 'leader'
+  if (v.includes('player')) return 'player'
+  return null
+}
+
+function parseYmdUtcMs(ymd: string | null) {
+  if (!ymd) return null
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd.trim())
+  if (!m) return null
+  const y = Number(m[1])
+  const mo = Number(m[2])
+  const d = Number(m[3])
+  if (!Number.isFinite(y) || !Number.isFinite(mo) || !Number.isFinite(d)) return null
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null
+  const ms = Date.UTC(y, mo - 1, d)
+  const dt = new Date(ms)
+  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d) return null
+  return ms
+}
+
+function clampContractLikeEndDate(endYmd: string | null, startYmd: string | null) {
+  const endMs = parseYmdUtcMs(endYmd)
+  if (endMs === null) return null
+  const startMs = parseYmdUtcMs(startYmd)
+  if (startMs === null) return endYmd
+  if (endMs < startMs) return null
+  // Guardrail: ignore obviously wrong far-future dates for "contract-ish" ends.
+  const maxMs = startMs + 5 * 365 * 24 * 60 * 60 * 1000
+  if (endMs > maxMs) return null
+  return endYmd
+}
+
+function clampProbationEndDate(endYmd: string | null, startYmd: string | null) {
+  const endMs = parseYmdUtcMs(endYmd)
+  if (endMs === null) return null
+  const startMs = parseYmdUtcMs(startYmd)
+  if (startMs === null) return endYmd
+  if (endMs < startMs) return null
+  // Probation should be relatively close to start date.
+  const maxMs = startMs + 365 * 24 * 60 * 60 * 1000
+  if (endMs > maxMs) return null
+  return endYmd
+}
+
 function normalizeDepartureReason(reason: string | undefined): 'resigned' | 'retired' | 'fired' | null {
   const v = (reason ?? '').trim().toLowerCase()
   if (!v) return null
@@ -56,6 +117,7 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
 
   const client = await getOdooClient()
   const fieldInfo = await client.fieldsGet('hr.employee')
+  const contractFieldInfo = await client.fieldsGet('hr.contract').catch(() => ({}))
 
   const countryField = pickFirstExistingField(fieldInfo, ['country_id', 'work_location_id', 'work_country_id'])
   const companyField = pickFirstExistingField(fieldInfo, ['company_id', 'x_company_id', 'x_company'])
@@ -78,8 +140,60 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
     'x_start_date',
     'start_date'
   ])
-  const contractEndField = pickFirstExistingField(fieldInfo, ['x_contract_end_date', 'x_probation_end_date', 'date_end'])
-  const talentRatingField = pickFirstExistingField(fieldInfo, ['x_talent_rating', 'x_a_player_rating', 'x_player_rating', 'x_rating'])
+  const contractEndField = pickFirstExistingField(fieldInfo, [
+    'contract_end',
+    'end_contract_date',
+    'x_contract_end_date',
+    'contract_end_date',
+    'x_end_of_contract',
+    'x_intern_contract_end_date',
+    'date_end'
+  ])
+  const probationEndField = pickFirstExistingField(fieldInfo, [
+    'end_of_probation',
+    'x_probation_end_date',
+    'probation_end_date',
+    'x_end_of_probation',
+    'x_probation_end'
+  ])
+
+  const contractDateEndField = pickFirstExistingField(contractFieldInfo, [
+    'date_end',
+    'x_date_end',
+    'end_date',
+    'contract_end_date',
+    'x_contract_end_date'
+  ])
+  const contractTrialEndField = pickFirstExistingField(contractFieldInfo, [
+    'trial_date_end',
+    'x_trial_date_end',
+    'trial_end_date',
+    'x_probation_end_date',
+    'probation_end_date'
+  ])
+
+  const talentRoleField = pickFirstExistingField(fieldInfo, [
+    'player_type',
+    'x_player_type',
+    'x_player_or_leader',
+    'x_talent_role',
+    'x_talent_type',
+    'x_role'
+  ])
+  const playerRatingField = pickFirstExistingField(fieldInfo, [
+    'player_rating',
+    'x_player_rating',
+    'x_a_player_rating',
+    'x_rating_player',
+    'x_player_perf_rating'
+  ])
+  const leaderRatingField = pickFirstExistingField(fieldInfo, [
+    'leader_rating',
+    'x_leader_rating',
+    'x_rating_leader',
+    'x_leader_perf_rating'
+  ])
+  const talentRatingField = pickFirstExistingField(fieldInfo, ['x_talent_rating', 'x_rating'])
   const employmentTypeField = pickFirstExistingField(fieldInfo, [
     'employment_type',
     'employee_type',
@@ -149,6 +263,7 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
         'active',
         'write_date',
         'create_date',
+        'contract_id',
         companyField,
         'department_id',
         'job_title',
@@ -159,6 +274,10 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
         workAddressField,
         startDateField,
         contractEndField,
+        probationEndField,
+        talentRoleField,
+        playerRatingField,
+        leaderRatingField,
         talentRatingField,
         employmentTypeField,
         birthDateField,
@@ -181,6 +300,33 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
   )
   if (!Array.isArray(rows)) {
     throw createError({ statusCode: 502, statusMessage: 'Unexpected Odoo response for employees.' })
+  }
+
+  const contractIds = Array.from(
+    new Set(
+      rows
+        .map((r) => (Array.isArray(r?.contract_id) ? r.contract_id[0] : null))
+        .filter((v): v is number => Number.isFinite(v))
+    )
+  )
+
+  const contractById = new Map<number, Record<string, unknown>>()
+  if (contractIds.length > 0 && (contractDateEndField || contractTrialEndField)) {
+    const contractFields = Array.from(new Set([contractDateEndField, contractTrialEndField].filter(Boolean))) as string[]
+    if (contractFields.length > 0) {
+      const contractRows = await client.executeKw<any[]>(
+        'hr.contract',
+        'search_read',
+        [[['id', 'in', contractIds]]],
+        { fields: ['id', ...contractFields] }
+      )
+      if (Array.isArray(contractRows)) {
+        for (const c of contractRows) {
+          const id = c?.id
+          if (Number.isFinite(id)) contractById.set(Number(id), c as Record<string, unknown>)
+        }
+      }
+    }
   }
 
   const employees: Employee[] = rows.map((r) => {
@@ -235,8 +381,10 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
       employeeStatus,
       gender: safeString(r?.gender).trim() || undefined,
       reportingTo: many2oneName(r?.parent_id) || undefined,
-      contractOrProbationEndDate: contractEndField ? toYmd(r?.[contractEndField]) : null,
-      talentRating: talentRatingField ? safeString(r?.[talentRatingField]).trim() || undefined : undefined,
+      contractEndDate: null,
+      probationEndDate: null,
+      contractOrProbationEndDate: null,
+      talentRating: undefined,
       employeeType: employmentTypeField
         ? (many2oneName(r?.[employmentTypeField]) || safeString(r?.[employmentTypeField])).trim() || undefined
         : undefined,
@@ -250,10 +398,56 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
       personalPhone: personalPhoneField ? safeString(r?.[personalPhoneField]).trim() || undefined : undefined
     }
 
+    // Prefer contract end for interns/contract staff; probation end for permanent staff.
+    const employeeTypeNorm = normalizeEmployeeType(employee.employeeType)
+    const startYmd = employee.startDate
+
+    const contractId = Array.isArray(r?.contract_id) ? r.contract_id[0] : null
+    const linkedContract = Number.isFinite(contractId) ? contractById.get(Number(contractId)) : null
+
+    const contractEndFromContract =
+      linkedContract && contractDateEndField ? toYmd(linkedContract[contractDateEndField]) : null
+    const contractEndFromEmployee = contractEndField ? toYmd(r?.[contractEndField]) : null
+
+    const probationEndFromContract =
+      linkedContract && contractTrialEndField ? toYmd(linkedContract[contractTrialEndField]) : null
+    const probationEndFromEmployee = probationEndField ? toYmd(r?.[probationEndField]) : null
+
+    const contractEndRaw = contractEndFromContract ?? contractEndFromEmployee
+    const probationEndRaw = probationEndFromEmployee ?? probationEndFromContract
+
+    const contractEnd = clampContractLikeEndDate(contractEndRaw, startYmd)
+    const probationEnd = clampProbationEndDate(probationEndRaw, startYmd)
+    employee.contractEndDate = contractEnd
+    employee.probationEndDate = probationEnd
+    employee.contractOrProbationEndDate =
+      employeeTypeNorm === 'intern' || employeeTypeNorm === 'contract'
+        ? contractEnd ?? probationEnd
+        : probationEnd ?? contractEnd
+
+    // Talent rating: production stores role + role-specific rating; keep a safe fallback to legacy single field.
+    const talentRoleRaw = talentRoleField ? (many2oneName(r?.[talentRoleField]) || safeString(r?.[talentRoleField])).trim() : ''
+    const talentRole = normalizeTalentRole(talentRoleRaw)
+    const playerRating = playerRatingField
+      ? (many2oneName(r?.[playerRatingField]) || safeString(r?.[playerRatingField])).trim()
+      : ''
+    const leaderRating = leaderRatingField
+      ? (many2oneName(r?.[leaderRatingField]) || safeString(r?.[leaderRatingField])).trim()
+      : ''
+    const legacyRating = talentRatingField
+      ? (many2oneName(r?.[talentRatingField]) || safeString(r?.[talentRatingField])).trim()
+      : ''
+
+    const rating = talentRole === 'leader' ? leaderRating : talentRole === 'player' ? playerRating : ''
+    const roleLabel = talentRole === 'leader' ? 'Leader' : talentRole === 'player' ? 'Player' : ''
+    const combined = rating && roleLabel ? `${rating} ${roleLabel}` : ''
+    employee.talentRating = combined || legacyRating || undefined
+
     return employee
   })
 
-  const employeesDeduped = dedupeOdooEmployees(employees)
+  const employeesFiltered = employees.filter((e) => !shouldExcludeOdooEmployee(e))
+  const employeesDeduped = dedupeOdooEmployees(employeesFiltered)
   const nextCache = { fetchedAtMs: Date.now(), employees: employeesDeduped }
   if (opts.includeInactive) cachedIncludingInactive = nextCache
   else cachedActiveOnly = nextCache

@@ -322,6 +322,7 @@
 
 <script setup lang="ts">
 import DateInput from '~/components/DateInput.vue'
+import { ensureUsaOption } from '~/utils/countryOptions'
 
 type MedicalEnrollment = {
   id: string
@@ -447,8 +448,8 @@ const {
 const items = computed(() => data.value ?? [])
 const errorMessage = computed(() => getErrorMessage(error.value))
 
-const { data: employeesData } = await useFetch<Employee[]>('/api/employees')
-const countries = computed(() => uniqueSorted((employeesData.value ?? []).map((e) => e.countryAssigned)))
+const { data: employeesData } = await useFetch<Employee[]>('/api/odoo/employees')
+const countries = computed(() => ensureUsaOption(uniqueSorted((employeesData.value ?? []).map((e) => e.countryAssigned))))
 
 const filters = reactive({
   stage: '',

@@ -1,5 +1,5 @@
 import { createError, getRouterParam, readBody } from 'h3'
-import { readJsonArray, writeJsonArray } from '../../utils/jsonStore'
+import { prisma } from '../../utils/db'
 
 type CriticalRecruitment = {
   id: string
@@ -36,22 +36,14 @@ export default defineEventHandler(async (event) => {
   const stage = requireNonEmptyString(body?.stage, 'stage')
   const notes = optionalTrimmedString(body?.notes)
 
-  const items = await readJsonArray<CriticalRecruitment>('critical-recruitment.json')
-  const idx = items.findIndex((v) => v.id === id)
-  if (idx === -1) throw createError({ statusCode: 404, statusMessage: 'Critical recruitment item not found' })
+  const existing = await prisma.criticalRecruitment.findUnique({ where: { id } })
+  if (!existing) throw createError({ statusCode: 404, statusMessage: 'Critical recruitment item not found' })
 
-  const existing = items[idx]
-  const updated: CriticalRecruitment = {
-    ...existing,
-    candidateName,
-    position,
-    country,
-    stage,
-    notes
-  }
+  const updated = await prisma.criticalRecruitment.update({
+    where: { id },
+    data: { candidateName, position, country, stage, notes }
+  })
 
-  items[idx] = updated
-  await writeJsonArray('critical-recruitment.json', items)
-  return updated
+  return { ...updated, createdAt: updated.createdAt.toISOString() }
 })
 

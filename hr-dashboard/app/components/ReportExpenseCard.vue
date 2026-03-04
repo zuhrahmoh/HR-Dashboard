@@ -1,0 +1,58 @@
+<template>
+  <div v-if="!isTotalOnly" class="report-expense-card report-keep">
+    <ExpenseCountryCard
+      :country="item.country"
+      :month="month"
+      currency="USD"
+      :gross-salary="item.grossSalary"
+      :paye="item.paye"
+      :overtime="item.overtime"
+      :vc="item.vc"
+      :health-surcharge="item.healthSurcharge"
+      :nis-company="item.nisCompany"
+      :total="item.total"
+      :show-deltas="false"
+    />
+  </div>
+
+  <section v-else class="rounded-md border border-slate-200 bg-white p-4 report-keep">
+    <div class="flex items-start justify-between gap-4">
+      <div class="min-w-0">
+        <h3 class="truncate text-sm font-semibold text-slate-900" :title="item.country">{{ item.country || '—' }}</h3>
+        <p v-if="month" class="mt-0.5 text-sm text-slate-600">{{ month }}</p>
+      </div>
+      <div class="text-right text-sm font-semibold tabular-nums text-slate-900">
+        {{ fmtUsd.format(item.total) }}
+      </div>
+    </div>
+  </section>
+</template>
+
+<script setup lang="ts">
+import ExpenseCountryCard from '~/components/ExpenseCountryCard.vue'
+
+type ExpenseItem = {
+  country: string
+  grossSalary: number
+  paye: number
+  overtime: number
+  vc: number
+  healthSurcharge: number
+  nisCompany: number
+  totalOutgoingExpenses: number
+  total: number
+}
+
+const props = defineProps<{
+  item: ExpenseItem
+  month: string | null
+}>()
+
+const fmtUsd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', currencyDisplay: 'code', maximumFractionDigits: 0 })
+
+const isTotalOnly = computed(() => {
+  const i = props.item
+  return i.grossSalary === 0 && i.paye === 0 && i.overtime === 0 && i.vc === 0 && i.healthSurcharge === 0 && i.nisCompany === 0
+})
+</script>
+

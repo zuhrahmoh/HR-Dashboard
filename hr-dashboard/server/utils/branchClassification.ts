@@ -1,7 +1,7 @@
 export const BRANCH_COUNTRIES = [
   'Trinidad and Tobago',
   'Guyana',
-  'Houston',
+  'USA',
   'Suriname',
   'El Dorado Offshore GY',
   'El Dorado Offshore TT',
@@ -58,14 +58,15 @@ export function classifyBranchCountry(input: {
       return title('El Dorado Offshore TT')
   }
 
-  // Houston (Ramps Logistics LLC / Ramps Logistics Houston)
+  // USA (Ramps Logistics LLC / Houston)
   if (
     hasAny(all, ['houston', 'texas', 'united states', 'usa']) ||
     hasToken(all, 'tx') ||
-    company.includes('llc') ||
+    hasToken(all, 'llc') ||
+    hasAny(all, ['ramps logistics llc']) ||
     company.includes('houston')
   ) {
-    return title('Houston')
+    return title('USA')
   }
 
   // Specific country branches

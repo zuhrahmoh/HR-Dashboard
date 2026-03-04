@@ -26,6 +26,20 @@
           </div>
         </div>
       </div>
+
+      <div v-if="showLegend" class="mt-4">
+        <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">Key</div>
+        <div class="mt-2 grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
+          <div v-for="row in rows" :key="`${row.key}__legend`" class="flex min-w-0 items-start gap-2">
+            <div class="h-2.5 w-2.5 shrink-0 rounded-sm" :class="row.colorClass" />
+            <div class="min-w-0 text-xs leading-snug text-slate-200">
+              <span class="font-semibold">{{ row.shortLabel }}</span>
+              <span class="text-slate-400"> — </span>
+              <span class="text-slate-300">{{ row.fullLabel }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -33,16 +47,20 @@
 <script setup lang="ts">
 type Item = { country: string; headcount: number }
 
-const props = defineProps<{
+const props = withDefaults(
+  defineProps<{
   items: Item[]
-}>()
+  showLegend?: boolean
+  }>(),
+  { showLegend: false }
+)
 
 const max = computed(() => props.items.reduce((m, i) => Math.max(m, i.headcount), 0))
 
 const BRANCH_ABBREV: Record<string, string> = {
   'Trinidad and Tobago': 'TT',
   Guyana: 'GUY',
-  Houston: 'HOU',
+  USA: 'USA',
   Suriname: 'SUR',
   'El Dorado Offshore GY': 'EDO GUY',
   'El Dorado Offshore TT': 'EDO TT',
@@ -56,24 +74,38 @@ function abbrev(label: string) {
 }
 
 const BAR_COLOR_CLASSES = [
-  'bg-sky-500',
-  'bg-blue-500',
-  'bg-indigo-500',
-  'bg-emerald-500',
-  'bg-green-500',
-  'bg-teal-500',
-  'bg-violet-500',
-  'bg-purple-500',
-  'bg-amber-500',
-  'bg-orange-500',
-  'bg-red-500',
-  'bg-rose-500',
-  'bg-cyan-500',
-  'bg-lime-500',
-  'bg-yellow-500',
-  'bg-pink-500',
-  'bg-fuchsia-500'
+  // Discrete stops inspired by the reference gradient (purple → magenta → red → peach).
+  // Hexes are used to keep the palette cohesive and avoid Tailwind’s default blues/greens.
+  // Brighter purples for visibility on dark background.
+  'bg-[#5B21B6]', // purple
+  'bg-[#6D28D9]',
+  'bg-[#7C3AED]',
+  'bg-[#8B5CF6]', // bright violet
+  'bg-[#A78BFA]', // light violet
+
+  // Magenta → pink → rose (spaced to avoid looking too similar).
+  'bg-[#D946EF]', // fuchsia
+  'bg-[#C026D3]',
+  'bg-[#EC4899]', // hot pink
+  'bg-[#F43F5E]', // rose-red
+  'bg-[#E11D48]', // red
+
+  // Peach/orange (more separated from pinks).
+  'bg-[#F97316]', // orange
+  'bg-[#FB923C]', // light orange
+  'bg-[#FDBA74]', // peach
+  'bg-[#FED7AA]', // pale peach
+
+  // Light yellow accents (like the reference).
+  'bg-[#FBBF24]', // amber
+  'bg-[#FDE047]', // yellow
+  'bg-[#FEF08A]'  // light yellow
 ] as const
+
+const OVERRIDE_BAR_COLOR_BY_LABEL: Record<string, (typeof BAR_COLOR_CLASSES)[number]> = {
+  Guyana: 'bg-[#EC4899]',
+  GUY: 'bg-[#EC4899]'
+}
 
 function hashString(input: string) {
   let hash = 0
@@ -82,6 +114,13 @@ function hashString(input: string) {
 }
 
 function colorClassForLabel(label: string, usedIndexes: Set<number>) {
+  const override = OVERRIDE_BAR_COLOR_BY_LABEL[label]
+  if (override) {
+    const idx = BAR_COLOR_CLASSES.indexOf(override)
+    if (idx >= 0) usedIndexes.add(idx)
+    return override
+  }
+
   const len = BAR_COLOR_CLASSES.length
   let idx = hashString(label) % len
   while (usedIndexes.size < len && usedIndexes.has(idx)) idx = (idx + 1) % len

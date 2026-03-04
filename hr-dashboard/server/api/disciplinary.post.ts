@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { createError, readBody } from 'h3'
-import { readJsonArray, writeJsonArray } from '../utils/jsonStore'
+import { prisma } from '../utils/db'
 
 type DisciplinaryCase = {
   id: string
@@ -9,6 +9,7 @@ type DisciplinaryCase = {
   country: string
   summary: string
   status: string
+  includeInReport: boolean
   createdAt: string
 }
 
@@ -19,28 +20,37 @@ function requireNonEmptyString(value: unknown, field: string) {
   return value.trim()
 }
 
+function optionalString(value: unknown) {
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function optionalBoolean(value: unknown) {
+  return typeof value === 'boolean' ? value : null
+}
+
 export default defineEventHandler(async (event) => {
   const body = (await readBody(event)) as Record<string, unknown> | null
   const employeeName = requireNonEmptyString(body?.employeeName, 'employeeName')
-  const department = requireNonEmptyString(body?.department, 'department')
+  const department = optionalString(body?.department)
   const country = requireNonEmptyString(body?.country, 'country')
   const summary = requireNonEmptyString(body?.summary, 'summary')
   const status = requireNonEmptyString(body?.status, 'status')
+  const includeInReport = optionalBoolean(body?.includeInReport) ?? false
 
-  const items = await readJsonArray<DisciplinaryCase>('disciplinary-cases.json')
+  const createdAt = new Date()
+  const created = await prisma.disciplinaryCase.create({
+    data: {
+      id: randomUUID(),
+      employeeName,
+      department,
+      country,
+      summary,
+      status,
+      includeInReport,
+      createdAt
+    }
+  })
 
-  const created: DisciplinaryCase = {
-    id: randomUUID(),
-    employeeName,
-    department,
-    country,
-    summary,
-    status,
-    createdAt: new Date().toISOString()
-  }
-
-  items.push(created)
-  await writeJsonArray('disciplinary-cases.json', items)
-  return created
+  return { ...created, createdAt: createdAt.toISOString() }
 })
 

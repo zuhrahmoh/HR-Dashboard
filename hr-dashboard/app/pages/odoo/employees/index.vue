@@ -213,7 +213,7 @@ function uniqueSorted(values: string[]) {
 const BRANCH_COUNTRIES = [
   'Trinidad and Tobago',
   'Guyana',
-  'Houston',
+  'USA',
   'Suriname',
   'El Dorado Offshore GY',
   'El Dorado Offshore TT',
@@ -223,6 +223,7 @@ const BRANCH_COUNTRIES = [
 
 const countries = computed(() => {
   const present = new Set(uniqueSorted(employees.value.map((e) => e.countryAssigned)))
+  present.add('USA')
   return BRANCH_COUNTRIES.filter((c) => present.has(c))
 })
 const departments = computed(() => uniqueSorted(employees.value.map((e) => e.department)))

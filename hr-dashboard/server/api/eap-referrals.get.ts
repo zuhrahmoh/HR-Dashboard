@@ -1,4 +1,4 @@
-import { readJsonArray } from '../utils/jsonStore'
+import { prisma } from '../utils/db'
 
 type EapReferral = {
   id: string
@@ -22,7 +22,11 @@ type EapReferral = {
 }
 
 export default defineEventHandler(async () => {
-  const items = await readJsonArray<EapReferral>('eap-referrals.json')
-  return items.sort((a, b) => (b.updatedAt || b.createdAt).localeCompare(a.updatedAt || a.createdAt))
+  const items = await prisma.eapReferral.findMany({ orderBy: { updatedAt: 'desc' } })
+  return items.map((v) => ({
+    ...v,
+    createdAt: v.createdAt.toISOString(),
+    updatedAt: v.updatedAt.toISOString()
+  }))
 })
 

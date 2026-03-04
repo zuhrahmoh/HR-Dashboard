@@ -37,7 +37,7 @@
           </select>
         </label>
 
-        <div class="flex flex-wrap gap-1.5 sm:flex-nowrap">
+        <div v-if="showBreakdown" class="flex flex-wrap gap-1.5 sm:flex-nowrap">
           <button
             type="button"
             class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold tabular-nums"
@@ -70,7 +70,7 @@
         <div class="tabular-nums text-slate-50">{{ selectedSeparations }}</div>
       </div>
 
-      <div class="pt-1 text-sm text-slate-400">
+      <div v-if="showBreakdown" class="pt-1 text-sm text-slate-400">
         Breakdown: Resigned {{ monthData.resigned }}, Retired {{ monthData.retired }}, Fired {{ monthData.fired }}
       </div>
     </div>
@@ -92,9 +92,11 @@ const props = defineProps<{
       }
     >
   }
+  showBreakdown?: boolean
 }>()
 
 const months = computed(() => props.separations?.months ?? [])
+const showBreakdown = computed(() => props.showBreakdown !== false)
 
 const selectedMonth = ref<string>(props.separations?.currentMonth ?? (months.value[0] ?? ''))
 watch(
@@ -130,6 +132,7 @@ const monthData = computed(() => {
 const totalAllReasons = computed(() => monthData.value.resigned + monthData.value.retired + monthData.value.fired)
 
 const selectedSeparations = computed(() => {
+  if (!showBreakdown.value) return totalAllReasons.value
   let sum = 0
   if (include.resigned) sum += monthData.value.resigned
   if (include.retired) sum += monthData.value.retired

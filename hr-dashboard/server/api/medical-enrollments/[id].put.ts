@@ -1,5 +1,5 @@
 import { createError, getRouterParam, readBody } from 'h3'
-import { readJsonArray, writeJsonArray } from '../../utils/jsonStore'
+import { prisma } from '../../utils/db'
 
 type MedicalEnrollment = {
   id: string
@@ -48,28 +48,25 @@ export default defineEventHandler(async (event) => {
   const notes = optionalTrimmedString(body?.notes)
   const attachmentsUrl = optionalTrimmedString(body?.attachmentsUrl)
 
-  const items = await readJsonArray<MedicalEnrollment>('medical-enrollments.json')
-  const idx = items.findIndex((v) => v.id === id)
-  if (idx === -1) throw createError({ statusCode: 404, statusMessage: 'Medical enrollment not found' })
+  const existing = await prisma.medicalEnrollment.findUnique({ where: { id } })
+  if (!existing) throw createError({ statusCode: 404, statusMessage: 'Medical enrollment not found' })
 
-  const existing = items[idx]
-  const updated: MedicalEnrollment = {
-    ...existing,
-    employeeName,
-    country,
-    enrollmentType,
-    vendor,
-    stage,
-    dateInitiated,
-    nextAction,
-    hrRepresentative,
-    notes,
-    attachmentsUrl,
-    updatedAt: new Date().toISOString()
-  }
+  const updated = await prisma.medicalEnrollment.update({
+    where: { id },
+    data: {
+      employeeName,
+      country,
+      enrollmentType,
+      vendor,
+      stage,
+      dateInitiated,
+      nextAction,
+      hrRepresentative,
+      notes,
+      attachmentsUrl
+    }
+  })
 
-  items[idx] = updated
-  await writeJsonArray('medical-enrollments.json', items)
-  return updated
+  return { ...updated, createdAt: updated.createdAt.toISOString(), updatedAt: updated.updatedAt.toISOString() }
 })
 

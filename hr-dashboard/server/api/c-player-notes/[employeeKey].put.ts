@@ -1,19 +1,11 @@
 import { createError, getRouterParam, readBody } from 'h3'
-import { getEmployeeByKey } from '../../utils/employees'
-import { readJsonArray, writeJsonArray } from '../../utils/jsonStore'
+import { prisma } from '../../utils/db'
+import { getOdooEmployeeByKey } from '../../utils/odooEmployees'
 
 type CPlayerNote = {
   employeeKey: string
   note: string
   updatedAt: string
-}
-
-function isResigned(status: string) {
-  return status.trim().toLowerCase() === 'resigned'
-}
-
-function isCPlayer(talentRating: string | undefined) {
-  return (talentRating ?? '').trim() === 'C Player'
 }
 
 function requireString(value: unknown, field: string) {
@@ -29,39 +21,26 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'employeeKey is required' })
   }
 
-  const employee = await getEmployeeByKey(employeeKey)
+  const employee = await getOdooEmployeeByKey(employeeKey)
   if (!employee) {
     throw createError({ statusCode: 404, statusMessage: 'Employee not found' })
-  }
-
-  if (isResigned(employee.employeeStatus ?? '')) {
-    throw createError({ statusCode: 400, statusMessage: 'Notes cannot be saved for resigned employees' })
-  }
-
-  if (!isCPlayer(employee.talentRating)) {
-    throw createError({ statusCode: 400, statusMessage: 'Notes can only be saved for C Players' })
   }
 
   const body = (await readBody(event)) as Record<string, unknown> | null
   const rawNote = requireString(body?.note, 'note')
   const note = rawNote.trim()
 
-  const items = await readJsonArray<CPlayerNote>('c-player-notes.json')
-  const idx = items.findIndex((n) => n.employeeKey === employeeKey)
-
   if (note === '') {
-    if (idx !== -1) {
-      items.splice(idx, 1)
-      await writeJsonArray('c-player-notes.json', items)
-    }
+    const existing = await prisma.cPlayerNote.findUnique({ where: { employeeKey } })
+    if (existing) await prisma.cPlayerNote.delete({ where: { employeeKey } })
     return { note: '' }
   }
 
-  const record: CPlayerNote = { employeeKey, note, updatedAt: new Date().toISOString() }
-  if (idx === -1) items.push(record)
-  else items[idx] = record
-
-  await writeJsonArray('c-player-notes.json', items)
+  await prisma.cPlayerNote.upsert({
+    where: { employeeKey },
+    create: { employeeKey, note },
+    update: { note }
+  })
   return { note }
 })
 

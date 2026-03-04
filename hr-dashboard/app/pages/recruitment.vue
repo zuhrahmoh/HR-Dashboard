@@ -1,11 +1,11 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6" :data-report-ready="reportReady ? '1' : undefined">
     <div class="space-y-1">
       <h1 class="text-2xl font-semibold">Recruitment &amp; Onboarding</h1>
       <p class="text-slate-300">Track critical vacancies, recruitment, onboarding and offboarding processes.</p>
     </div>
 
-    <hr class="border-slate-800" />
+    <hr v-if="!isReportMode" class="border-slate-800" />
 
     <section class="space-y-3">
       <div class="space-y-2">
@@ -98,7 +98,7 @@
         No vacancies yet.
       </div>
       <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-        <div v-for="v in vacancies" :key="v.id" class="rounded-md border border-slate-800 bg-slate-900 p-3">
+        <div v-for="v in vacanciesForDisplay" :key="v.id" class="rounded-md border border-slate-800 bg-slate-900 p-3">
           <div class="flex items-start justify-between gap-4">
             <div class="min-w-0">
               <div class="truncate text-sm font-semibold text-slate-50">{{ v.positionTitle }}</div>
@@ -191,6 +191,9 @@
           </form>
         </div>
       </div>
+      <div v-if="isReportMode && vacancies.length > vacanciesForDisplay.length" class="mt-3 text-xs text-slate-400">
+        Showing top {{ vacanciesForDisplay.length }} vacancies. See the dashboard for the full list.
+      </div>
 
       <div class="rounded-md border border-slate-700 bg-slate-800/20 p-3 text-xs text-slate-200">
         <div class="flex items-center gap-2 font-semibold text-slate-100">
@@ -217,12 +220,22 @@
       </div>
     </section>
 
-    <hr class="border-slate-800" />
+    <hr v-if="!isReportMode" class="border-slate-800" />
 
     <section class="space-y-3">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <h2 class="text-base font-semibold text-slate-200">Recruitment &amp; Onboarding</h2>
         <div class="flex flex-wrap items-center gap-2">
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+            <span class="whitespace-nowrap">Country</span>
+            <select
+              v-model="selectedRecruitmentCountry"
+              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+            >
+              <option value="">All</option>
+              <option v-for="c in criticalRecruitmentCountries" :key="c" :value="c">{{ c }}</option>
+            </select>
+          </label>
           <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
             <span class="whitespace-nowrap">Stage</span>
             <select
@@ -345,7 +358,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="c in filteredCriticalRecruitment" :key="c.id" class="border-t border-slate-800">
+              <tr v-for="c in criticalRecruitmentForDisplay" :key="c.id" class="border-t border-slate-800">
                 <template v-if="criticalRecruitmentEditId === c.id">
                   <td class="px-4 py-3">
                     <input
@@ -419,7 +432,9 @@
                     </span>
                   </td>
                   <td class="px-4 py-3 align-top text-slate-200">
-                    <div class="max-w-[28rem] whitespace-normal break-words">{{ c.notes || '—' }}</div>
+                    <div class="max-w-[28rem] whitespace-normal break-words" :class="isReportMode ? 'report-clamp-2' : ''">
+                      {{ c.notes || '—' }}
+                    </div>
                   </td>
                   <td class="px-4 py-3 text-right">
                     <div class="flex justify-end gap-2">
@@ -449,22 +464,37 @@
           </table>
         </div>
       </div>
+      <div v-if="isReportMode && filteredCriticalRecruitment.length > criticalRecruitmentForDisplay.length" class="mt-3 text-xs text-slate-400">
+        Showing top {{ criticalRecruitmentForDisplay.length }} candidates. See the dashboard for the full list.
+      </div>
     </section>
 
-    <hr class="border-slate-800" />
+    <hr v-if="!isReportMode" class="border-slate-800" />
 
-    <section class="space-y-3">
+    <section v-if="!isReportMode" class="space-y-3">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <h2 class="text-base font-semibold text-slate-200">New Hires</h2>
-        <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
-          <span class="whitespace-nowrap">Month</span>
-          <select
-            v-model="selectedNewHireMonth"
-            class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
-          >
-            <option v-for="m in newHireMonths" :key="m" :value="m">{{ formatMonthLabel(m) }}</option>
-          </select>
-        </label>
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+            <span class="whitespace-nowrap">Country</span>
+            <select
+              v-model="selectedNewHireCountry"
+              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+            >
+              <option value="">All</option>
+              <option v-for="c in newHireCountries" :key="c" :value="c">{{ c }}</option>
+            </select>
+          </label>
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+            <span class="whitespace-nowrap">Month</span>
+            <select
+              v-model="selectedNewHireMonth"
+              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+            >
+              <option v-for="m in newHireMonths" :key="m" :value="m">{{ formatMonthLabel(m) }}</option>
+            </select>
+          </label>
+        </div>
       </div>
 
       <div v-if="odooNewHiresPending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
@@ -486,7 +516,7 @@
               </tr>
             </thead>
             <tbody>
-              <template v-for="n in odooNewHires" :key="n.employeeKey">
+              <template v-for="n in filteredNewHires" :key="n.employeeKey">
                 <tr class="border-t border-slate-800 align-top">
                   <td class="px-4 py-3 text-slate-50">{{ n.name }}</td>
                   <td class="px-4 py-3 text-slate-200">{{ n.position }}</td>
@@ -563,7 +593,7 @@
                 </tr>
               </template>
 
-              <tr v-if="odooNewHires.length === 0" class="border-t border-slate-800">
+              <tr v-if="filteredNewHires.length === 0" class="border-t border-slate-800">
                 <td colspan="6" class="px-4 py-6 text-center text-slate-300">No new hires found for this month.</td>
               </tr>
             </tbody>
@@ -572,23 +602,35 @@
       </div>
     </section>
 
-    <hr class="border-slate-800" />
+    <hr v-if="!isReportMode" class="border-slate-800" />
 
-    <section class="space-y-3">
+    <section v-if="!isReportMode" class="space-y-3">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="space-y-1">
           <h2 class="text-base font-semibold text-slate-200">Offboarding</h2>
           <p class="text-xs text-slate-400">Manual tracker for HR to record offboarding progress.</p>
         </div>
-        <button
-          v-if="!showOffboardingCreateForm"
-          type="button"
-          class="inline-flex items-center rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800/40"
-          @click="showOffboardingCreateForm = true"
-        >
-          <span aria-hidden="true" class="mr-1.5 font-semibold">+</span>
-          <span>Add offboarding</span>
-        </button>
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+            <span class="whitespace-nowrap">Country</span>
+            <select
+              v-model="selectedOffboardingCountry"
+              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+            >
+              <option value="">All</option>
+              <option v-for="c in offboardingCountries" :key="c" :value="c">{{ c }}</option>
+            </select>
+          </label>
+          <button
+            v-if="!showOffboardingCreateForm"
+            type="button"
+            class="inline-flex items-center rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800/40"
+            @click="showOffboardingCreateForm = true"
+          >
+            <span aria-hidden="true" class="mr-1.5 font-semibold">+</span>
+            <span>Add offboarding</span>
+          </button>
+        </div>
       </div>
 
       <form
@@ -680,7 +722,7 @@
               </tr>
             </thead>
             <tbody>
-              <template v-for="row in offboardingRows" :key="row.id">
+              <template v-for="row in filteredOffboardingRows" :key="row.id">
                 <tr class="border-t border-slate-800 align-top">
                   <template v-if="offboardingEditId === row.id">
                     <td class="px-4 py-3">
@@ -856,7 +898,7 @@
                 </tr>
               </template>
 
-              <tr v-if="offboardingRows.length === 0" class="border-t border-slate-800">
+              <tr v-if="filteredOffboardingRows.length === 0" class="border-t border-slate-800">
                 <td colspan="7" class="px-4 py-6 text-center text-slate-300">No offboarding items yet.</td>
               </tr>
             </tbody>
@@ -865,9 +907,9 @@
       </div>
     </section>
 
-    <hr class="border-slate-800" />
+    <hr v-if="!isReportMode" class="border-slate-800" />
 
-    <section class="space-y-3">
+    <section v-if="!isReportMode" class="space-y-3">
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="space-y-1">
           <h2 class="text-base font-semibold text-slate-200">Upcoming Onboarding Check-ins</h2>
@@ -875,6 +917,16 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+            <span class="whitespace-nowrap">Country</span>
+            <select
+              v-model="selectedCheckinsCountry"
+              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+            >
+              <option value="">All</option>
+              <option v-for="c in checkinsCountries" :key="c" :value="c">{{ c }}</option>
+            </select>
+          </label>
           <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
             <span class="whitespace-nowrap">Check-in</span>
             <select
@@ -919,14 +971,14 @@
           <div v-if="probationNewHiresErrorMessage" class="mt-2 text-xs text-red-200/80">{{ probationNewHiresErrorMessage }}</div>
         </div>
         <div v-else>
-          <NewHireCheckinsTable :items="probationNewHires" :checkin-filter="upcomingCheckinsFilter" />
+          <NewHireCheckinsTable :items="filteredCheckinsNewHires" :checkin-filter="upcomingCheckinsFilter" />
         </div>
       </div>
     </section>
 
-    <hr class="border-slate-800" />
+    <hr v-if="!isReportMode" class="border-slate-800" />
 
-    <section class="space-y-3">
+    <section v-if="!isReportMode" class="space-y-3">
       <div class="space-y-1">
         <h2 class="text-base font-semibold text-slate-200">Recent Separations</h2>
         <p class="text-xs text-slate-400">Employees where Active = false (resigned / fired / retired).</p>
@@ -934,15 +986,27 @@
 
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="text-sm text-slate-300">Archived employees (by month, from Odoo write date).</div>
-        <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
-          <span class="whitespace-nowrap">Month</span>
-          <select
-            v-model="selectedSeparationMonth"
-            class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
-          >
-            <option v-for="m in separationMonths" :key="m" :value="m">{{ formatMonthLabel(m) }}</option>
-          </select>
-        </label>
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+            <span class="whitespace-nowrap">Country</span>
+            <select
+              v-model="selectedSeparationCountry"
+              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+            >
+              <option value="">All</option>
+              <option v-for="c in separationCountries" :key="c" :value="c">{{ c }}</option>
+            </select>
+          </label>
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+            <span class="whitespace-nowrap">Month</span>
+            <select
+              v-model="selectedSeparationMonth"
+              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+            >
+              <option v-for="m in separationMonths" :key="m" :value="m">{{ formatMonthLabel(m) }}</option>
+            </select>
+          </label>
+        </div>
       </div>
 
       <div v-if="separationsPending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
@@ -991,8 +1055,12 @@
 
 <script setup lang="ts">
 import { formatYmdDateOrDash } from '~/utils/dates'
+import { ensureUsaOption } from '~/utils/countryOptions'
 import DateInput from '~/components/DateInput.vue'
 import NewHireCheckinsTable from '~/components/NewHireCheckinsTable.vue'
+
+const route = useRoute()
+const isReportMode = computed(() => route.query.report === '1')
 
 type Vacancy = {
   id: string
@@ -1160,6 +1228,10 @@ const {
 const vacancies = computed(() => vacanciesData.value ?? [])
 const vacanciesErrorMessage = computed(() => getErrorMessage(vacanciesError.value))
 
+const REPORT_TOP_VACANCIES = 12
+const REPORT_TOP_CANDIDATES = 15
+const vacanciesForDisplay = computed(() => (isReportMode.value ? vacancies.value.slice(0, REPORT_TOP_VACANCIES) : vacancies.value))
+
 const {
   data: criticalRecruitmentData,
   pending: criticalRecruitmentPending,
@@ -1180,6 +1252,14 @@ const {
 const newHireMonths = computed(() => odooNewHiresData.value?.months ?? [])
 const odooNewHires = computed(() => odooNewHiresData.value?.items ?? [])
 const odooNewHiresErrorMessage = computed(() => getErrorMessage(odooNewHiresError.value))
+
+const selectedNewHireCountry = ref('')
+const newHireCountries = computed(() => ensureUsaOption(uniqueSorted(odooNewHires.value.map((n) => n.countryAssigned))))
+const filteredNewHires = computed(() => {
+  const selected = selectedNewHireCountry.value.trim()
+  const items = odooNewHires.value ?? []
+  return selected ? items.filter((n) => n.countryAssigned === selected) : items
+})
 
 const ONBOARDING_TASKS = [
   'HR Orientation',
@@ -1378,8 +1458,15 @@ const probationNewHiresErrorMessage = computed(() => getErrorMessage(probationNe
 
 const upcomingCheckinsExpanded = ref(true)
 const upcomingCheckinsFilter = ref<'all' | '1' | '2-3' | '4-6'>('all')
+const selectedCheckinsCountry = ref('')
+const checkinsCountries = computed(() => ensureUsaOption(uniqueSorted(probationNewHires.value.map((n) => n.countryAssigned))))
+const filteredCheckinsNewHires = computed(() => {
+  const selected = selectedCheckinsCountry.value.trim()
+  const items = probationNewHires.value ?? []
+  return selected ? items.filter((n) => n.countryAssigned === selected) : items
+})
 
-const { data: employeesData, pending: employeesPending, error: employeesError } = await useFetch<Employee[]>('/api/employees')
+const { data: employeesData, pending: employeesPending, error: employeesError } = await useFetch<Employee[]>('/api/odoo/employees')
 const employeesErrorMessage = computed(() => getErrorMessage(employeesError.value))
 
 const selectedSeparationMonth = ref('')
@@ -1398,11 +1485,16 @@ watchEffect(() => {
   if (m) selectedSeparationMonth.value = m
 })
 
-const recentSeparations = computed(() =>
-  (separationsData.value?.items ?? []).slice().sort((a, b) => a.name.localeCompare(b.name))
-)
+const selectedSeparationCountry = ref('')
+const separationCountries = computed(() => ensureUsaOption(uniqueSorted((separationsData.value?.items ?? []).map((e) => e.countryAssigned))))
+const recentSeparations = computed(() => {
+  const selected = selectedSeparationCountry.value.trim()
+  const items = separationsData.value?.items ?? []
+  const filtered = selected ? items.filter((e) => e.countryAssigned === selected) : items
+  return filtered.slice().sort((a, b) => a.name.localeCompare(b.name))
+})
 
-const vacancyCountries = computed(() => uniqueSorted((employeesData.value ?? []).map((e) => e.countryAssigned)))
+const vacancyCountries = computed(() => ensureUsaOption(uniqueSorted((employeesData.value ?? []).map((e) => e.countryAssigned))))
 const vacancyDepartments = computed(() => uniqueSorted((employeesData.value ?? []).map((e) => e.department)))
 const vacancyPriorities = ['high', 'medium', 'low'] as const
 const criticalRecruitmentStages = [
@@ -1414,13 +1506,21 @@ const criticalRecruitmentStages = [
 const newHireStatuses = ['Pre-Onboarding Stage', 'Onboarding', 'Hired'] as const
 
 const selectedRecruitmentStage = ref('')
+const selectedRecruitmentCountry = ref('')
+
+const criticalRecruitmentCountries = computed(() => ensureUsaOption(uniqueSorted((criticalRecruitment.value ?? []).map((c) => c.country))))
 
 const filteredCriticalRecruitment = computed(() => {
   const selected = selectedRecruitmentStage.value.trim()
+  const selectedCountry = selectedRecruitmentCountry.value.trim()
   const items = criticalRecruitment.value ?? []
-  if (!selected) return items
-  return items.filter((c) => normalizeRecruitmentStage(c.stage) === selected)
+  const stageFiltered = selected ? items.filter((c) => normalizeRecruitmentStage(c.stage) === selected) : items
+  return selectedCountry ? stageFiltered.filter((c) => c.country === selectedCountry) : stageFiltered
 })
+
+const criticalRecruitmentForDisplay = computed(() =>
+  isReportMode.value ? filteredCriticalRecruitment.value.slice(0, REPORT_TOP_CANDIDATES) : filteredCriticalRecruitment.value
+)
 
 function formatSeparationType(value: OdooSeparationsRow['separationType']) {
   if (value === 'resigned') return 'Resigned'
@@ -1482,6 +1582,14 @@ const offboardingEditForm = reactive({
   effectiveDate: ''
 })
 const offboardingEditError = ref('')
+
+const selectedOffboardingCountry = ref('')
+const offboardingCountries = computed(() => ensureUsaOption(uniqueSorted(offboardingRows.value.map((r) => r.country))))
+const filteredOffboardingRows = computed(() => {
+  const selected = selectedOffboardingCountry.value.trim()
+  const items = offboardingRows.value ?? []
+  return selected ? items.filter((r) => r.country === selected) : items
+})
 
 function safeParseArray(input: string | null) {
   if (!input) return null
@@ -1633,101 +1741,6 @@ watch(
   },
   { deep: true }
 )
-
-type DatePickerTarget = 'newHireCreate' | 'newHireEdit' | null
-
-const newHireCreateDatePickerEl = ref<HTMLElement | null>(null)
-const newHireEditDatePickerEl = ref<HTMLElement | null>(null)
-
-const datePicker = reactive({
-  openFor: null as DatePickerTarget,
-  viewYear: new Date().getFullYear(),
-  viewMonth: new Date().getMonth()
-})
-
-const datePickerWeekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
-
-function pad2(value: number) {
-  return String(value).padStart(2, '0')
-}
-
-function isValidIsoDate(value: string) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
-  const [y, m, d] = value.split('-').map((n) => Number(n))
-  if (!y || !m || !d) return false
-  const dt = new Date(y, m - 1, d)
-  return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d
-}
-
-function monthLabel(year: number, monthIndex: number) {
-  return new Date(year, monthIndex, 1).toLocaleString(undefined, { month: 'long', year: 'numeric' })
-}
-
-const datePickerMonthLabel = computed(() => monthLabel(datePicker.viewYear, datePicker.viewMonth))
-
-const activeDatePickerValue = computed(() => {
-  if (datePicker.openFor === 'newHireCreate') return newHireForm.startDate
-  if (datePicker.openFor === 'newHireEdit') return newHireEditForm.startDate
-  return ''
-})
-
-const datePickerCells = computed(() => {
-  const first = new Date(datePicker.viewYear, datePicker.viewMonth, 1)
-  const daysInMonth = new Date(datePicker.viewYear, datePicker.viewMonth + 1, 0).getDate()
-  const mondayStartOffset = (first.getDay() + 6) % 7
-  const cells: Array<{ key: string; day: number | null; iso: string | null }> = []
-  for (let i = 0; i < 42; i += 1) {
-    const day = i - mondayStartOffset + 1
-    if (day < 1 || day > daysInMonth) {
-      cells.push({ key: `e-${i}`, day: null, iso: null })
-      continue
-    }
-    const iso = `${datePicker.viewYear}-${pad2(datePicker.viewMonth + 1)}-${pad2(day)}`
-    cells.push({ key: iso, day, iso })
-  }
-  return cells
-})
-
-function openDatePicker(target: Exclude<DatePickerTarget, null>) {
-  datePicker.openFor = target
-  const value = target === 'newHireCreate' ? newHireForm.startDate : newHireEditForm.startDate
-  if (isValidIsoDate(value)) {
-    const parts = value.split('-')
-    const y = Number(parts[0])
-    const m = Number(parts[1])
-    datePicker.viewYear = y
-    datePicker.viewMonth = m - 1
-    return
-  }
-  const now = new Date()
-  datePicker.viewYear = now.getFullYear()
-  datePicker.viewMonth = now.getMonth()
-}
-
-function toggleDatePicker(target: Exclude<DatePickerTarget, null>) {
-  if (datePicker.openFor === target) {
-    datePicker.openFor = null
-    return
-  }
-  openDatePicker(target)
-}
-
-function closeDatePicker() {
-  datePicker.openFor = null
-}
-
-function shiftDatePickerMonth(delta: -1 | 1) {
-  const dt = new Date(datePicker.viewYear, datePicker.viewMonth + delta, 1)
-  datePicker.viewYear = dt.getFullYear()
-  datePicker.viewMonth = dt.getMonth()
-}
-
-function selectDatePickerDate(iso: string) {
-  if (!datePicker.openFor) return
-  if (datePicker.openFor === 'newHireCreate') newHireForm.startDate = iso
-  if (datePicker.openFor === 'newHireEdit') newHireEditForm.startDate = iso
-  closeDatePicker()
-}
 
 const showVacancyForm = ref(false)
 const vacancyForm = reactive({ positionTitle: '', department: '', country: '', priority: '' })
@@ -1895,90 +1908,20 @@ async function deleteCriticalRecruitment(id: string) {
   }
 }
 
-const showNewHireForm = ref(false)
-const newHireForm = reactive({ name: '', position: '', country: '', startDate: '', status: '' })
-const newHireSaving = ref(false)
-const newHireActionError = ref('')
-const newHireEditId = ref<string | null>(null)
-const newHireEditForm = reactive({ name: '', position: '', country: '', startDate: '', status: '' })
-const newHireEditError = ref('')
-
-onMounted(() => {
-  const onPointerDown = (event: MouseEvent) => {
-    if (!datePicker.openFor) return
-    const container = datePicker.openFor === 'newHireCreate' ? newHireCreateDatePickerEl.value : newHireEditDatePickerEl.value
-    if (!container) return
-    const target = event.target
-    if (target instanceof Node && !container.contains(target)) closeDatePicker()
+const reportReady = ref(false)
+watchEffect(async () => {
+  if (!isReportMode.value) {
+    reportReady.value = true
+    return
   }
-  window.addEventListener('mousedown', onPointerDown)
-  onBeforeUnmount(() => window.removeEventListener('mousedown', onPointerDown))
+
+  if (vacanciesPending.value || criticalRecruitmentPending.value) {
+    reportReady.value = false
+    return
+  }
+
+  await nextTick()
+  reportReady.value = true
 })
-
-function cancelNewHireCreate() {
-  newHireActionError.value = ''
-  showNewHireForm.value = false
-}
-
-async function createNewHire() {
-  newHireActionError.value = ''
-  newHireSaving.value = true
-  try {
-    await $fetch('/api/new-hires', { method: 'POST', body: { ...newHireForm } })
-    newHireForm.name = ''
-    newHireForm.position = ''
-    newHireForm.country = ''
-    newHireForm.startDate = ''
-    newHireForm.status = ''
-    showNewHireForm.value = false
-  } catch (err) {
-    newHireActionError.value = getErrorMessage(err)
-  } finally {
-    newHireSaving.value = false
-  }
-}
-
-function startEditNewHire(n: NewHire) {
-  newHireEditError.value = ''
-  newHireEditId.value = n.id
-  newHireEditForm.name = n.name
-  newHireEditForm.position = n.position
-  newHireEditForm.country = n.country
-  newHireEditForm.startDate = n.startDate
-  newHireEditForm.status = n.status
-}
-
-function cancelEditNewHire() {
-  newHireEditId.value = null
-  newHireEditError.value = ''
-}
-
-async function saveEditNewHire() {
-  const id = newHireEditId.value
-  if (!id) return
-  newHireEditError.value = ''
-  newHireSaving.value = true
-  try {
-    await $fetch(`/api/new-hires/${id}`, { method: 'PUT', body: { ...newHireEditForm } })
-    newHireEditId.value = null
-  } catch (err) {
-    newHireEditError.value = getErrorMessage(err)
-  } finally {
-    newHireSaving.value = false
-  }
-}
-
-async function deleteNewHire(id: string) {
-  newHireActionError.value = ''
-  newHireSaving.value = true
-  try {
-    await $fetch(`/api/new-hires/${id}`, { method: 'DELETE' })
-    if (newHireEditId.value === id) newHireEditId.value = null
-  } catch (err) {
-    newHireActionError.value = getErrorMessage(err)
-  } finally {
-    newHireSaving.value = false
-  }
-}
 </script>
 

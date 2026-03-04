@@ -1,4 +1,4 @@
-import { readJsonArray } from '../utils/jsonStore'
+import { prisma } from '../utils/db'
 
 type CriticalRecruitment = {
   id: string
@@ -11,7 +11,7 @@ type CriticalRecruitment = {
 }
 
 export default defineEventHandler(async () => {
-  const items = await readJsonArray<CriticalRecruitment>('critical-recruitment.json')
-  return items.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  const items = await prisma.criticalRecruitment.findMany({ orderBy: { createdAt: 'desc' } })
+  return items.map((v) => ({ ...v, createdAt: v.createdAt.toISOString() }))
 })
 

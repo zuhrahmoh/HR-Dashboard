@@ -1,5 +1,5 @@
 import { createError, getRouterParam, readBody } from 'h3'
-import { readJsonArray, writeJsonArray } from '../../utils/jsonStore'
+import { prisma } from '../../utils/db'
 
 type Vacancy = {
   id: string
@@ -27,21 +27,14 @@ export default defineEventHandler(async (event) => {
   const country = requireNonEmptyString(body?.country, 'country')
   const priority = requireNonEmptyString(body?.priority, 'priority')
 
-  const items = await readJsonArray<Vacancy>('vacancies.json')
-  const idx = items.findIndex((v) => v.id === id)
-  if (idx === -1) throw createError({ statusCode: 404, statusMessage: 'Vacancy not found' })
+  const existing = await prisma.vacancy.findUnique({ where: { id } })
+  if (!existing) throw createError({ statusCode: 404, statusMessage: 'Vacancy not found' })
 
-  const existing = items[idx]
-  const updated: Vacancy = {
-    ...existing,
-    positionTitle,
-    department,
-    country,
-    priority
-  }
+  const updated = await prisma.vacancy.update({
+    where: { id },
+    data: { positionTitle, department, country, priority }
+  })
 
-  items[idx] = updated
-  await writeJsonArray('vacancies.json', items)
-  return updated
+  return { ...updated, createdAt: updated.createdAt.toISOString() }
 })
 

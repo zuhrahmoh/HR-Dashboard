@@ -280,6 +280,7 @@
 
 <script setup lang="ts">
 import DateInput from '~/components/DateInput.vue'
+import { ensureUsaOption } from '~/utils/countryOptions'
 
 type EapReferral = {
   id: string
@@ -321,7 +322,8 @@ function normalizeReasonCategory(value: string) {
   if (v === 'stress management' || v === 'stress') return 'Stress Management'
   return value.trim()
 }
-function reasonCategoryBadgeClass(value: string) {
+
+function reasonCategoryBadgeClass(value: string) {
   const v = normalizeForMatch(normalizeReasonCategory(value))
   if (v === 'stress management' || v === 'stress') return 'border-teal-900/60 bg-teal-950/30 text-teal-200'
   if (v === 'underperformance' || v === 'under performance' || v === 'performance' || v === 'drop in performance' || v === 'drop-in performance') return 'border-pink-900/60 bg-pink-950/30 text-pink-200'
@@ -389,8 +391,8 @@ const {
 const items = computed(() => data.value ?? [])
 const errorMessage = computed(() => getErrorMessage(error.value))
 
-const { data: employeesData } = await useFetch<Employee[]>('/api/employees')
-const countries = computed(() => uniqueSorted((employeesData.value ?? []).map((e) => e.countryAssigned)))
+const { data: employeesData } = await useFetch<Employee[]>('/api/odoo/employees')
+const countries = computed(() => ensureUsaOption(uniqueSorted((employeesData.value ?? []).map((e) => e.countryAssigned))))
 
 const showCreateForm = ref(false)
 const saving = ref(false)

@@ -1,5 +1,5 @@
 import { createError, getRouterParam, readBody } from 'h3'
-import { readJsonArray, writeJsonArray } from '../../utils/jsonStore'
+import { prisma } from '../../utils/db'
 
 type EapReferral = {
   id: string
@@ -58,33 +58,30 @@ export default defineEventHandler(async (event) => {
   const closeDate = optionalTrimmedString(body?.closeDate)
   const closedReason = optionalTrimmedString(body?.closedReason)
 
-  const items = await readJsonArray<EapReferral>('eap-referrals.json')
-  const idx = items.findIndex((v) => v.id === id)
-  if (idx === -1) throw createError({ statusCode: 404, statusMessage: 'EAP referral not found' })
+  const existing = await prisma.eapReferral.findUnique({ where: { id } })
+  if (!existing) throw createError({ statusCode: 404, statusMessage: 'EAP referral not found' })
 
-  const existing = items[idx]
-  const updated: EapReferral = {
-    ...existing,
-    employeeName,
-    country,
-    referralSource,
-    referralDate,
-    reasonCategory,
-    reasonDetails,
-    programStatus,
-    startDate,
-    lastFollowUpDate,
-    nextFollowUpDate,
-    outcomeNotes,
-    ownerHr,
-    referralDocsUrl,
-    closeDate,
-    closedReason,
-    updatedAt: new Date().toISOString()
-  }
+  const updated = await prisma.eapReferral.update({
+    where: { id },
+    data: {
+      employeeName,
+      country,
+      referralSource,
+      referralDate,
+      reasonCategory,
+      reasonDetails,
+      programStatus,
+      startDate,
+      lastFollowUpDate,
+      nextFollowUpDate,
+      outcomeNotes,
+      ownerHr,
+      referralDocsUrl,
+      closeDate,
+      closedReason
+    }
+  })
 
-  items[idx] = updated
-  await writeJsonArray('eap-referrals.json', items)
-  return updated
+  return { ...updated, createdAt: updated.createdAt.toISOString(), updatedAt: updated.updatedAt.toISOString() }
 })
 

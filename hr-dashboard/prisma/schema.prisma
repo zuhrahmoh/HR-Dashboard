@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client"
+  output   = "./generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Vacancy {
+  id            String   @id @default(uuid()) @db.Uuid
+  positionTitle String
+  department    String
+  country       String
+  priority      String
+  createdAt     DateTime @default(now())
+}
+
+model CriticalRecruitment {
+  id            String   @id @default(uuid()) @db.Uuid
+  candidateName String
+  position      String
+  country       String
+  stage         String
+  notes         String?
+  createdAt     DateTime @default(now())
+}
+
+model DisciplinaryCase {
+  id              String   @id @default(uuid()) @db.Uuid
+  employeeName    String
+  department      String
+  country         String
+  summary         String
+  status          String
+  includeInReport Boolean  @default(false)
+  createdAt       DateTime @default(now())
+}
+
+model ContractChange {
+  id           String   @id @default(uuid()) @db.Uuid
+  employeeName String
+  country      String
+  department   String
+  position     String
+  changeTypes  String[]
+  status       String
+  description  String
+  createdAt    DateTime @default(now())
+}
+
+model MedicalEnrollment {
+  id             String   @id @default(uuid()) @db.Uuid
+  employeeName   String
+  country        String
+  enrollmentType String?
+  vendor         String?
+  stage          String
+  dateInitiated  String?
+  nextAction     String?
+  hrRepresentative String?
+  notes          String?
+  attachmentsUrl String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model EapReferral {
+  id              String   @id @default(uuid()) @db.Uuid
+  employeeName    String
+  country         String
+  referralSource  String?
+  referralDate    String
+  reasonCategory  String
+  reasonDetails   String?
+  programStatus   String
+  startDate       String?
+  lastFollowUpDate String?
+  nextFollowUpDate String?
+  outcomeNotes    String?
+  ownerHr         String?
+  referralDocsUrl String?
+  closeDate       String?
+  closedReason    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model CPlayerNote {
+  employeeKey String @id
+  note        String
+  updatedAt   DateTime @updatedAt
+}
+
+model HeadcountSnapshot {
+  id        String   @id @default(uuid()) @db.Uuid
+  month     DateTime @unique
+  headcount Int
+  createdAt DateTime @default(now())
+}
+
