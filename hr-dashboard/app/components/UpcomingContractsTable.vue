@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-3">
+  <div class="min-w-0 space-y-3">
     <div class="flex items-center justify-end">
       <div class="inline-flex overflow-hidden rounded-md border border-slate-700 bg-slate-900">
         <button
@@ -40,17 +40,26 @@
         <section v-for="group in upcomingContractGroups" :key="`upcoming_contract__${group.countryKey}`" class="space-y-2">
           <h4 class="text-base font-semibold text-slate-200">{{ group.countryLabel }}</h4>
 
-          <div class="overflow-x-auto overflow-y-visible rounded-md border border-slate-800 bg-slate-900">
-            <table class="min-w-full text-left text-sm">
+          <div class="rounded-md border border-slate-800 bg-slate-900">
+            <table class="w-full table-fixed border-collapse text-left text-sm">
+              <colgroup>
+                <col style="width: 15%" />
+                <col style="width: 15%" />
+                <col style="width: 16%" />
+                <col style="width: 16%" />
+                <col style="width: 12%" />
+                <col style="width: 14%" />
+                <col style="width: 12%" />
+              </colgroup>
               <thead class="border-b border-slate-800 text-xs text-slate-400">
                 <tr>
-                  <th scope="col" class="px-4 py-3 font-medium">Name</th>
-                  <th scope="col" class="px-4 py-3 font-medium">Department</th>
-                  <th scope="col" class="px-4 py-3 font-medium">Position</th>
-                  <th scope="col" class="px-4 py-3 font-medium">Reporting To</th>
-                  <th scope="col" class="px-4 py-3 font-medium">End date</th>
-                  <th scope="col" class="px-4 py-3 font-medium">Status</th>
-                  <th scope="col" class="px-4 py-3 text-right font-medium">Time remaining</th>
+                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Name</th>
+                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Department</th>
+                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Position</th>
+                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Reporting To</th>
+                  <th scope="col" class="px-3 py-3 align-bottom font-medium">End date</th>
+                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Status</th>
+                  <th scope="col" class="px-3 py-3 text-right align-bottom font-medium">Time left</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-800">
@@ -59,28 +68,20 @@
                   :key="row.key"
                   :class="upcomingRowClass(row, rowIdx, group.rows.length)"
                 >
-                  <td class="px-4 py-3 font-medium text-slate-100">
-                    <div class="max-w-52 truncate" :title="row.name || ''">{{ row.name || '—' }}</div>
-                  </td>
-                  <td class="px-4 py-3 text-slate-300">
-                    <div class="max-w-48 truncate" :title="row.department || ''">{{ row.department || '—' }}</div>
-                  </td>
-                  <td class="px-4 py-3 text-slate-300">
-                    <div class="max-w-56 truncate" :title="row.position || ''">{{ row.position || '—' }}</div>
-                  </td>
-                  <td class="px-4 py-3 text-slate-300">
-                    <div class="max-w-56 truncate" :title="row.reportingTo || ''">{{ row.reportingTo || '—' }}</div>
-                  </td>
-                  <td class="whitespace-nowrap px-4 py-3 tabular-nums text-slate-200">
+                  <td class="min-w-0 px-3 py-3 align-top font-medium break-words text-slate-100">{{ row.name || '—' }}</td>
+                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-300">{{ row.department || '—' }}</td>
+                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-300">{{ row.position || '—' }}</td>
+                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-300">{{ row.reportingTo || '—' }}</td>
+                  <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top tabular-nums text-slate-200">
                     {{ formatYmdDate(row.contractOrProbationEndDate) }}
                   </td>
-                  <td class="whitespace-nowrap px-4 py-3">
+                  <td class="min-w-0 px-3 py-3 align-top">
                     <StatusBadgeSelect
                       :model-value="getStatusForRow(row)"
                       @update:model-value="(v) => setStatusForRow(row, v)"
                     />
                   </td>
-                  <td class="whitespace-nowrap px-4 py-3 text-right font-bold tabular-nums text-slate-100">
+                  <td class="min-w-0 whitespace-nowrap px-3 py-3 text-right align-top font-bold tabular-nums text-slate-100">
                     {{ formatRemaining(row.daysRemaining) }}
                   </td>
                 </tr>
@@ -101,17 +102,26 @@
         <section v-for="group in upcomingProbationGroups" :key="`upcoming_probation__${group.countryKey}`" class="space-y-2">
           <h4 class="text-base font-semibold text-slate-200">{{ group.countryLabel }}</h4>
 
-          <div class="overflow-x-auto overflow-y-visible rounded-md border border-slate-800 bg-slate-900">
-            <table class="min-w-full text-left text-sm">
+          <div class="rounded-md border border-slate-800 bg-slate-900">
+            <table class="w-full table-fixed border-collapse text-left text-sm">
+              <colgroup>
+                <col style="width: 15%" />
+                <col style="width: 15%" />
+                <col style="width: 16%" />
+                <col style="width: 16%" />
+                <col style="width: 12%" />
+                <col style="width: 14%" />
+                <col style="width: 12%" />
+              </colgroup>
               <thead class="border-b border-slate-800 text-xs text-slate-400">
                 <tr>
-                  <th scope="col" class="px-4 py-3 font-medium">Name</th>
-                  <th scope="col" class="px-4 py-3 font-medium">Department</th>
-                  <th scope="col" class="px-4 py-3 font-medium">Position</th>
-                  <th scope="col" class="px-4 py-3 font-medium">Reporting To</th>
-                  <th scope="col" class="px-4 py-3 font-medium">End date</th>
-                  <th scope="col" class="px-4 py-3 font-medium">Status</th>
-                  <th scope="col" class="px-4 py-3 text-right font-medium">Time remaining</th>
+                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Name</th>
+                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Department</th>
+                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Position</th>
+                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Reporting To</th>
+                  <th scope="col" class="px-3 py-3 align-bottom font-medium">End date</th>
+                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Status</th>
+                  <th scope="col" class="px-3 py-3 text-right align-bottom font-medium">Time left</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-800">
@@ -120,25 +130,17 @@
                   :key="row.key"
                   :class="upcomingRowClass(row, rowIdx, group.rows.length)"
                 >
-                  <td class="px-4 py-3 font-medium text-slate-100">
-                    <div class="max-w-52 truncate" :title="row.name || ''">{{ row.name || '—' }}</div>
-                  </td>
-                  <td class="px-4 py-3 text-slate-300">
-                    <div class="max-w-48 truncate" :title="row.department || ''">{{ row.department || '—' }}</div>
-                  </td>
-                  <td class="px-4 py-3 text-slate-300">
-                    <div class="max-w-56 truncate" :title="row.position || ''">{{ row.position || '—' }}</div>
-                  </td>
-                  <td class="px-4 py-3 text-slate-300">
-                    <div class="max-w-56 truncate" :title="row.reportingTo || ''">{{ row.reportingTo || '—' }}</div>
-                  </td>
-                  <td class="whitespace-nowrap px-4 py-3 tabular-nums text-slate-200">
+                  <td class="min-w-0 px-3 py-3 align-top font-medium break-words text-slate-100">{{ row.name || '—' }}</td>
+                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-300">{{ row.department || '—' }}</td>
+                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-300">{{ row.position || '—' }}</td>
+                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-300">{{ row.reportingTo || '—' }}</td>
+                  <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top tabular-nums text-slate-200">
                     {{ formatYmdDate(row.contractOrProbationEndDate) }}
                   </td>
-                  <td class="whitespace-nowrap px-4 py-3">
+                  <td class="min-w-0 px-3 py-3 align-top">
                     <StatusBadgeSelect :model-value="getStatusForRow(row)" @update:model-value="(v) => setStatusForRow(row, v)" />
                   </td>
-                  <td class="whitespace-nowrap px-4 py-3 text-right font-bold tabular-nums text-slate-100">
+                  <td class="min-w-0 whitespace-nowrap px-3 py-3 text-right align-top font-bold tabular-nums text-slate-100">
                     {{ formatRemaining(row.daysRemaining) }}
                   </td>
                 </tr>
@@ -156,43 +158,44 @@
         <section v-for="group in pendingExpiryGroups" :key="`pending__${group.countryKey}`" class="space-y-2">
           <h4 class="text-base font-semibold text-slate-200">{{ group.countryLabel }}</h4>
 
-          <div class="overflow-x-auto overflow-y-visible rounded-md border border-slate-800 bg-slate-900">
-            <table class="min-w-full text-left text-sm">
+          <div class="rounded-md border border-slate-800 bg-slate-900">
+            <table class="w-full table-fixed border-collapse text-left text-sm">
+              <colgroup>
+                <col style="width: 15%" />
+                <col style="width: 15%" />
+                <col style="width: 16%" />
+                <col style="width: 16%" />
+                <col style="width: 12%" />
+                <col style="width: 14%" />
+                <col style="width: 12%" />
+              </colgroup>
               <thead class="border-b border-slate-800 text-xs text-slate-400">
                 <tr>
-                  <th scope="col" class="px-4 py-3 font-medium">Name</th>
-                  <th scope="col" class="px-4 py-3 font-medium">Department</th>
-                  <th scope="col" class="px-4 py-3 font-medium">Position</th>
-                  <th scope="col" class="px-4 py-3 font-medium">Reporting To</th>
-                  <th scope="col" class="px-4 py-3 font-medium">End date</th>
-                  <th scope="col" class="px-4 py-3 font-medium">Status</th>
-                  <th scope="col" class="px-4 py-3 text-right font-medium">Time remaining</th>
+                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Name</th>
+                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Department</th>
+                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Position</th>
+                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Reporting To</th>
+                  <th scope="col" class="px-3 py-3 align-bottom font-medium">End date</th>
+                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Status</th>
+                  <th scope="col" class="px-3 py-3 text-right align-bottom font-medium">Time left</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-800">
                 <tr v-for="row in group.rows" :key="row.key" class="text-slate-200">
-                  <td class="px-4 py-3 font-medium text-slate-100">
-                    <div class="max-w-52 truncate" :title="row.name || ''">{{ row.name || '—' }}</div>
-                  </td>
-                  <td class="px-4 py-3 text-slate-300">
-                    <div class="max-w-48 truncate" :title="row.department || ''">{{ row.department || '—' }}</div>
-                  </td>
-                  <td class="px-4 py-3 text-slate-300">
-                    <div class="max-w-56 truncate" :title="row.position || ''">{{ row.position || '—' }}</div>
-                  </td>
-                  <td class="px-4 py-3 text-slate-300">
-                    <div class="max-w-56 truncate" :title="row.reportingTo || ''">{{ row.reportingTo || '—' }}</div>
-                  </td>
-                  <td class="whitespace-nowrap px-4 py-3 tabular-nums text-slate-200">
+                  <td class="min-w-0 px-3 py-3 align-top font-medium break-words text-slate-100">{{ row.name || '—' }}</td>
+                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-300">{{ row.department || '—' }}</td>
+                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-300">{{ row.position || '—' }}</td>
+                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-300">{{ row.reportingTo || '—' }}</td>
+                  <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top tabular-nums text-slate-200">
                     {{ formatYmdDate(row.contractOrProbationEndDate) }}
                   </td>
-                  <td class="whitespace-nowrap px-4 py-3">
+                  <td class="min-w-0 px-3 py-3 align-top">
                     <StatusBadgeSelect
                       :model-value="getStatusForRow(row)"
                       @update:model-value="(v) => setStatusForRow(row, v)"
                     />
                   </td>
-                  <td class="whitespace-nowrap px-4 py-3 text-right font-bold tabular-nums text-slate-100">
+                  <td class="min-w-0 whitespace-nowrap px-3 py-3 text-right align-top font-bold tabular-nums text-slate-100">
                     {{ formatRemaining(row.daysRemaining) }}
                   </td>
                 </tr>

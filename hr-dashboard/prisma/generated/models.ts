@@ -11,6 +11,7 @@
 export type * from './models/Vacancy.js'
 export type * from './models/CriticalRecruitment.js'
 export type * from './models/DisciplinaryCase.js'
+export type * from './models/DisciplinaryCaseInclude.js'
 export type * from './models/ContractChange.js'
 export type * from './models/MedicalEnrollment.js'
 export type * from './models/EapReferral.js'

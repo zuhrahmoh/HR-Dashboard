@@ -46,8 +46,8 @@
                   <tr v-for="r in rows" :key="r.employeeKey" class="border-t border-slate-200">
                     <td class="px-3 py-2 text-slate-900">{{ r.name }}</td>
                     <td class="px-3 py-2 text-slate-700">{{ r.position || '—' }}</td>
-                    <td class="px-3 py-2">
-                      <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold" :class="typeBadgeClass(r.separationType)">
+                    <td class="min-w-0 px-3 py-2">
+                      <span :class="[tableDataBadgeClass, typeBadgeClass(r.separationType)]">
                         {{ formatType(r.separationType) }}
                       </span>
                     </td>
@@ -64,6 +64,7 @@
 
 <script setup lang="ts">
 import ReportKpiTile from '~/components/ReportKpiTile.vue'
+import { tableDataBadgeClass } from '~/utils/tableBadge'
 
 type HomeAnalytics = {
   separations: {

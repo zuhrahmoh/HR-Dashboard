@@ -118,7 +118,7 @@ const reportMonthKey = computed(() => (/^\d{4}-\d{2}$/.test(reportMonth.value) ?
 
 const { data: analyticsData, pending: analyticsPending } = await useFetch<HomeAnalytics>('/api/odoo/analytics/home')
 const { data: vacanciesData, pending: vacanciesPending } = await useFetch<Vacancy[]>('/api/vacancies')
-const { data: casesData, pending: casesPending } = await useFetch<DisciplinaryCase[]>('/api/disciplinary')
+const { data: casesData, pending: casesPending } = await useFetch<DisciplinaryCase[]>('/api/odoo/disciplinary-cases')
 const { data: expensesData, pending: expensesPending } = await useFetch<ExpensesResponse>('/api/expenses', {
   query: computed(() => ({ month: reportMonthKey.value || undefined })),
   watch: [reportMonthKey]

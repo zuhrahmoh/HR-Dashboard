@@ -5,11 +5,10 @@ export type SharePointExpenseRow = {
   monthKey: string
   monthLabel: string
   grossSalary: number
-  paye: number
   overtime: number
   vc: number
-  healthSurcharge: number
   nisCompany: number
+  medicalPlanEmployer: number
   totalOutgoingExpenses: number
 }
 
@@ -127,27 +126,31 @@ function extractExpenseRow(fields: Record<string, unknown>): SharePointExpenseRo
 
   // Prefer strict internal field names from the current SharePoint list (verified via Graph):
   // - Salaries_x0028_inclusiveofPAYE_x (displayed as "Gross Salary")
-  // - OtherAllowances (displayed as "Health Surcharge")
   // - NIS_x0028_Company_x0029_ (displayed as "NIS (Company)")
   // - Total (displayed as "Total Outgoing Expenses")
-  // - PAYE (displayed as "PAYE")
   // Fallbacks exist to reduce breakage if the list schema changes later.
   const grossSalary = parseAmount(
     (fields['Salaries_x0028_inclusiveofPAYE_x'] as unknown) ??
       getFieldValue(fields, ['Gross Salary', 'GrossSalary', 'grossSalary', 'GrossSalaryUSD'])
   )
-  const paye = parseAmount((fields['PAYE'] as unknown) ?? getFieldValue(fields, ['PAYE', 'Paye', 'paye']))
 
   const overtime = parseAmount((fields['Overtime'] as unknown) ?? getFieldValue(fields, ['Overtime', 'overtime']))
   const vc = parseAmount((fields['VC'] as unknown) ?? getFieldValue(fields, ['VC', 'Vc', 'vc']))
-  const healthSurcharge = parseAmount(
-    (fields['OtherAllowances'] as unknown) ??
-      getFieldValue(fields, ['OtherAllowances', 'Health Surcharge', 'HealthSurcharge', 'healthSurcharge'])
-  )
   const nisCompany = parseAmount(
     (fields['NIS_x0028_Company_x0029_'] as unknown) ??
       getFieldValue(fields, ['NIS_x0028_Company_x0029_', 'NIS (Company)', 'NISCompany', 'nisCompany', 'NIS', 'nis'])
   )
+  const medicalPlanEmployer = parseAmount(
+    getFieldValue(fields, [
+      'Medical_x0020_Plan_x0020__x0028_Employer_x0029_',
+      'Medical_x0020_Plan_x0028_Employer_x0029_',
+      'Medical Plan (Employer)',
+      'MedicalPlanEmployer',
+      'medicalPlanEmployer',
+      'MedicalPlan_x0028_Employer_x0029_'
+    ])
+  )
+
   const totalOutgoingExpensesDirect = parseAmount(
     (fields['Total'] as unknown) ??
       getFieldValue(fields, ['Total', 'Total Outgoing Expenses', 'TotalOutgoingExpenses', 'totalOutgoingExpenses', 'TotalOutgoingEx', 'totalOutgoingEx'])
@@ -160,11 +163,10 @@ function extractExpenseRow(fields: Record<string, unknown>): SharePointExpenseRo
     monthKey,
     monthLabel,
     grossSalary,
-    paye,
     overtime,
     vc,
-    healthSurcharge,
     nisCompany,
+    medicalPlanEmployer,
     totalOutgoingExpenses
   }
 }

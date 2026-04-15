@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6" :data-report-ready="reportReady ? '1' : undefined">
     <div class="space-y-1">
-      <h1 class="text-3xl font-semibold">HR Analytics (Odoo)</h1>
+      <h1 class="text-3xl font-semibold">HR Analytics</h1>
       <p class="text-base text-slate-300">Employee analytics sourced from the Odoo Employee module.</p>
     </div>
 
@@ -12,7 +12,7 @@
         <div class="mb-1 flex items-center justify-between gap-3">
           <h2 class="text-lg font-semibold text-slate-200">Geographical Headcount</h2>
           <button
-            v-if="!showHeadcountOverview"
+            v-if="!showHeadcountOverview && !reportHomeAll"
             type="button"
             class="rounded-md border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-100 hover:bg-slate-800/70"
             @click="showHeadcountOverview = true"
@@ -20,12 +20,13 @@
             <span class="inline-flex items-center gap-1.5">
               <span>View trends</span>
               <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" class="h-3.5 w-3.5" stroke="currentColor" stroke-width="1.75">
-                <path d="M4 6l4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M5.25 3.5L9.25 8l-4 4.5" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M8.25 3.5L12.25 8l-4 4.5" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
             </span>
           </button>
           <button
-            v-else
+            v-else-if="!reportHomeAll"
             type="button"
             class="rounded-md border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-100 hover:bg-slate-800/70"
             @click="showHeadcountOverview = false"
@@ -48,7 +49,16 @@
           </div>
         </div>
         <div v-else class="mt-2 min-h-0 flex-1">
-          <HeadcountBarChart :items="analytics?.headcountByCountry ?? []" />
+          <HeadcountMonthlyLineChart
+            v-if="showHeadcountOverview"
+            :items="headcountSnapshots?.items ?? []"
+            title="Geographical headcount trend"
+            :show-header="false"
+          />
+          <HeadcountBarChart
+            v-else
+            :items="analytics?.headcountByCountry ?? []"
+          />
         </div>
       </section>
 
@@ -92,7 +102,11 @@
         </div>
         <template v-else>
           <template v-if="reportHomeAll">
-            <SeparationsDonut :separations="analytics?.separations ?? { currentMonth: '', months: [], byMonth: {} }" :show-breakdown="false" />
+            <SeparationsDonut
+              :separations="analytics?.separations ?? { currentMonth: '', months: [], byMonth: {} }"
+              :show-breakdown="false"
+              show-recruitment-details-link
+            />
             <div class="mt-3">
               <SeparationsYearLineChart :items="analytics?.separationsByYear ?? []" :by-type="null" />
             </div>
@@ -107,6 +121,7 @@
               v-else
               :separations="analytics?.separations ?? { currentMonth: '', months: [], byMonth: {} }"
               :show-breakdown="false"
+              show-recruitment-details-link
             />
           </template>
         </template>
@@ -153,6 +168,7 @@
             <AdditionsDonut
               :additions="analytics?.additions ?? { currentMonth: '', months: [], byMonth: {} }"
               :total-headcount="totalHeadcountNow"
+              show-recruitment-details-link
             />
             <div class="mt-3">
               <AdditionsYearLineChart :items="analytics?.additionsByYear ?? []" />
@@ -167,15 +183,12 @@
               v-else
               :additions="analytics?.additions ?? { currentMonth: '', months: [], byMonth: {} }"
               :total-headcount="totalHeadcountNow"
+              show-recruitment-details-link
             />
           </template>
         </template>
       </section>
     </div>
-
-    <section v-if="showHeadcountOverview" class="rounded-md border border-slate-800 bg-slate-900 p-4">
-      <HeadcountMonthlyLineChart :items="headcountSnapshots?.items ?? []" title="Geographical headcount trend" />
-    </section>
 
     <hr class="border-slate-800" />
 
@@ -255,19 +268,17 @@
             :month="expenses?.month ?? null"
             :currency="selectedCurrency"
             :gross-salary="convertUsd(item.grossSalary)"
-            :paye="convertUsd(item.paye)"
             :overtime="convertUsd(item.overtime)"
             :vc="convertUsd(item.vc)"
-            :health-surcharge="convertUsd(item.healthSurcharge)"
             :nis-company="convertUsd(item.nisCompany)"
+            :medical-plan-employer="convertUsd(item.medicalPlanEmployer)"
             :total="convertUsd(item.total)"
             :show-deltas="showNetChanges && !!baselineMonthKey"
             :delta-gross-salary="convertUsd(expenseDeltasByCountry.get(item.country)?.grossSalary ?? 0)"
-            :delta-paye="convertUsd(expenseDeltasByCountry.get(item.country)?.paye ?? 0)"
             :delta-overtime="convertUsd(expenseDeltasByCountry.get(item.country)?.overtime ?? 0)"
             :delta-vc="convertUsd(expenseDeltasByCountry.get(item.country)?.vc ?? 0)"
-            :delta-health-surcharge="convertUsd(expenseDeltasByCountry.get(item.country)?.healthSurcharge ?? 0)"
             :delta-nis-company="convertUsd(expenseDeltasByCountry.get(item.country)?.nisCompany ?? 0)"
+            :delta-medical-plan-employer="convertUsd(expenseDeltasByCountry.get(item.country)?.medicalPlanEmployer ?? 0)"
             :delta-total="convertUsd(expenseDeltasByCountry.get(item.country)?.total ?? 0)"
           />
         </div>
@@ -302,18 +313,12 @@
           {{ analyticsErrorMessage }}
         </div>
       </div>
-      <div v-else class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:auto-rows-fr">
-        <section class="rounded-md border border-slate-800 bg-slate-900 p-4 flex flex-col">
-          <div class="space-y-1">
-            <h2 class="text-lg font-semibold text-slate-200">Talent Density</h2>
-            <p class="text-sm text-slate-400">Leaders and Players distribution by rating buckets. Excludes resigned employees.</p>
-          </div>
-          <div class="mt-3 min-h-0 flex-1">
-            <TalentDensityStackedBar title="Leaders" :segments="analytics?.talentDensity.leaders ?? []" />
-          </div>
-        </section>
-
-        <section class="rounded-md border border-slate-800 bg-slate-900 p-4 flex flex-col">
+      <!--
+        Talent density UI removed; `analytics.talentDensity` still returned by GET /api/odoo/analytics/home.
+        Restore with TalentDensityStackedBar for leaders/players when re-enabling.
+      -->
+      <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <section class="flex min-h-[20rem] flex-col rounded-md border border-slate-800 bg-slate-900 p-4">
           <div class="space-y-1">
             <div class="text-base font-semibold text-slate-200">Permanent vs Contracted</div>
             <div class="text-xs text-slate-400">Contracted includes interns.</div>
@@ -330,13 +335,7 @@
           </div>
         </section>
 
-        <section class="rounded-md border border-slate-800 bg-slate-900 p-4 flex flex-col">
-          <div class="mt-1 min-h-0 flex-1">
-            <TalentDensityStackedBar title="Players" :segments="analytics?.talentDensity.players ?? []" />
-          </div>
-        </section>
-
-        <section class="rounded-md border border-slate-800 bg-slate-900 p-4 flex flex-col">
+        <section class="flex min-h-[20rem] flex-col rounded-md border border-slate-800 bg-slate-900 p-4">
           <div class="space-y-1">
             <div class="text-base font-semibold text-slate-200">Gender breakdown</div>
           </div>
@@ -443,11 +442,10 @@ type ExpensesSnapshot = {
   items: Array<{
     country: string
     grossSalary: number
-    paye: number
     overtime: number
     vc: number
-    healthSurcharge: number
     nisCompany: number
+    medicalPlanEmployer: number
     totalOutgoingExpenses: number
     total: number
   }>
@@ -480,12 +478,12 @@ function isFetchFailed(message: string) {
   return typeof message === 'string' && message.toLowerCase().includes('fetch failed')
 }
 
-const { data: analyticsData, pending: analyticsPending, error: analyticsError } = await useFetch<HomeAnalytics>('/api/odoo/analytics/home')
+const { data: analyticsData, pending: analyticsPending, error: analyticsError } = useFetch<HomeAnalytics>('/api/odoo/analytics/home')
 const analytics = computed(() => analyticsData.value ?? null)
 const analyticsErrorMessage = computed(() => getErrorMessage(analyticsError.value))
 
 type HeadcountSnapshotsResponse = { items: Array<{ month: string; headcount: number }> }
-const { data: headcountSnapshots } = await useFetch<HeadcountSnapshotsResponse>('/api/analytics/headcount-snapshots')
+const { data: headcountSnapshots } = useFetch<HeadcountSnapshotsResponse>('/api/analytics/headcount-snapshots')
 
 const route = useRoute()
 const isReportMode = computed(() => route.query.report === '1')
@@ -515,7 +513,7 @@ const expensesQuery = computed(() => {
   return q
 })
 
-const { data: expensesData, pending: expensesPending, error: expensesError } = await useFetch<ExpensesResponse>('/api/expenses', {
+const { data: expensesData, pending: expensesPending, error: expensesError } = useFetch<ExpensesResponse>('/api/expenses', {
   query: expensesQuery,
   watch: [expensesQuery]
 })
@@ -591,7 +589,13 @@ function monthLabel(monthKey: string) {
 
 type ExpenseItem = ExpensesSnapshot['items'][number]
 function isTotalOnlyExpense(item: ExpenseItem) {
-  return item.grossSalary === 0 && item.paye === 0 && item.overtime === 0 && item.vc === 0 && item.healthSurcharge === 0 && item.nisCompany === 0
+  return (
+    item.grossSalary === 0 &&
+    item.overtime === 0 &&
+    item.vc === 0 &&
+    item.nisCompany === 0 &&
+    item.medicalPlanEmployer === 0
+  )
 }
 
 const expenseDetailedItems = computed(() => (expenses.value?.items ?? []).filter((i) => !isTotalOnlyExpense(i)))

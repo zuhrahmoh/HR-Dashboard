@@ -1,8 +1,8 @@
 <template>
-  <div class="space-y-6">
+  <div class="min-w-0 space-y-6">
     <div class="space-y-1">
       <h1 class="text-2xl font-semibold">Medical Enrollments and Employee Assistance Program (EAP)</h1>
-      <p class="text-slate-300">Track medical enrollments and EAP referrals.</p>
+      <p class="text-slate-300">Medical enrollments and EAP referrals from Odoo (read-only).</p>
     </div>
 
     <hr class="border-slate-800" />

@@ -6,11 +6,10 @@ import { loadExpensesRowsFromSharePoint } from './sharepointExpenses'
 export type ExpenseCountryBreakdown = {
   country: string
   grossSalary: number
-  paye: number
   overtime: number
   vc: number
-  healthSurcharge: number
   nisCompany: number
+  medicalPlanEmployer: number
   totalOutgoingExpenses: number
   total: number
 }
@@ -53,15 +52,16 @@ function canonicalHeaderKey(rawHeader: string) {
   if (h === 'country') return 'country'
   if (h === 'month') return 'month'
   if (h === 'gross salary') return 'grossSalary'
-  if (h === 'paye') return 'paye'
+  if (h === 'paye') return ''
   if (h === 'overtime') return 'overtime'
   if (h === 'vc') return 'vc'
-  if (h === 'health surcharge') return 'healthSurcharge'
+  if (h === 'health surcharge') return ''
   if (h === 'nis (company)') return 'nisCompany'
+  if (h === 'medical plan (employer)') return 'medicalPlanEmployer'
   if (h === 'total outgoing expenses') return 'totalOutgoingExpenses'
   // Legacy CSV headers (pre-SharePoint)
   if (h === 'salaries inclusive of paye') return 'grossSalary'
-  if (h === 'other allowances') return 'healthSurcharge'
+  if (h === 'other allowances') return ''
   return h
 }
 
@@ -73,6 +73,13 @@ function normalizeMonthKey(v: string) {
   const key = v.trim().replace(/\s+/g, ' ').toLowerCase()
   if (key === 'decemeber') return 'december'
   return key
+}
+
+function normalizeExpenseCountryName(raw: string) {
+  const v = String(raw ?? '').trim().replace(/\s+/g, ' ')
+  if (!v) return ''
+  if (v.toLowerCase() === 'columbia') return 'Colombia'
+  return v
 }
 
 function isYyyyMm(v: string) {
@@ -201,11 +208,10 @@ type NormalizedExpenseRow = {
   monthKey: string
   monthLabel: string
   grossSalary: number
-  paye: number
   overtime: number
   vc: number
-  healthSurcharge: number
   nisCompany: number
+  medicalPlanEmployer: number
   totalOutgoingExpenses: number
 }
 
@@ -231,26 +237,24 @@ function aggregateSnapshot(rows: NormalizedExpenseRow[], selectedMonthKey: strin
 
   const countryMap = new Map<string, Omit<ExpenseCountryBreakdown, 'total'>>()
   for (const r of filtered) {
-    const country = r.country.trim()
+    const country = normalizeExpenseCountryName(r.country)
     if (!country) continue
 
     const prev = countryMap.get(country) ?? {
       country,
       grossSalary: 0,
-      paye: 0,
       overtime: 0,
       vc: 0,
-      healthSurcharge: 0,
       nisCompany: 0,
+      medicalPlanEmployer: 0,
       totalOutgoingExpenses: 0
     }
 
     prev.grossSalary += r.grossSalary
-    prev.paye += r.paye
     prev.overtime += r.overtime
     prev.vc += r.vc
-    prev.healthSurcharge += r.healthSurcharge
     prev.nisCompany += r.nisCompany
+    prev.medicalPlanEmployer += r.medicalPlanEmployer
     prev.totalOutgoingExpenses += r.totalOutgoingExpenses
 
     countryMap.set(country, prev)
@@ -277,22 +281,20 @@ function computeDeltas(current: ExpenseCountryBreakdown[], baseline: ExpenseCoun
     const b = byCountryBaseline.get(country)
 
     const grossSalary = (c?.grossSalary ?? 0) - (b?.grossSalary ?? 0)
-    const paye = (c?.paye ?? 0) - (b?.paye ?? 0)
     const overtime = (c?.overtime ?? 0) - (b?.overtime ?? 0)
     const vc = (c?.vc ?? 0) - (b?.vc ?? 0)
-    const healthSurcharge = (c?.healthSurcharge ?? 0) - (b?.healthSurcharge ?? 0)
     const nisCompany = (c?.nisCompany ?? 0) - (b?.nisCompany ?? 0)
+    const medicalPlanEmployer = (c?.medicalPlanEmployer ?? 0) - (b?.medicalPlanEmployer ?? 0)
     const totalOutgoingExpenses = (c?.totalOutgoingExpenses ?? 0) - (b?.totalOutgoingExpenses ?? 0)
     const total = (c?.total ?? 0) - (b?.total ?? 0)
 
     deltas.push({
       country,
       grossSalary,
-      paye,
       overtime,
       vc,
-      healthSurcharge,
       nisCompany,
+      medicalPlanEmployer,
       totalOutgoingExpenses,
       total
     })
@@ -320,24 +322,22 @@ export async function loadExpensesFromCsv(): Promise<ExpensesSnapshot> {
   const countryMap = new Map<string, Omit<ExpenseCountryBreakdown, 'total'>>()
 
   for (const r of filtered) {
-    const country = String(r.country ?? '').trim()
+    const country = normalizeExpenseCountryName(String(r.country ?? ''))
     const prev = countryMap.get(country) ?? {
       country,
       grossSalary: 0,
-      paye: 0,
       overtime: 0,
       vc: 0,
-      healthSurcharge: 0,
       nisCompany: 0,
+      medicalPlanEmployer: 0,
       totalOutgoingExpenses: 0
     }
 
     prev.grossSalary += parseAmount((r.grossSalary ?? r.salariesInclusiveOfPaye ?? '') as string)
-    prev.paye += parseAmount((r.paye ?? '') as string)
     prev.overtime += parseAmount(r.overtime ?? '')
     prev.vc += parseAmount(r.vc ?? '')
-    prev.healthSurcharge += parseAmount((r.healthSurcharge ?? r.otherAllowances ?? '') as string)
     prev.nisCompany += parseAmount(r.nisCompany ?? '')
+    prev.medicalPlanEmployer += parseAmount((r.medicalPlanEmployer ?? '') as string)
     prev.totalOutgoingExpenses += parseAmount((r.totalOutgoingExpenses ?? '') as string)
 
     countryMap.set(country, prev)
@@ -362,7 +362,7 @@ async function loadNormalizedRowsFromCsv() {
 
   const out: NormalizedExpenseRow[] = []
   for (const r of rows) {
-    const country = String(r.country ?? '').trim()
+    const country = normalizeExpenseCountryName(String(r.country ?? ''))
     const monthLabel = String(r.month ?? '').trim()
     const monthKey = normalizeMonthKey(monthLabel)
     if (!country || !monthKey) continue
@@ -372,11 +372,10 @@ async function loadNormalizedRowsFromCsv() {
       monthKey,
       monthLabel: monthLabel || monthKey,
       grossSalary: parseAmount((r.grossSalary ?? r.salariesInclusiveOfPaye ?? '') as string),
-      paye: parseAmount((r.paye ?? '') as string),
       overtime: parseAmount(r.overtime ?? ''),
       vc: parseAmount(r.vc ?? ''),
-      healthSurcharge: parseAmount((r.healthSurcharge ?? r.otherAllowances ?? '') as string),
       nisCompany: parseAmount(r.nisCompany ?? ''),
+      medicalPlanEmployer: parseAmount((r.medicalPlanEmployer ?? '') as string),
       totalOutgoingExpenses: parseAmount((r.totalOutgoingExpenses ?? '') as string)
     })
   }

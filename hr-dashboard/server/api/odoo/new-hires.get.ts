@@ -88,7 +88,8 @@ export default defineEventHandler(async (event): Promise<Response> => {
   const currentMonth = monthKeyFromUtcMs(utcTodayMs())
   const activeMonth = /^\d{4}-\d{2}$/.test(requestedMonth) ? requestedMonth : currentMonth
 
-  const employees = await loadEmployeesFromOdoo({ includeInactive: true })
+  // Probation / upcoming check-ins: only current Odoo-active profiles. Monthly hire lists keep inactive rows for history.
+  const employees = await loadEmployeesFromOdoo({ includeInactive: !probation })
 
   const additionMonths = employees
     .map((e) => ((e.startDate ?? '').trim() || (e.createdAt ?? '').trim() || '').trim())

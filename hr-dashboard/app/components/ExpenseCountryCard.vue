@@ -45,19 +45,17 @@ const props = defineProps<{
   month: string | null
   currency?: string
   grossSalary: number
-  paye: number
   overtime: number
   vc: number
-  healthSurcharge: number
   nisCompany: number
+  medicalPlanEmployer: number
   total: number
   showDeltas?: boolean
   deltaGrossSalary?: number
-  deltaPaye?: number
   deltaOvertime?: number
   deltaVc?: number
-  deltaHealthSurcharge?: number
   deltaNisCompany?: number
+  deltaMedicalPlanEmployer?: number
   deltaTotal?: number
 }>()
 
@@ -100,20 +98,20 @@ function deltaTextClass(v: number) {
 const country = computed(() => props.country)
 const month = computed(() => props.month)
 const grossSalary = computed(() => props.grossSalary)
-const paye = computed(() => props.paye)
 const overtime = computed(() => props.overtime)
 const vc = computed(() => props.vc)
-const healthSurcharge = computed(() => props.healthSurcharge)
 const nisCompany = computed(() => props.nisCompany)
+const medicalPlanEmployer = computed(() => props.medicalPlanEmployer)
 const total = computed(() => props.total)
 const showDeltas = computed(() => props.showDeltas === true)
 
 const deltaGrossSalary = computed(() => (Number.isFinite(props.deltaGrossSalary) ? (props.deltaGrossSalary as number) : 0))
-const deltaPaye = computed(() => (Number.isFinite(props.deltaPaye) ? (props.deltaPaye as number) : 0))
 const deltaOvertime = computed(() => (Number.isFinite(props.deltaOvertime) ? (props.deltaOvertime as number) : 0))
 const deltaVc = computed(() => (Number.isFinite(props.deltaVc) ? (props.deltaVc as number) : 0))
-const deltaHealthSurcharge = computed(() => (Number.isFinite(props.deltaHealthSurcharge) ? (props.deltaHealthSurcharge as number) : 0))
 const deltaNisCompany = computed(() => (Number.isFinite(props.deltaNisCompany) ? (props.deltaNisCompany as number) : 0))
+const deltaMedicalPlanEmployer = computed(() =>
+  Number.isFinite(props.deltaMedicalPlanEmployer) ? (props.deltaMedicalPlanEmployer as number) : 0
+)
 const deltaTotal = computed(() => (Number.isFinite(props.deltaTotal) ? (props.deltaTotal as number) : 0))
 
 function widthPctForValue(value: number) {
@@ -130,23 +128,16 @@ const breakdownRows = computed(() => [
     delta: deltaGrossSalary.value,
     widthPct: widthPctForValue(grossSalary.value)
   },
-  {
-    key: 'paye',
-    label: 'PAYE',
-    value: paye.value,
-    delta: deltaPaye.value,
-    widthPct: widthPctForValue(paye.value)
-  },
   { key: 'overtime', label: 'Overtime', value: overtime.value, delta: deltaOvertime.value, widthPct: widthPctForValue(overtime.value) },
   { key: 'vc', label: 'VC', value: vc.value, delta: deltaVc.value, widthPct: widthPctForValue(vc.value) },
+  { key: 'nisCompany', label: 'NIS (Company)', value: nisCompany.value, delta: deltaNisCompany.value, widthPct: widthPctForValue(nisCompany.value) },
   {
-    key: 'healthSurcharge',
-    label: 'Health Surcharge',
-    value: healthSurcharge.value,
-    delta: deltaHealthSurcharge.value,
-    widthPct: widthPctForValue(healthSurcharge.value)
-  },
-  { key: 'nisCompany', label: 'NIS (Company)', value: nisCompany.value, delta: deltaNisCompany.value, widthPct: widthPctForValue(nisCompany.value) }
+    key: 'medicalPlanEmployer',
+    label: 'Medical Plan (Employer)',
+    value: medicalPlanEmployer.value,
+    delta: deltaMedicalPlanEmployer.value,
+    widthPct: widthPctForValue(medicalPlanEmployer.value)
+  }
 ])
 </script>
 

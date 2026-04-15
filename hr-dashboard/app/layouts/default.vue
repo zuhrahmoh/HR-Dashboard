@@ -1,7 +1,10 @@
 <template>
   <div :class="rootClass">
-    <div class="flex min-h-screen min-w-0">
-      <aside v-if="!isReportMode" class="flex w-56 shrink-0 flex-col border-r border-slate-800/80 bg-slate-950">
+    <div class="flex min-h-screen min-w-0 items-start">
+      <aside
+        v-if="!isReportMode"
+        class="sticky top-0 flex h-screen w-56 shrink-0 flex-col overflow-y-auto border-r border-slate-800/80 bg-slate-950"
+      >
         <div class="px-4 py-4">
           <div class="text-base font-semibold tracking-tight text-slate-50">HR Dashboard</div>
         </div>

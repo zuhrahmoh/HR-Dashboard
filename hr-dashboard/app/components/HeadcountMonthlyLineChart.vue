@@ -5,7 +5,7 @@
     </div>
 
     <div v-else class="space-y-3">
-      <div class="flex flex-wrap items-center justify-between gap-3 text-sm">
+      <div v-if="showHeader" class="flex flex-wrap items-center justify-between gap-3 text-sm">
         <div :class="isLight ? 'text-slate-700' : 'text-slate-300'">{{ title }}</div>
         <div class="flex items-center gap-2 tabular-nums" :class="isLight ? 'text-slate-900' : 'text-slate-50'">
           <span>Latest</span>
@@ -13,56 +13,77 @@
         </div>
       </div>
 
-      <svg
-        :viewBox="`0 0 ${W} ${H}`"
-        class="h-44 w-full"
-      >
-        <rect x="0" y="0" :width="W" :height="H" fill="transparent" />
+      <div ref="wrapEl" class="relative">
+        <div
+          v-if="hover"
+          class="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-md border px-2 py-1 text-xs font-semibold shadow-lg"
+          :class="
+            isLight
+              ? 'border-slate-200 bg-white text-slate-900 shadow-slate-300/40'
+              : 'border-slate-700 bg-slate-950/95 text-slate-100 shadow-black/30'
+          "
+          :style="{ left: `${tooltipLeft}px`, top: `${tooltipTop}px` }"
+        >
+          {{ hover.label }}: {{ hover.value }}
+        </div>
 
-        <g :transform="`translate(${padL},${padT})`">
-          <path :d="areaPath" fill="rgb(244 63 94 / 0.10)" stroke="none" />
-          <path
-            :d="linePath"
-            fill="none"
-            stroke="rgb(244 63 94)"
-            stroke-width="3"
-            stroke-linejoin="round"
-            stroke-linecap="round"
-          />
+        <svg :viewBox="`0 0 ${W} ${H}`" class="h-44 w-full">
+          <rect x="0" y="0" :width="W" :height="H" fill="transparent" />
 
-          <template v-for="p in points" :key="p.month">
-            <circle :cx="p.x" :cy="p.y" r="3.5" fill="rgb(244 63 94)" />
-          </template>
+          <g :transform="`translate(${padL},${padT})`">
+            <path :d="areaPath" fill="rgb(244 63 94 / 0.10)" stroke="none" />
+            <path
+              :d="linePath"
+              fill="none"
+              stroke="rgb(244 63 94)"
+              stroke-width="3"
+              stroke-linejoin="round"
+              stroke-linecap="round"
+            />
 
-          <line :x1="0" :y1="innerH" :x2="innerW" :y2="innerH" stroke="rgb(30 41 59)" stroke-width="2" />
-          <line x1="0" y1="0" x2="0" :y2="innerH" stroke="rgb(30 41 59)" stroke-width="2" />
+            <template v-for="p in points" :key="p.month">
+              <circle
+                :cx="p.x"
+                :cy="p.y"
+                r="6"
+                fill="transparent"
+                @pointerenter="onPointEnter(p, $event)"
+                @pointermove="onPointMove($event)"
+                @pointerleave="onPointLeave"
+              />
+              <circle :cx="p.x" :cy="p.y" r="3.5" fill="rgb(244 63 94)" />
+            </template>
 
-          <template v-for="t in xYearTicks" :key="t.label">
-            <text
-              :x="t.x"
-              :y="innerH + 18"
-              text-anchor="middle"
-              font-size="12"
-              fill="rgb(148 163 184)"
-            >
-              {{ t.label }}
-            </text>
-          </template>
+            <line :x1="0" :y1="innerH" :x2="innerW" :y2="innerH" stroke="rgb(30 41 59)" stroke-width="2" />
+            <line x1="0" y1="0" x2="0" :y2="innerH" stroke="rgb(30 41 59)" stroke-width="2" />
 
-          <template v-for="t in yTicks" :key="t.value">
-            <line :x1="0" :y1="t.y" :x2="innerW" :y2="t.y" stroke="rgb(30 41 59)" stroke-width="1" />
-            <text
-              :x="-10"
-              :y="t.y + 4"
-              text-anchor="end"
-              font-size="12"
-              fill="rgb(148 163 184)"
-            >
-              {{ t.value }}
-            </text>
-          </template>
-        </g>
-      </svg>
+            <template v-for="t in xYearTicks" :key="t.label">
+              <text
+                :x="t.x"
+                :y="innerH + 18"
+                text-anchor="middle"
+                font-size="12"
+                fill="rgb(148 163 184)"
+              >
+                {{ t.label }}
+              </text>
+            </template>
+
+            <template v-for="t in yTicks" :key="t.value">
+              <line :x1="0" :y1="t.y" :x2="innerW" :y2="t.y" stroke="rgb(30 41 59)" stroke-width="1" />
+              <text
+                :x="-10"
+                :y="t.y + 4"
+                text-anchor="end"
+                font-size="12"
+                fill="rgb(148 163 184)"
+              >
+                {{ t.value }}
+              </text>
+            </template>
+          </g>
+        </svg>
+      </div>
     </div>
   </div>
 </template>
@@ -74,10 +95,12 @@ const props = defineProps<{
   items: Item[]
   title?: string
   variant?: 'dark' | 'light'
+  showHeader?: boolean
 }>()
 
 const title = computed(() => (props.title ?? 'Headcount trend (monthly)').trim() || 'Headcount trend (monthly)')
 const isLight = computed(() => props.variant === 'light')
+const showHeader = computed(() => props.showHeader !== false)
 
 function safeInt(v: unknown) {
   const n = typeof v === 'number' ? v : Number(v)
@@ -138,6 +161,47 @@ const points = computed(() =>
     y: yScale(i.headcount)
   }))
 )
+
+type HoverState = { label: string; value: number; x: number; y: number; w: number; h: number }
+const wrapEl = ref<HTMLElement | null>(null)
+const hover = ref<HoverState | null>(null)
+
+function clamp(v: number, lo: number, hi: number) {
+  return Math.max(lo, Math.min(hi, v))
+}
+
+const tooltipLeft = computed(() => {
+  const h = hover.value
+  if (!h) return 0
+  return clamp(h.x, 62, Math.max(62, h.w - 62))
+})
+const tooltipTop = computed(() => {
+  const h = hover.value
+  if (!h) return 0
+  return clamp(h.y, 18, Math.max(18, h.h - 10))
+})
+
+function setHover(label: string, value: number, ev: PointerEvent) {
+  const el = wrapEl.value
+  if (!el) return
+  const r = el.getBoundingClientRect()
+  hover.value = { label, value, x: ev.clientX - r.left, y: ev.clientY - r.top, w: r.width, h: r.height }
+}
+
+function onPointEnter(p: { month: string; headcount: number }, ev: PointerEvent) {
+  setHover(p.month, p.headcount, ev)
+}
+function onPointMove(ev: PointerEvent) {
+  const h = hover.value
+  if (!h) return
+  const el = wrapEl.value
+  if (!el) return
+  const r = el.getBoundingClientRect()
+  hover.value = { ...h, x: ev.clientX - r.left, y: ev.clientY - r.top, w: r.width, h: r.height }
+}
+function onPointLeave() {
+  hover.value = null
+}
 
 function toPath(pts: Array<{ x: number; y: number }>) {
   if (pts.length === 0) return ''

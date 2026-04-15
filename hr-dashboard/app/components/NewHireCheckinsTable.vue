@@ -1,50 +1,60 @@
 <template>
-  <div class="space-y-3">
+  <div class="min-w-0 space-y-3">
     <div v-if="rows.length === 0" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-sm text-slate-200">
       No check-ins approaching.
     </div>
 
-    <div v-else class="overflow-hidden rounded-md border border-slate-800 bg-slate-900">
-      <div class="overflow-x-auto">
-        <table class="min-w-full text-left text-sm">
-          <thead class="bg-slate-950 text-slate-300">
-            <tr>
-              <th class="px-4 py-3 font-medium">Name</th>
-              <th class="px-4 py-3 font-medium">Position</th>
-              <th class="px-4 py-3 font-medium">Country</th>
-              <th class="px-4 py-3 font-medium">Start Date</th>
-              <th class="px-4 py-3 font-medium">Tenure</th>
-              <th class="px-4 py-3 font-medium">Check-In Approaching</th>
-              <th class="px-4 py-3 text-right font-medium">Days</th>
-              <th class="px-4 py-3 font-medium">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="r in rows" :key="r.key" class="border-t border-slate-800">
-              <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-50">{{ r.name }}</td>
-              <td class="whitespace-nowrap px-4 py-3 text-slate-200">{{ r.position }}</td>
-              <td class="whitespace-nowrap px-4 py-3 text-slate-200">{{ r.countryAssigned }}</td>
-              <td class="whitespace-nowrap px-4 py-3 text-slate-200">{{ formatYmdDateOrDash(r.startDate) }}</td>
-              <td class="whitespace-nowrap px-4 py-3 text-slate-200">{{ r.tenure || '—' }}</td>
-              <td class="whitespace-nowrap px-4 py-3">
-                <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold" :class="checkinBadgeClass(r.months)">
-                  {{ checkinLabel(r.months) }}
-                </span>
-              </td>
-              <td class="whitespace-nowrap px-4 py-3 text-right font-bold tabular-nums text-slate-100">{{ r.daysUntil }}</td>
-              <td class="whitespace-nowrap px-4 py-3">
-                <CheckinStatusSelect :model-value="getStatusForRow(r)" @update:model-value="(v) => setStatusForRow(r, v)" />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <div v-else class="rounded-md border border-slate-800 bg-slate-900">
+      <table class="w-full table-fixed border-collapse text-left text-sm">
+        <colgroup>
+          <col style="width: 17%" />
+          <col style="width: 21%" />
+          <col style="width: 14%" />
+          <col style="width: 11%" />
+          <col style="width: 9%" />
+          <col style="width: 11%" />
+          <col style="width: 6%" />
+          <col style="width: 11%" />
+        </colgroup>
+        <thead class="bg-slate-950 text-slate-300">
+          <tr>
+            <th class="px-3 py-3 align-bottom font-medium">Name</th>
+            <th class="px-3 py-3 align-bottom font-medium">Position</th>
+            <th class="px-3 py-3 align-bottom font-medium">Country</th>
+            <th class="px-3 py-3 align-bottom font-medium">Start</th>
+            <th class="px-3 py-3 align-bottom font-medium">Tenure</th>
+            <th class="px-3 py-3 align-bottom font-medium">Milestone</th>
+            <th class="px-3 py-3 text-right align-bottom font-medium">Days</th>
+            <th class="px-3 py-3 align-bottom font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="r in rows" :key="r.key" class="border-t border-slate-800">
+            <td class="min-w-0 px-3 py-3 align-top font-medium break-words text-slate-50">{{ r.name }}</td>
+            <td class="min-w-0 px-3 py-3 align-top break-words text-slate-200">{{ r.position }}</td>
+            <td class="min-w-0 px-3 py-3 align-top break-words text-slate-200">{{ r.countryAssigned }}</td>
+            <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top text-slate-200">{{ formatYmdDateOrDash(r.startDate) }}</td>
+            <td class="min-w-0 px-3 py-3 align-top tabular-nums text-slate-200">{{ formatTenureReadable(r.tenure) }}</td>
+            <td class="min-w-0 px-3 py-3 align-top">
+              <span :class="[tableDataBadgeClass, checkinBadgeClass(r.months)]">
+                {{ checkinLabel(r.months) }}
+              </span>
+            </td>
+            <td class="whitespace-nowrap px-3 py-3 text-right align-top font-bold tabular-nums text-slate-100">{{ r.daysUntil }}</td>
+            <td class="min-w-0 px-3 py-3 align-top">
+              <CheckinStatusSelect :model-value="getStatusForRow(r)" @update:model-value="(v) => setStatusForRow(r, v)" />
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { formatYmdDateOrDash } from '~/utils/dates'
+import { formatTenureReadable } from '~/utils/tenure'
+import { tableDataBadgeClass } from '~/utils/tableBadge'
 import CheckinStatusSelect from '~/components/CheckinStatusSelect.vue'
 
 type NewHire = {
@@ -171,7 +181,7 @@ function setStatusForRow(row: Row, status: StatusKey) {
 }
 
 function checkinLabel(months: number) {
-  return `${months} month${months === 1 ? '' : 's'}`
+  return months === 1 ? '1 month' : `${months} months`
 }
 
 function checkinBadgeClass(months: number) {

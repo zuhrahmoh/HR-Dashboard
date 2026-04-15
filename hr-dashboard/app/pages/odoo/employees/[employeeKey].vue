@@ -75,34 +75,30 @@
                 <dd class="text-right text-slate-50">{{ employee.countryAssigned || '—' }}</dd>
               </div>
               <div class="flex justify-between gap-4">
-                <dt class="text-slate-400">Odoo ID</dt>
-                <dd class="text-right text-slate-50">{{ odooIdLabel }}</dd>
-              </div>
-              <div class="flex justify-between gap-4">
                 <dt class="text-slate-400">Reporting To</dt>
                 <dd class="text-right text-slate-50">{{ employee.reportingTo ?? '—' }}</dd>
               </div>
               <div class="flex justify-between gap-4">
                 <dt class="text-slate-400">Talent Rating</dt>
                 <dd class="text-right text-slate-50">
-                  <div class="flex items-center justify-end gap-2">
+                  <div class="flex flex-col items-end gap-1.5">
                     <span class="text-slate-50">{{ displayTalentRating }}</span>
-                    <div class="flex gap-0.5" aria-hidden="true">
+                    <div class="flex justify-end gap-1" aria-hidden="true">
                       <template v-for="n in 5" :key="n">
-                        <svg
-                          class="h-4 w-4 shrink-0"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                          :class="n <= talentRatingStars ? 'text-yellow-400' : 'text-slate-600'"
+                        <div
+                          class="grid h-5 w-5 shrink-0 place-items-center rounded-full border"
+                          :class="
+                            n <= talentRatingStars
+                              ? 'border-yellow-400/70 bg-yellow-400/10 text-yellow-400'
+                              : 'border-slate-600 bg-slate-950 text-slate-500'
+                          "
                         >
-                          <path
-                            d="M10 2.25a5.75 5.75 0 1 0 0 11.5a5.75 5.75 0 0 0 0-11.5Zm0 2.05l.86 1.75l1.93.28l-1.39 1.35l.33 1.92L10 8.75L8.27 9.65l.33-1.92L7.2 6.38l1.93-.28L10 4.3Z"
-                            fill-rule="evenodd"
-                            clip-rule="evenodd"
-                          />
-                          <path d="M7.0 12.55L3.8 19.25l4.6-3l1.85-3.7Z" />
-                          <path d="M7.0 12.55L3.8 19.25l4.6-3l1.85-3.7Z" transform="translate(20 0) scale(-1 1)" />
-                        </svg>
+                          <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                              d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+                            />
+                          </svg>
+                        </div>
                       </template>
                     </div>
                   </div>
@@ -311,6 +307,7 @@
 
 <script setup lang="ts">
 import { formatYmdDateOrDash } from '~/utils/dates'
+import { talentRatingStarsFromDisplay } from '~/utils/talentRatingDisplay'
 
 type Employee = {
   employeeKey: string
@@ -336,10 +333,6 @@ type Employee = {
 
 const route = useRoute()
 const employeeKey = computed(() => String(route.params.employeeKey || ''))
-const odooIdLabel = computed(() => {
-  const m = /^odoo-(\d+)$/.exec(employeeKey.value.trim())
-  return m?.[1] ?? '—'
-})
 
 const { data, pending, error } = await useFetch<Employee>(() => `/api/odoo/employees/${employeeKey.value}`)
 const employee = computed(() => data.value ?? null)
@@ -417,6 +410,7 @@ function normalizeEmployeeType(value: string) {
 const statusPillClass = computed(() => {
   const s = normalizeStatus(employee.value?.employeeStatus ?? '')
   if (s === 'active') return 'border-emerald-400/30 bg-emerald-500/10 text-emerald-100'
+  if (s === 'offboarding') return 'border-amber-400/30 bg-amber-500/10 text-amber-100'
   if (s === 'resigned' || s === 'fired' || s === 'retired' || s === 'separated') return 'border-slate-700 bg-slate-950 text-slate-200'
   return 'border-slate-700 bg-slate-950 text-slate-200'
 })
@@ -438,26 +432,12 @@ function toTitleCase(input: string) {
     .join(' ')
 }
 
-const TALENT_RATING_TO_STARS: Record<string, number> = {
-  C: 1,
-  'B-': 2,
-  B: 3,
-  'B+': 4,
-  A: 5,
-}
-
-function parseTalentRatingStars(rating: string | undefined): number {
-  if (!rating?.trim()) return 0
-  const key = rating.trim().toUpperCase()
-  return TALENT_RATING_TO_STARS[key] ?? 0
-}
-
 const displayTalentRating = computed(() => {
   const r = employee.value?.talentRating?.trim()
   return r || '—'
 })
 
-const talentRatingStars = computed(() => parseTalentRatingStars(employee.value?.talentRating))
+const talentRatingStars = computed(() => talentRatingStarsFromDisplay(employee.value?.talentRating))
 
 const uploadInput = ref<HTMLInputElement | null>(null)
 const uploading = ref(false)

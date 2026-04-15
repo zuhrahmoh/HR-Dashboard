@@ -60,7 +60,7 @@
                 <div class="mt-0.5 text-xs text-slate-600">{{ (v.department || '—') + ' · ' + (v.country || '—') }}</div>
               </div>
               <div class="shrink-0">
-                <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold border-red-900/60 bg-red-950/30 text-red-200">
+                <span :class="[tableDataBadgeClass, 'border-red-900/60 bg-red-950/30 text-red-200']">
                   High
                 </span>
               </div>
@@ -78,6 +78,7 @@
 
 <script setup lang="ts">
 import ReportKpiTile from '~/components/ReportKpiTile.vue'
+import { tableDataBadgeClass } from '~/utils/tableBadge'
 
 type Vacancy = {
   id: string

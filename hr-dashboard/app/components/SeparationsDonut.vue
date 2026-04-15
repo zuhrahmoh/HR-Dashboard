@@ -1,78 +1,90 @@
 <template>
-  <div class="mt-4 grid gap-4 sm:grid-cols-[9rem_1fr] sm:items-start">
-    <div class="flex justify-center sm:justify-start">
-      <div class="relative h-36 w-36">
-        <svg class="h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
-          <circle cx="50" cy="50" r="42" fill="none" stroke="rgb(30 41 59)" stroke-width="10" />
-          <circle
-            cx="50"
-            cy="50"
-            r="42"
-            fill="none"
-            stroke="rgb(244 63 94)"
-            stroke-width="10"
-            stroke-linecap="round"
-            :stroke-dasharray="dashArray"
-            stroke-dashoffset="0"
-          />
-        </svg>
+  <div>
+    <div class="mt-4 grid gap-4 sm:grid-cols-[9rem_1fr] sm:items-start">
+      <div class="flex justify-center sm:justify-start">
+        <div class="relative h-36 w-36">
+          <svg class="h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="42" fill="none" stroke="rgb(30 41 59)" stroke-width="10" />
+            <circle
+              cx="50"
+              cy="50"
+              r="42"
+              fill="none"
+              stroke="rgb(244 63 94)"
+              stroke-width="10"
+              stroke-linecap="round"
+              :stroke-dasharray="dashArray"
+              stroke-dashoffset="0"
+            />
+          </svg>
 
-        <div class="absolute inset-0 grid place-items-center text-center">
-          <div class="text-sm text-slate-300">Separations</div>
-          <div class="text-3xl font-semibold tabular-nums">{{ selectedSeparations }}</div>
-          <div class="text-sm text-slate-400 tabular-nums">{{ selectedMonthLabel }}</div>
+          <div class="absolute inset-0 grid place-items-center text-center">
+            <div class="text-sm text-slate-300">Separations</div>
+            <div class="text-3xl font-semibold tabular-nums">{{ selectedSeparations }}</div>
+            <div class="text-sm text-slate-400 tabular-nums">{{ selectedMonthLabel }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="min-w-0 space-y-2 text-base">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+            <span class="whitespace-nowrap">Month</span>
+            <select
+              v-model="selectedMonth"
+              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+            >
+              <option v-for="m in months" :key="m" :value="m">{{ formatMonthLabel(m) }}</option>
+            </select>
+          </label>
+
+          <div v-if="showBreakdown" class="flex flex-wrap gap-1.5 sm:flex-nowrap">
+            <button
+              type="button"
+              class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold tabular-nums"
+              :class="reasonPillClass('resigned', include.resigned)"
+              @click="include.resigned = !include.resigned"
+            >
+              Resigned
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold tabular-nums"
+              :class="reasonPillClass('retired', include.retired)"
+              @click="include.retired = !include.retired"
+            >
+              Retired
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold tabular-nums"
+              :class="reasonPillClass('fired', include.fired)"
+              @click="include.fired = !include.fired"
+            >
+              Fired
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between gap-6">
+          <div class="text-slate-300">Separations</div>
+          <div class="tabular-nums text-slate-50">{{ selectedSeparations }}</div>
+        </div>
+
+        <div v-if="showBreakdown" class="pt-1 text-sm text-slate-400">
+          Breakdown: Resigned {{ monthData.resigned }}, Retired {{ monthData.retired }}, Fired {{ monthData.fired }}
         </div>
       </div>
     </div>
 
-    <div class="min-w-0 space-y-2 text-base">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
-          <span class="whitespace-nowrap">Month</span>
-          <select
-            v-model="selectedMonth"
-            class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
-          >
-            <option v-for="m in months" :key="m" :value="m">{{ formatMonthLabel(m) }}</option>
-          </select>
-        </label>
-
-        <div v-if="showBreakdown" class="flex flex-wrap gap-1.5 sm:flex-nowrap">
-          <button
-            type="button"
-            class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold tabular-nums"
-            :class="reasonPillClass('resigned', include.resigned)"
-            @click="include.resigned = !include.resigned"
-          >
-            Resigned
-          </button>
-          <button
-            type="button"
-            class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold tabular-nums"
-            :class="reasonPillClass('retired', include.retired)"
-            @click="include.retired = !include.retired"
-          >
-            Retired
-          </button>
-          <button
-            type="button"
-            class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold tabular-nums"
-            :class="reasonPillClass('fired', include.fired)"
-            @click="include.fired = !include.fired"
-          >
-            Fired
-          </button>
-        </div>
-      </div>
-
-      <div class="flex items-center justify-between gap-6">
-        <div class="text-slate-300">Separations</div>
-        <div class="tabular-nums text-slate-50">{{ selectedSeparations }}</div>
-      </div>
-
-      <div v-if="showBreakdown" class="pt-1 text-sm text-slate-400">
-        Breakdown: Resigned {{ monthData.resigned }}, Retired {{ monthData.retired }}, Fired {{ monthData.fired }}
-      </div>
+    <div v-if="showRecruitmentDetailsLink" class="mt-3 flex justify-end">
+      <button
+        type="button"
+        class="rounded-md border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs font-semibold text-slate-200 hover:bg-slate-800/70"
+        @click="openRecruitmentSeparationsDetails"
+      >
+        See details
+      </button>
     </div>
   </div>
 </template>
@@ -93,7 +105,16 @@ const props = defineProps<{
     >
   }
   showBreakdown?: boolean
+  /** Shows a button linking to Recruitment → Recent separations for the selected month. */
+  showRecruitmentDetailsLink?: boolean
 }>()
+
+function openRecruitmentSeparationsDetails() {
+  if (!props.showRecruitmentDetailsLink) return
+  const m = (selectedMonth.value ?? '').trim()
+  if (!/^\d{4}-\d{2}$/.test(m)) return
+  navigateTo(`/recruitment?section=recent-separations&sepMonth=${encodeURIComponent(m)}#recent-separations-table`)
+}
 
 const months = computed(() => props.separations?.months ?? [])
 const showBreakdown = computed(() => props.showBreakdown !== false)
@@ -173,4 +194,3 @@ function reasonPillClass(reason: 'resigned' | 'retired' | 'fired', enabled: bool
   return 'border-red-500/40 bg-red-950/40 text-red-100'
 }
 </script>
-

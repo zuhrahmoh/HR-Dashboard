@@ -133,15 +133,8 @@
                 <td class="px-4 py-4 text-slate-200">{{ e.position }}</td>
                 <td class="px-4 py-4 text-slate-200">{{ e.countryAssigned }}</td>
                 <td class="px-4 py-4 text-slate-200">{{ e.employeeType ? toTitleCase(e.employeeType) : '—' }}</td>
-                <td class="px-4 py-4">
-                  <span
-                    class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium"
-                    :class="
-                      isActiveStatus(e.employeeStatus)
-                        ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-300'
-                        : 'border-slate-700 bg-slate-800 text-slate-200'
-                    "
-                  >
+                <td class="min-w-0 px-4 py-4">
+                  <span :class="[tableDataBadgeClass, employeeStatusBadgeClass(e.employeeStatus)]">
                     {{ e.employeeStatus }}
                   </span>
                 </td>
@@ -160,6 +153,7 @@
 
 <script setup lang="ts">
 import { formatYmdDateOrDash } from '~/utils/dates'
+import { tableDataBadgeClass } from '~/utils/tableBadge'
 
 type Employee = {
   employeeKey: string
@@ -172,7 +166,7 @@ type Employee = {
   employeeStatus: string
 }
 
-const { data, pending, error } = await useFetch<Employee[]>('/api/odoo/employees')
+const { data, pending, error } = useFetch<Employee[]>('/api/odoo/employees')
 
 const search = ref('')
 const country = ref('')
@@ -247,8 +241,11 @@ function goToEmployee(employeeKey: string) {
   return navigateTo(`/odoo/employees/${employeeKey}`)
 }
 
-function isActiveStatus(statusLabel: string) {
-  return statusLabel.trim().toLowerCase() === 'active'
+function employeeStatusBadgeClass(statusLabel: string) {
+  const s = statusLabel.trim().toLowerCase()
+  if (s === 'active') return 'border-emerald-500/30 bg-emerald-500/15 text-emerald-300'
+  if (s === 'offboarding') return 'border-amber-500/35 bg-amber-500/10 text-amber-200'
+  return 'border-slate-700 bg-slate-800 text-slate-200'
 }
 
 function resetFilters() {

@@ -1,4 +1,5 @@
 import { createError } from 'h3'
+import { formatTalentRatingDisplay } from '~/utils/talentRatingDisplay'
 import type { Employee } from './employees'
 import { getOdooClient } from './odoo'
 import { classifyBranchCountry } from './branchClassification'
@@ -39,6 +40,91 @@ function toYmd(v: unknown): string | null {
 function safeString(v: unknown) {
   if (v === true || v === false) return ''
   return typeof v === 'string' ? v : v == null ? '' : String(v)
+}
+
+function formatGenderForDisplay(raw: string) {
+  const s = raw.trim()
+  if (!s) return undefined
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
+}
+
+const WORK_PHONE_FIELD_CANDIDATES = [
+  'work_phone',
+  'x_work_phone',
+  'x_phone',
+  'x_office_phone'
+]
+
+type OdooFieldDef = { type?: string; string?: string }
+
+/**
+ * Standard + common Studio names. Ambiguous `phone` is last — work line may reuse it.
+ * Custom "Personal Phone #" columns are picked up via {@link discoverPersonalPhoneFieldsByLabel}.
+ */
+const PERSONAL_PHONE_FIELD_AFTER_DISCOVERY = [
+  'personal_phone',
+  'x_mobile_phone',
+  'x_private_phone',
+  'x_personal_phone',
+  'x_mobile',
+  'x_cell_phone',
+  'private_mobile',
+  'employee_phone',
+  'mobile',
+  'phone'
+]
+
+function existingFieldsInOrder(fieldInfo: Record<string, unknown>, candidates: string[]) {
+  return candidates.filter((name) => Object.prototype.hasOwnProperty.call(fieldInfo, name))
+}
+
+function isOdooStringLikeField(def: OdooFieldDef | undefined) {
+  const t = (def?.type ?? '').toLowerCase()
+  return t === 'char' || t === 'text' || t === 'phone'
+}
+
+/** Studio / custom fields use labels like "Personal Phone #"; technical names vary (e.g. `x_studio_...`). */
+function discoverPersonalPhoneFieldsByLabel(fieldInfo: Record<string, OdooFieldDef>): string[] {
+  const hits: string[] = []
+  for (const [name, def] of Object.entries(fieldInfo)) {
+    if (!def || !isOdooStringLikeField(def)) continue
+    const nl = safeString(def.string).trim().toLowerCase()
+    const nn = name.toLowerCase()
+    if (nn === 'work_phone' || nn === 'work_mobile') continue
+    if (nl.includes('work') && nl.includes('phone') && !nl.includes('personal') && !nl.includes('private') && !nl.includes('home'))
+      continue
+
+    const nameHit = /personal.*phone|phone.*personal|private.*phone|home.*phone/.test(nn)
+    const labelHit =
+      (nl.includes('personal') && nl.includes('phone')) ||
+      (nl.includes('private') && nl.includes('phone')) ||
+      (nl.includes('home') && nl.includes('phone'))
+    if (nameHit || labelHit) hits.push(name)
+  }
+  hits.sort()
+  return hits
+}
+
+function buildPersonalPhoneFieldOrder(fieldInfo: Record<string, OdooFieldDef>): string[] {
+  const discovered = discoverPersonalPhoneFieldsByLabel(fieldInfo)
+  const orderedNames = ['mobile_phone', 'private_phone', ...discovered, ...PERSONAL_PHONE_FIELD_AFTER_DISCOVERY]
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const name of orderedNames) {
+    if (seen.has(name) || !Object.prototype.hasOwnProperty.call(fieldInfo, name)) continue
+    seen.add(name)
+    out.push(name)
+  }
+  return out
+}
+
+function readFirstNonEmptyFieldString(row: Record<string, unknown>, fieldNames: string[]) {
+  for (const name of fieldNames) {
+    const raw = row[name]
+    const v = (many2oneName(raw) || safeString(raw)).trim()
+    if (v) return v
+  }
+  return undefined
 }
 
 function normalizeEmployeeType(raw: string | undefined) {
@@ -108,6 +194,22 @@ function normalizeDepartureReason(reason: string | undefined): 'resigned' | 'ret
   if (v === 'retired' || v.startsWith('retire')) return 'retired'
   if (v === 'fired' || v.startsWith('fire') || v.includes('terminated') || v.includes('termination')) return 'fired'
   return null
+}
+
+function selectionDisplayString(v: unknown): string {
+  if (Array.isArray(v) && v.length >= 2 && typeof v[1] === 'string') return v[1].trim()
+  return safeString(v).trim()
+}
+
+/** True when Odoo marks the employee as in offboarding (still active until last working day). */
+function rawIndicatesOffboarding(raw: unknown, fieldType: string | undefined): boolean {
+  if (fieldType === 'boolean') return raw === true
+  const s = selectionDisplayString(raw).toLowerCase()
+  if (!s) return false
+  if (s.includes('offboard')) return true
+  if (s.includes('off-board')) return true
+  if (s.includes('pending separation') || s.includes('pending_separation')) return true
+  return false
 }
 
 async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean }): Promise<Employee[]> {
@@ -213,6 +315,28 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
     'x_dob'
   ])
   const departureReasonField = pickFirstExistingField(fieldInfo, ['departure_reason_id', 'x_departure_reason_id'])
+  const offboardingStateField = pickFirstExistingField(fieldInfo, [
+    'x_offboarding',
+    'in_offboarding',
+    'x_in_offboarding',
+    'x_employee_offboarding',
+    'offboarding_state',
+    'x_offboarding_state',
+    'employee_lifecycle',
+    'x_employee_lifecycle',
+    'x_hr_status',
+    'x_employment_state',
+    'hr_employee_state',
+    'x_hr_employee_state'
+  ])
+  const offboardingPhaseField = pickFirstExistingField(fieldInfo, [
+    'x_offboarding_status',
+    'x_offboarding_phase',
+    'x_separation_stage',
+    'x_exit_stage',
+    'separation_stage',
+    'x_separation_status'
+  ])
   const departureDateField = pickFirstExistingField(fieldInfo, [
     'departure_date',
     'x_departure_date',
@@ -242,19 +366,10 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
   ])
   const personalEmailField = pickFirstExistingField(fieldInfo, ['private_email', 'personal_email', 'x_private_email', 'x_personal_email'])
 
-  const workPhoneField = pickFirstExistingField(fieldInfo, [
-    'work_phone',
-    'x_work_phone',
-    'x_phone'
-  ])
-  const personalPhoneField = pickFirstExistingField(fieldInfo, [
-    'mobile_phone',
-    'private_phone',
-    'phone',
-    'mobile',
-    'x_mobile_phone',
-    'x_private_phone'
-  ])
+  const workPhoneFields = existingFieldsInOrder(fieldInfo as Record<string, unknown>, WORK_PHONE_FIELD_CANDIDATES)
+  const personalPhoneFields = buildPersonalPhoneFieldOrder(fieldInfo as Record<string, OdooFieldDef>)
+
+  const fieldDefs = fieldInfo as Record<string, { type?: string }>
 
   const fields = Array.from(
     new Set(
@@ -282,12 +397,14 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
         employmentTypeField,
         birthDateField,
         departureReasonField,
+        offboardingStateField,
+        offboardingPhaseField,
         departureDateField,
         tenureField,
         workEmailField,
         personalEmailField,
-        workPhoneField,
-        personalPhoneField
+        ...workPhoneFields,
+        ...personalPhoneFields
       ].filter(Boolean)
     )
   ) as string[]
@@ -358,15 +475,25 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
       ? (many2oneName(rawDepartureReason) || safeString(rawDepartureReason)).trim() || undefined
       : undefined
     const normReason = normalizeDepartureReason(departureReason)
-    const employeeStatus = isActive
-      ? 'Active'
-      : normReason === 'retired'
+    const offStateType = offboardingStateField ? fieldDefs[offboardingStateField]?.type : undefined
+    const offRaw = offboardingStateField ? r?.[offboardingStateField] : undefined
+    const inOffboarding =
+      Boolean(offboardingStateField) && isActive && rawIndicatesOffboarding(offRaw, offStateType)
+
+    const employeeStatus = !isActive
+      ? normReason === 'retired'
         ? 'Retired'
         : normReason === 'fired'
           ? 'Fired'
           : normReason === 'resigned'
             ? 'Resigned'
             : 'Separated'
+      : inOffboarding
+        ? 'Offboarding'
+        : 'Active'
+
+    const lastWorkingDayYmd = departureDateField ? toYmd(r?.[departureDateField]) : null
+    const offPhaseRaw = offboardingPhaseField ? selectionDisplayString(r?.[offboardingPhaseField]) : ''
 
     const employee: Employee = {
       employeeKey: `odoo-${id}`,
@@ -379,7 +506,7 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
       companyName: companyName || undefined,
       workAddress: workAddress || undefined,
       employeeStatus,
-      gender: safeString(r?.gender).trim() || undefined,
+      gender: formatGenderForDisplay(safeString(r?.gender)),
       reportingTo: many2oneName(r?.parent_id) || undefined,
       contractEndDate: null,
       probationEndDate: null,
@@ -389,13 +516,15 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
         ? (many2oneName(r?.[employmentTypeField]) || safeString(r?.[employmentTypeField])).trim() || undefined
         : undefined,
       departureReason,
+      lastWorkingDay: lastWorkingDayYmd,
+      offboardingPhase: offPhaseRaw || undefined,
       separatedAt: !isActive ? (departureDateField ? toYmd(r?.[departureDateField]) : null) ?? toYmd(r?.write_date) : null,
       createdAt: toYmd(r?.create_date),
       tenure: tenureField ? safeString(r?.[tenureField]).trim() || undefined : undefined,
       workEmail: workEmailField ? safeString(r?.[workEmailField]).trim() || undefined : undefined,
       personalEmail: personalEmailField ? safeString(r?.[personalEmailField]).trim() || undefined : undefined,
-      workPhone: workPhoneField ? safeString(r?.[workPhoneField]).trim() || undefined : undefined,
-      personalPhone: personalPhoneField ? safeString(r?.[personalPhoneField]).trim() || undefined : undefined
+      workPhone: readFirstNonEmptyFieldString(r as Record<string, unknown>, workPhoneFields),
+      personalPhone: readFirstNonEmptyFieldString(r as Record<string, unknown>, personalPhoneFields)
     }
 
     // Prefer contract end for interns/contract staff; probation end for permanent staff.
@@ -441,7 +570,8 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
     const rating = talentRole === 'leader' ? leaderRating : talentRole === 'player' ? playerRating : ''
     const roleLabel = talentRole === 'leader' ? 'Leader' : talentRole === 'player' ? 'Player' : ''
     const combined = rating && roleLabel ? `${rating} ${roleLabel}` : ''
-    employee.talentRating = combined || legacyRating || undefined
+    const rawTalent = (combined || legacyRating || '').trim()
+    employee.talentRating = rawTalent ? formatTalentRatingDisplay(rawTalent) ?? rawTalent : undefined
 
     return employee
   })

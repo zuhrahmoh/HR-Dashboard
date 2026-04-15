@@ -5,11 +5,10 @@
       :month="month"
       currency="USD"
       :gross-salary="item.grossSalary"
-      :paye="item.paye"
       :overtime="item.overtime"
       :vc="item.vc"
-      :health-surcharge="item.healthSurcharge"
       :nis-company="item.nisCompany"
+      :medical-plan-employer="item.medicalPlanEmployer"
       :total="item.total"
       :show-deltas="false"
     />
@@ -34,11 +33,10 @@ import ExpenseCountryCard from '~/components/ExpenseCountryCard.vue'
 type ExpenseItem = {
   country: string
   grossSalary: number
-  paye: number
   overtime: number
   vc: number
-  healthSurcharge: number
   nisCompany: number
+  medicalPlanEmployer: number
   totalOutgoingExpenses: number
   total: number
 }
@@ -52,7 +50,13 @@ const fmtUsd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'US
 
 const isTotalOnly = computed(() => {
   const i = props.item
-  return i.grossSalary === 0 && i.paye === 0 && i.overtime === 0 && i.vc === 0 && i.healthSurcharge === 0 && i.nisCompany === 0
+  return (
+    i.grossSalary === 0 &&
+    i.overtime === 0 &&
+    i.vc === 0 &&
+    i.nisCompany === 0 &&
+    i.medicalPlanEmployer === 0
+  )
 })
 </script>
 

@@ -55,6 +55,11 @@ export type CriticalRecruitment = Prisma.CriticalRecruitmentModel
  */
 export type DisciplinaryCase = Prisma.DisciplinaryCaseModel
 /**
+ * Model DisciplinaryCaseInclude
+ * 
+ */
+export type DisciplinaryCaseInclude = Prisma.DisciplinaryCaseIncludeModel
+/**
  * Model ContractChange
  * 
  */

@@ -1,9 +1,9 @@
 <template>
-  <div class="flex h-full flex-col space-y-3">
+  <div class="flex h-full min-h-0 flex-col space-y-3 overflow-hidden">
     <div v-if="items.length === 0" class="text-base text-slate-300">No headcount data.</div>
 
     <div v-else class="flex min-h-0 flex-1 flex-col">
-      <div class="flex min-h-0 flex-1 flex-col justify-between gap-2">
+      <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
         <div
           v-for="row in rows"
           :key="row.key"

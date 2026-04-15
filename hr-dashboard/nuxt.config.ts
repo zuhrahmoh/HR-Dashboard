@@ -38,7 +38,15 @@ export default defineNuxtConfig({
       password: process.env.ODOO_PASSWORD || '',
       db: process.env.ODOO_DB || '',
       insecureTLS: process.env.ODOO_INSECURE_TLS === '1',
-      cacheTtlMs: Number(process.env.ODOO_CACHE_TTL_MS || '30000')
+      cacheTtlMs: Number(process.env.ODOO_CACHE_TTL_MS || '30000'),
+      contractChangeLineModel: process.env.ODOO_CONTRACT_CHANGE_LINE_MODEL || '',
+      contractChangeEmployeeField: process.env.ODOO_CONTRACT_CHANGE_EMPLOYEE_FIELD || 'employee_id',
+      contractChangeTypeField: process.env.ODOO_CONTRACT_CHANGE_TYPE_FIELD || '',
+      contractChangeStatusField: process.env.ODOO_CONTRACT_CHANGE_STATUS_FIELD || '',
+      contractChangeDescriptionField: process.env.ODOO_CONTRACT_CHANGE_DESCRIPTION_FIELD || '',
+      medicalEnrolmentLineModel: process.env.ODOO_MEDICAL_ENROLMENT_LINE_MODEL || 'hr.medical.enrolment',
+      eapLineModel: process.env.ODOO_EAP_LINE_MODEL || 'hr.eap',
+      disciplineCaseLineModel: process.env.ODOO_DISCIPLINE_CASE_LINE_MODEL || 'hr.discipline.case'
     }
   }
 })

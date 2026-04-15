@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6" :data-report-ready="reportReady ? '1' : undefined">
+  <div class="min-w-0 space-y-6" :data-report-ready="reportReady ? '1' : undefined">
     <div class="space-y-1">
       <h1 class="text-2xl font-semibold">Recruitment &amp; Onboarding</h1>
       <p class="text-slate-300">Track critical vacancies, recruitment, onboarding and offboarding processes.</p>
@@ -8,17 +8,29 @@
     <hr v-if="!isReportMode" class="border-slate-800" />
 
     <section class="space-y-3">
-      <div class="space-y-2">
+      <div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
         <h2 class="text-base font-semibold text-slate-200">Critical Vacancies</h2>
-        <button
-          v-if="!showVacancyForm"
-          type="button"
-          class="inline-flex items-center rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800/40"
-          @click="showVacancyForm = true"
-        >
-          <span aria-hidden="true" class="mr-1.5 font-semibold">+</span>
-          <span>Add vacancy</span>
-        </button>
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+            <span class="whitespace-nowrap">Country</span>
+            <select
+              v-model="selectedVacancyCountry"
+              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+            >
+              <option value="">All</option>
+              <option v-for="c in vacancyListCountries" :key="c" :value="c">{{ c }}</option>
+            </select>
+          </label>
+          <button
+            v-if="!showVacancyForm"
+            type="button"
+            class="inline-flex items-center rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800/40"
+            @click="showVacancyForm = true"
+          >
+            <span aria-hidden="true" class="mr-1.5 font-semibold">+</span>
+            <span>Add vacancy</span>
+          </button>
+        </div>
       </div>
 
       <form
@@ -97,6 +109,12 @@
       <div v-else-if="(vacancies?.length ?? 0) === 0" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">
         No vacancies yet.
       </div>
+      <div
+        v-else-if="vacanciesForDisplay.length === 0"
+        class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200"
+      >
+        No critical vacancies for this country.
+      </div>
       <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         <div v-for="v in vacanciesForDisplay" :key="v.id" class="rounded-md border border-slate-800 bg-slate-900 p-3">
           <div class="flex items-start justify-between gap-4">
@@ -104,7 +122,7 @@
               <div class="truncate text-sm font-semibold text-slate-50">{{ v.positionTitle }}</div>
               <div class="mt-1 text-xs text-slate-300">{{ v.department }} · {{ v.country }}</div>
               <div class="mt-2">
-                <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium" :class="priorityBadgeClass(v.priority)">
+                <span :class="[tableDataBadgeClass, priorityBadgeClass(v.priority)]">
                   {{ formatPriority(v.priority) }}
                 </span>
               </div>
@@ -191,7 +209,10 @@
           </form>
         </div>
       </div>
-      <div v-if="isReportMode && vacancies.length > vacanciesForDisplay.length" class="mt-3 text-xs text-slate-400">
+      <div
+        v-if="isReportMode && vacanciesFiltered.length > vacanciesForDisplay.length"
+        class="mt-3 text-xs text-slate-400"
+      >
         Showing top {{ vacanciesForDisplay.length }} vacancies. See the dashboard for the full list.
       </div>
 
@@ -222,8 +243,8 @@
 
     <hr v-if="!isReportMode" class="border-slate-800" />
 
-    <section class="space-y-3">
-      <div class="flex flex-wrap items-center justify-between gap-3">
+    <section class="min-w-0 space-y-3">
+      <div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
         <h2 class="text-base font-semibold text-slate-200">Recruitment &amp; Onboarding</h2>
         <div class="flex flex-wrap items-center gap-2">
           <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
@@ -341,66 +362,70 @@
         Failed to load recruitment.
         <div v-if="criticalRecruitmentErrorMessage" class="mt-2 text-xs text-red-200/80">{{ criticalRecruitmentErrorMessage }}</div>
       </div>
-      <div
-        v-else
-        class="overflow-hidden rounded-md border border-slate-800 bg-slate-900"
-      >
-        <div class="overflow-x-auto">
-          <table class="min-w-full text-left text-sm">
-            <thead class="bg-slate-950 text-slate-300">
-              <tr>
-                <th class="px-4 py-3 font-medium">Candidate</th>
-                <th class="px-4 py-3 font-medium">Position</th>
-                <th class="px-4 py-3 font-medium">Country</th>
-                <th class="px-4 py-3 font-medium">Stage</th>
-                <th class="px-4 py-3 font-medium">Notes</th>
-                <th class="px-4 py-3 font-medium"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="c in criticalRecruitmentForDisplay" :key="c.id" class="border-t border-slate-800">
-                <template v-if="criticalRecruitmentEditId === c.id">
-                  <td class="px-4 py-3">
-                    <input
-                      v-model="criticalRecruitmentEditForm.candidateName"
-                      type="text"
-                      class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
-                    />
-                  </td>
-                  <td class="px-4 py-3">
-                    <input
-                      v-model="criticalRecruitmentEditForm.position"
-                      type="text"
-                      class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
-                    />
-                  </td>
-                  <td class="px-4 py-3">
-                    <select
-                      v-model="criticalRecruitmentEditForm.country"
-                      class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
-                    >
-                      <option value="" disabled>Select country</option>
-                      <option v-for="c in vacancyCountries" :key="c" :value="c">{{ c }}</option>
-                    </select>
-                  </td>
-                  <td class="px-4 py-3">
-                    <select
-                      v-model="criticalRecruitmentEditForm.stage"
-                      class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
-                    >
-                      <option value="" disabled>Select stage</option>
-                      <option v-for="s in criticalRecruitmentStages" :key="s" :value="s">{{ s }}</option>
-                    </select>
-                  </td>
-                  <td class="px-4 py-3">
-                    <input
-                      v-model="criticalRecruitmentEditForm.notes"
-                      type="text"
-                      class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50 placeholder:text-slate-500"
-                      placeholder="Notes…"
-                    />
-                  </td>
-                  <td class="px-4 py-3 text-right">
+      <div v-else class="rounded-md border border-slate-800 bg-slate-900">
+        <table class="w-full table-fixed border-collapse text-left text-sm">
+          <colgroup>
+            <col style="width: 18%" />
+            <col style="width: 17%" />
+            <col style="width: 12%" />
+            <col style="width: 14%" />
+            <col style="width: 27%" />
+            <col style="width: 12%" />
+          </colgroup>
+          <thead class="bg-slate-950 text-slate-300">
+            <tr>
+              <th class="px-3 py-3 align-bottom font-medium">Candidate</th>
+              <th class="px-3 py-3 align-bottom font-medium">Position</th>
+              <th class="px-3 py-3 align-bottom font-medium">Country</th>
+              <th class="px-3 py-3 align-bottom font-medium">Stage</th>
+              <th class="px-3 py-3 align-bottom font-medium">Notes</th>
+              <th class="px-3 py-3 align-bottom font-medium"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="c in criticalRecruitmentForDisplay" :key="c.id" class="border-t border-slate-800">
+              <template v-if="criticalRecruitmentEditId === c.id">
+                <td class="min-w-0 px-3 py-3 align-top">
+                  <input
+                    v-model="criticalRecruitmentEditForm.candidateName"
+                    type="text"
+                    class="w-full min-w-0 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+                  />
+                </td>
+                <td class="min-w-0 px-3 py-3 align-top">
+                  <input
+                    v-model="criticalRecruitmentEditForm.position"
+                    type="text"
+                    class="w-full min-w-0 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+                  />
+                </td>
+                <td class="min-w-0 px-3 py-3 align-top">
+                  <select
+                    v-model="criticalRecruitmentEditForm.country"
+                    class="w-full min-w-0 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+                  >
+                    <option value="" disabled>Select country</option>
+                    <option v-for="c in vacancyCountries" :key="c" :value="c">{{ c }}</option>
+                  </select>
+                </td>
+                <td class="min-w-0 px-3 py-3 align-top">
+                  <select
+                    v-model="criticalRecruitmentEditForm.stage"
+                    class="w-full min-w-0 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+                  >
+                    <option value="" disabled>Select stage</option>
+                    <option v-for="s in criticalRecruitmentStages" :key="s" :value="s">{{ s }}</option>
+                  </select>
+                </td>
+                <td class="min-w-0 px-3 py-3 align-top">
+                  <input
+                    v-model="criticalRecruitmentEditForm.notes"
+                    type="text"
+                    class="w-full min-w-0 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50 placeholder:text-slate-500"
+                    placeholder="Notes…"
+                  />
+                </td>
+                <td class="min-w-0 px-3 py-3 align-top text-right">
                     <div class="flex justify-end gap-2">
                       <button
                         type="button"
@@ -423,20 +448,20 @@
                 </template>
 
                 <template v-else>
-                  <td class="px-4 py-3 text-slate-50">{{ c.candidateName }}</td>
-                  <td class="px-4 py-3 text-slate-200">{{ c.position }}</td>
-                  <td class="px-4 py-3 text-slate-200">{{ c.country }}</td>
-                  <td class="px-4 py-3">
-                    <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium" :class="criticalRecruitmentStageBadgeClass(c.stage)">
+                  <td class="min-w-0 break-words px-3 py-3 align-top text-slate-50">{{ c.candidateName }}</td>
+                  <td class="min-w-0 break-words px-3 py-3 align-top text-slate-200">{{ c.position }}</td>
+                  <td class="min-w-0 break-words px-3 py-3 align-top text-slate-200">{{ c.country }}</td>
+                  <td class="min-w-0 px-3 py-3 align-top">
+                    <span :class="[tableDataBadgeClass, criticalRecruitmentStageBadgeClass(c.stage)]">
                       {{ normalizeRecruitmentStage(c.stage) }}
                     </span>
                   </td>
-                  <td class="px-4 py-3 align-top text-slate-200">
-                    <div class="max-w-[28rem] whitespace-normal break-words" :class="isReportMode ? 'report-clamp-2' : ''">
+                  <td class="min-w-0 px-3 py-3 align-top text-slate-200">
+                    <div class="break-words whitespace-normal" :class="isReportMode ? 'report-clamp-2' : ''">
                       {{ c.notes || '—' }}
                     </div>
                   </td>
-                  <td class="px-4 py-3 text-right">
+                  <td class="min-w-0 px-3 py-3 align-top text-right">
                     <div class="flex justify-end gap-2">
                       <button
                         type="button"
@@ -458,11 +483,10 @@
               </tr>
 
               <tr v-if="(filteredCriticalRecruitment?.length ?? 0) === 0" class="border-t border-slate-800">
-                <td colspan="6" class="px-4 py-6 text-center text-slate-300">No candidates found.</td>
+                <td colspan="6" class="px-3 py-6 text-center text-slate-300">No candidates found.</td>
               </tr>
             </tbody>
-          </table>
-        </div>
+        </table>
       </div>
       <div v-if="isReportMode && filteredCriticalRecruitment.length > criticalRecruitmentForDisplay.length" class="mt-3 text-xs text-slate-400">
         Showing top {{ criticalRecruitmentForDisplay.length }} candidates. See the dashboard for the full list.
@@ -471,9 +495,9 @@
 
     <hr v-if="!isReportMode" class="border-slate-800" />
 
-    <section v-if="!isReportMode" class="space-y-3">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <h2 class="text-base font-semibold text-slate-200">New Hires</h2>
+    <section v-if="!isReportMode" class="min-w-0 space-y-3">
+      <div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
+        <h2 id="recent-new-hires" class="scroll-mt-24 text-base font-semibold text-slate-200">New Hires</h2>
         <div class="flex flex-wrap items-center gap-2">
           <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
             <span class="whitespace-nowrap">Country</span>
@@ -502,40 +526,51 @@
         Failed to load new hires.
         <div v-if="odooNewHiresErrorMessage" class="mt-2 text-xs text-red-200/80">{{ odooNewHiresErrorMessage }}</div>
       </div>
-      <div v-else class="overflow-hidden rounded-md border border-slate-800 bg-slate-900">
-        <div class="overflow-x-auto">
-          <table class="min-w-full text-left text-sm">
-            <thead class="bg-slate-950 text-slate-300">
-              <tr>
-                <th class="px-4 py-3 font-medium">Name</th>
-                <th class="px-4 py-3 font-medium">Position</th>
-                <th class="px-4 py-3 font-medium">Country</th>
-                <th class="px-4 py-3 font-medium">Start Date</th>
-                <th class="px-4 py-3 font-medium">Tenure</th>
-                <th class="px-4 py-3 font-medium">Onboarding Checklist</th>
-              </tr>
-            </thead>
-            <tbody>
-              <template v-for="n in filteredNewHires" :key="n.employeeKey">
-                <tr class="border-t border-slate-800 align-top">
-                  <td class="px-4 py-3 text-slate-50">{{ n.name }}</td>
-                  <td class="px-4 py-3 text-slate-200">{{ n.position }}</td>
-                  <td class="px-4 py-3 text-slate-200">{{ n.countryAssigned }}</td>
-                  <td class="px-4 py-3 text-slate-200">{{ formatYmdDateOrDash(n.startDate) }}</td>
-                  <td class="px-4 py-3 text-slate-200">{{ n.tenure || '—' }}</td>
-                  <td class="px-4 py-3">
-                    <button
-                      type="button"
-                      class="inline-flex items-center gap-2 rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-800/40"
-                      @click="toggleOnboardingChecklist(n)"
-                    >
-                      <span>
-                        Checklist ({{ onboardingDoneCount(n) }}/{{ ONBOARDING_TASKS.length }})
-                      </span>
+      <div
+        v-else
+        id="recent-new-hires-table"
+        class="scroll-mt-24 rounded-md border border-slate-800 bg-slate-900"
+      >
+        <table class="w-full table-fixed border-collapse text-left text-sm">
+          <colgroup>
+            <col style="width: 17%" />
+            <col style="width: 20%" />
+            <col style="width: 14%" />
+            <col style="width: 11%" />
+            <col style="width: 10%" />
+            <col style="width: 28%" />
+          </colgroup>
+          <thead class="bg-slate-950 text-slate-300">
+            <tr>
+              <th class="px-3 py-3 align-bottom font-medium">Name</th>
+              <th class="px-3 py-3 align-bottom font-medium">Position</th>
+              <th class="px-3 py-3 align-bottom font-medium">Country</th>
+              <th class="px-3 py-3 align-bottom font-medium">Start</th>
+              <th class="px-3 py-3 align-bottom font-medium">Tenure</th>
+              <th class="px-3 py-3 align-bottom font-medium">Onboarding</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template v-for="n in filteredNewHires" :key="n.employeeKey">
+              <tr class="border-t border-slate-800 align-top">
+                <td class="min-w-0 break-words px-3 py-3 text-slate-50">{{ n.name }}</td>
+                <td class="min-w-0 break-words px-3 py-3 text-slate-200">{{ n.position }}</td>
+                <td class="min-w-0 break-words px-3 py-3 text-slate-200">{{ n.countryAssigned }}</td>
+                <td class="min-w-0 whitespace-nowrap px-3 py-3 tabular-nums text-slate-200">{{ formatYmdDateOrDash(n.startDate) }}</td>
+                <td class="min-w-0 px-3 py-3 tabular-nums text-slate-200">{{ formatTenureReadable(n.tenure) }}</td>
+                <td class="min-w-0 px-3 py-3 align-top">
+                  <button
+                    type="button"
+                    class="inline-flex max-w-full items-center gap-2 rounded-md border border-slate-800 bg-slate-950 px-2 py-1.5 text-xs text-slate-200 hover:bg-slate-800/40"
+                    @click="toggleOnboardingChecklist(n)"
+                  >
+                    <span class="min-w-0 text-left break-words">
+                      Checklist ({{ onboardingDoneCount(n) }}/{{ ONBOARDING_TASKS.length }})
+                    </span>
                       <svg
                         viewBox="0 0 20 20"
                         fill="currentColor"
-                        class="h-4 w-4 text-slate-400"
+                        class="h-4 w-4 shrink-0 text-slate-400"
                         aria-hidden="true"
                         :class="expandedOnboardingKey === onboardingRowKey(n) ? 'rotate-180' : ''"
                       >
@@ -549,8 +584,8 @@
                   </td>
                 </tr>
 
-                <tr v-if="expandedOnboardingKey === onboardingRowKey(n)" class="border-t border-slate-800">
-                  <td colspan="6" class="bg-slate-950/30 px-4 py-4">
+              <tr v-if="expandedOnboardingKey === onboardingRowKey(n)" class="border-t border-slate-800">
+                <td colspan="6" class="bg-slate-950/30 px-3 py-4">
                     <div class="space-y-3">
                       <div class="text-xs font-semibold text-slate-200">Onboarding Checklist</div>
                       <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
@@ -594,324 +629,175 @@
               </template>
 
               <tr v-if="filteredNewHires.length === 0" class="border-t border-slate-800">
-                <td colspan="6" class="px-4 py-6 text-center text-slate-300">No new hires found for this month.</td>
+                <td colspan="6" class="px-3 py-6 text-center text-slate-300">No new hires found for this month.</td>
               </tr>
             </tbody>
-          </table>
-        </div>
+        </table>
       </div>
     </section>
 
     <hr v-if="!isReportMode" class="border-slate-800" />
 
-    <section v-if="!isReportMode" class="space-y-3">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="space-y-1">
+    <section v-if="!isReportMode" class="min-w-0 space-y-3">
+      <div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
+        <div class="min-w-0 space-y-1">
           <h2 class="text-base font-semibold text-slate-200">Offboarding</h2>
-          <p class="text-xs text-slate-400">Manual tracker for HR to record offboarding progress.</p>
+          <p class="text-xs text-slate-400">
+            Pulled from Odoo: employees still active but marked offboarding until their last working day (then archived).
+          </p>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
-            <span class="whitespace-nowrap">Country</span>
-            <select
-              v-model="selectedOffboardingCountry"
-              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
-            >
-              <option value="">All</option>
-              <option v-for="c in offboardingCountries" :key="c" :value="c">{{ c }}</option>
-            </select>
-          </label>
-          <button
-            v-if="!showOffboardingCreateForm"
-            type="button"
-            class="inline-flex items-center rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800/40"
-            @click="showOffboardingCreateForm = true"
+        <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+          <span class="whitespace-nowrap">Country</span>
+          <select
+            v-model="selectedOffboardingCountry"
+            class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
           >
-            <span aria-hidden="true" class="mr-1.5 font-semibold">+</span>
-            <span>Add offboarding</span>
-          </button>
-        </div>
+            <option value="">All</option>
+            <option v-for="c in offboardingCountries" :key="c" :value="c">{{ c }}</option>
+          </select>
+        </label>
       </div>
 
-      <form
-        v-if="showOffboardingCreateForm"
-        class="rounded-md border border-slate-800 bg-slate-900 p-4"
-        @submit.prevent="createOffboarding"
-      >
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-6">
-          <label class="block md:col-span-2">
-            <div class="mb-1 text-sm text-slate-300">Name</div>
-            <input
-              v-model="offboardingCreateForm.name"
-              type="text"
-              class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
-            />
-          </label>
-
-          <label class="block">
-            <div class="mb-1 text-sm text-slate-300">Country</div>
-            <select
-              v-model="offboardingCreateForm.country"
-              class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
-            >
-              <option value="" disabled>Select country</option>
-              <option v-for="c in vacancyCountries" :key="c" :value="c">{{ c }}</option>
-            </select>
-          </label>
-
-          <label class="block">
-            <div class="mb-1 text-sm text-slate-300">Departure Type</div>
-            <select
-              v-model="offboardingCreateForm.departureType"
-              class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
-            >
-              <option value="" disabled>Select type</option>
-              <option v-for="t in offboardingDepartureTypes" :key="t.value" :value="t.value">{{ t.label }}</option>
-            </select>
-          </label>
-
-          <label class="block">
-            <div class="mb-1 text-sm text-slate-300">Status</div>
-            <select
-              v-model="offboardingCreateForm.status"
-              class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
-            >
-              <option value="" disabled>Select status</option>
-              <option v-for="s in offboardingStatuses" :key="s.value" :value="s.value">{{ s.label }}</option>
-            </select>
-          </label>
-
-          <label class="block">
-            <div class="mb-1 text-sm text-slate-300">Date Effective</div>
-            <DateInput v-model="offboardingCreateForm.effectiveDate" />
-          </label>
-        </div>
-
-        <div class="mt-3 flex items-center justify-between gap-3">
-          <div v-if="offboardingCreateError" class="text-xs text-red-200">{{ offboardingCreateError }}</div>
-          <div class="ml-auto flex items-center gap-2">
-            <button
-              type="button"
-              class="rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800/40"
-              @click="cancelOffboardingCreate"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              class="rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800/40"
-            >
-              Save
-            </button>
-          </div>
-        </div>
-      </form>
-
-      <div class="overflow-hidden rounded-md border border-slate-800 bg-slate-900">
-        <div class="overflow-x-auto">
-          <table class="min-w-full text-left text-sm">
-            <thead class="bg-slate-950 text-slate-300">
-              <tr>
-                <th class="px-4 py-3 font-medium">Name</th>
-                <th class="px-4 py-3 font-medium">Country</th>
-                <th class="px-4 py-3 font-medium">Departure Type</th>
-                <th class="px-4 py-3 font-medium">Status</th>
-                <th class="px-4 py-3 font-medium">Date Effective</th>
-                <th class="px-4 py-3 font-medium">Exit Checklist</th>
-                <th class="px-4 py-3 font-medium"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <template v-for="row in filteredOffboardingRows" :key="row.id">
-                <tr class="border-t border-slate-800 align-top">
-                  <template v-if="offboardingEditId === row.id">
-                    <td class="px-4 py-3">
-                      <input
-                        v-model="offboardingEditForm.name"
-                        type="text"
-                        class="w-full min-w-56 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+      <div v-if="offboardingPending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
+      <div v-else-if="offboardingError" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
+        Failed to load offboarding employees from Odoo.
+        <div v-if="offboardingErrorMessage" class="mt-2 text-xs text-red-200/80">{{ offboardingErrorMessage }}</div>
+      </div>
+      <div v-else class="rounded-md border border-slate-800 bg-slate-900">
+        <table class="w-full table-fixed border-collapse text-left text-sm">
+          <colgroup>
+            <col style="width: 18%" />
+            <col style="width: 12%" />
+            <col style="width: 16%" />
+            <col style="width: 18%" />
+            <col style="width: 14%" />
+            <col style="width: 22%" />
+          </colgroup>
+          <thead class="bg-slate-950 text-slate-300">
+            <tr>
+              <th class="px-3 py-3 align-bottom font-medium">Name</th>
+              <th class="px-3 py-3 align-bottom font-medium">Country</th>
+              <th class="px-3 py-3 align-bottom font-medium">Departure</th>
+              <th class="px-3 py-3 align-bottom font-medium">Workflow</th>
+              <th class="px-3 py-3 align-bottom font-medium">Last working day</th>
+              <th class="px-3 py-3 align-bottom font-medium">Exit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template v-for="row in filteredOffboardingEmployees" :key="row.employeeKey">
+              <tr class="border-t border-slate-800 align-top">
+                <td class="min-w-0 px-3 py-3 align-top font-medium">
+                  <NuxtLink
+                    :to="`/odoo/employees/${row.employeeKey}`"
+                    class="break-words text-sky-300 underline decoration-sky-500/40 underline-offset-2 hover:text-sky-200"
+                  >
+                    {{ row.name || '—' }}
+                  </NuxtLink>
+                </td>
+                <td class="min-w-0 break-words px-3 py-3 text-slate-200">{{ row.countryAssigned || '—' }}</td>
+                <td class="min-w-0 px-3 py-3 text-slate-200">
+                  <span
+                    v-if="offboardingDepartureKind(row)"
+                    :class="[tableDataBadgeClass, offboardingDepartureTypeBadgeClass(offboardingDepartureKind(row)!)]"
+                  >
+                    {{ offboardingDepartureTypeLabel(offboardingDepartureKind(row)!) }}
+                  </span>
+                  <span v-else-if="row.departureReason?.trim()" :class="[tableDataBadgeClass, 'border-slate-600 bg-slate-800 text-slate-200']">
+                    {{ row.departureReason.trim() }}
+                  </span>
+                  <span v-else class="text-slate-400">—</span>
+                </td>
+                <td class="min-w-0 px-3 py-3 text-slate-200">
+                  <span :class="[tableDataBadgeClass, offboardingWorkflowBadgeClass(row)]">
+                    {{ offboardingWorkflowLabel(row) }}
+                  </span>
+                </td>
+                <td class="min-w-0 whitespace-nowrap px-3 py-3 tabular-nums text-slate-200">
+                  {{ formatYmdDateOrDash(row.lastWorkingDay ?? null) }}
+                </td>
+                <td class="min-w-0 px-3 py-3 align-top">
+                  <button
+                    type="button"
+                    class="inline-flex max-w-full items-center gap-2 rounded-md border border-slate-800 bg-slate-950 px-2 py-1.5 text-xs text-slate-200 hover:bg-slate-800/40"
+                    @click="toggleExitChecklist(row)"
+                  >
+                    <span class="min-w-0 text-left break-words">Checklist ({{ exitDoneCount(row) }}/{{ EXIT_TASKS.length }})</span>
+                    <svg
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      class="h-4 w-4 shrink-0 text-slate-400"
+                      aria-hidden="true"
+                      :class="expandedExitChecklistKey === row.employeeKey ? 'rotate-180' : ''"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        clip-rule="evenodd"
+                        d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.24 4.5a.75.75 0 0 1-1.08 0l-4.24-4.5a.75.75 0 0 1 .02-1.06Z"
                       />
-                    </td>
-                    <td class="px-4 py-3">
-                      <select
-                        v-model="offboardingEditForm.country"
-                        class="w-full min-w-40 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
-                      >
-                        <option value="" disabled>Select country</option>
-                        <option v-for="c in vacancyCountries" :key="c" :value="c">{{ c }}</option>
-                      </select>
-                    </td>
-                    <td class="px-4 py-3">
-                      <select
-                        v-model="offboardingEditForm.departureType"
-                        class="w-full min-w-40 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
-                      >
-                        <option value="" disabled>Select type</option>
-                        <option v-for="t in offboardingDepartureTypes" :key="t.value" :value="t.value">{{ t.label }}</option>
-                      </select>
-                    </td>
-                    <td class="px-4 py-3">
-                      <select
-                        v-model="offboardingEditForm.status"
-                        class="w-full min-w-56 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
-                      >
-                        <option value="" disabled>Select status</option>
-                        <option v-for="s in offboardingStatuses" :key="s.value" :value="s.value">{{ s.label }}</option>
-                      </select>
-                    </td>
-                    <td class="px-4 py-3">
-                      <DateInput v-model="offboardingEditForm.effectiveDate" />
-                    </td>
-                    <td class="px-4 py-3 text-slate-400"></td>
-                    <td class="px-4 py-3 text-right">
-                      <div class="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          class="rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-800/40"
-                          @click="cancelEditOffboarding"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          class="rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-800/40"
-                          @click="saveEditOffboarding"
-                        >
-                          Save
-                        </button>
-                      </div>
-                      <div v-if="offboardingEditError" class="mt-2 text-xs text-red-200">{{ offboardingEditError }}</div>
-                    </td>
-                  </template>
-
-                  <template v-else>
-                    <td class="px-4 py-3 font-medium text-slate-50">{{ row.name || '—' }}</td>
-                    <td class="px-4 py-3 text-slate-200">{{ row.country || '—' }}</td>
-                    <td class="px-4 py-3 text-slate-200">
-                      <span
-                        v-if="row.departureType"
-                        class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium"
-                        :class="offboardingDepartureTypeBadgeClass(row.departureType)"
-                      >
-                        {{ offboardingDepartureTypeLabel(row.departureType) }}
-                      </span>
-                      <span v-else class="text-slate-400">—</span>
-                    </td>
-                    <td class="px-4 py-3 text-slate-200">
-                      <span
-                        v-if="row.status"
-                        class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium"
-                        :class="offboardingStatusBadgeClass(row.status)"
-                      >
-                        {{ offboardingStatusLabel(row.status) }}
-                      </span>
-                      <span v-else class="text-slate-400">—</span>
-                    </td>
-                    <td class="whitespace-nowrap px-4 py-3 tabular-nums text-slate-200">{{ row.effectiveDate || '—' }}</td>
-                    <td class="px-4 py-3">
-                      <button
-                        type="button"
-                        class="inline-flex items-center gap-2 rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-800/40"
-                        @click="toggleExitChecklist(row)"
-                      >
-                        <span>Checklist ({{ exitDoneCount(row) }}/{{ EXIT_TASKS.length }})</span>
-                        <svg
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                          class="h-4 w-4 text-slate-400"
-                          aria-hidden="true"
-                          :class="expandedExitChecklistId === row.id ? 'rotate-180' : ''"
-                        >
-                          <path
-                            fill-rule="evenodd"
-                            clip-rule="evenodd"
-                            d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.24 4.5a.75.75 0 0 1-1.08 0l-4.24-4.5a.75.75 0 0 1 .02-1.06Z"
-                          />
-                        </svg>
-                      </button>
-                    </td>
-                    <td class="px-4 py-3 text-right">
-                      <div class="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          class="rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-800/40"
-                          @click="startEditOffboarding(row)"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          class="rounded-md border border-red-900/60 bg-red-950/30 px-3 py-1.5 text-xs text-red-200 hover:bg-red-950/50"
-                          @click="deleteOffboarding(row.id)"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </template>
-                </tr>
-
-                <tr
-                  v-if="offboardingEditId !== row.id && expandedExitChecklistId === row.id"
-                  class="border-t border-slate-800"
-                >
-                  <td colspan="7" class="bg-slate-950/30 px-4 py-4">
-                    <div class="space-y-3">
-                      <div class="text-xs font-semibold text-slate-200">Exit Checklist</div>
-                      <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
-                        <label
-                          v-for="(task, idx) in EXIT_TASKS"
-                          :key="task"
-                          class="flex cursor-pointer items-start gap-2 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 hover:bg-slate-900/40"
-                        >
-                          <input
-                            type="checkbox"
-                            class="sr-only"
-                            :checked="isExitTaskDone(row, idx)"
-                            @change="(e) => setExitTaskDone(row, idx, (e.target as HTMLInputElement).checked)"
-                          />
-                          <span
-                            class="relative mt-0.5 inline-flex h-5 w-5 shrink-0 rounded-full border"
-                            :class="
-                              isExitTaskDone(row, idx)
-                                ? 'border-sky-400/50 bg-sky-500/15'
-                                : 'border-slate-600/60 bg-slate-950'
-                            "
-                            aria-hidden="true"
-                          >
-                            <span
-                              v-if="isExitTaskDone(row, idx)"
-                              class="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-200"
-                            />
-                          </span>
-                          <span
-                            class="text-sm"
-                            :class="isExitTaskDone(row, idx) ? 'text-slate-400 line-through' : 'text-slate-200'"
-                          >
-                            {{ task }}
-                          </span>
-                        </label>
-                      </div>
-                      <div class="text-xs text-slate-400">Checked items are saved in this browser.</div>
-                    </div>
-                  </td>
-                </tr>
-              </template>
-
-              <tr v-if="filteredOffboardingRows.length === 0" class="border-t border-slate-800">
-                <td colspan="7" class="px-4 py-6 text-center text-slate-300">No offboarding items yet.</td>
+                    </svg>
+                  </button>
+                </td>
               </tr>
-            </tbody>
-          </table>
-        </div>
+
+              <tr v-if="expandedExitChecklistKey === row.employeeKey" class="border-t border-slate-800">
+                <td colspan="6" class="bg-slate-950/30 px-3 py-4">
+                  <div class="space-y-3">
+                    <div class="text-xs font-semibold text-slate-200">Exit Checklist</div>
+                    <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
+                      <label
+                        v-for="(task, idx) in EXIT_TASKS"
+                        :key="task"
+                        class="flex cursor-pointer items-start gap-2 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 hover:bg-slate-900/40"
+                      >
+                        <input
+                          type="checkbox"
+                          class="sr-only"
+                          :checked="isExitTaskDone(row, idx)"
+                          @change="(e) => setExitTaskDone(row, idx, (e.target as HTMLInputElement).checked)"
+                        />
+                        <span
+                          class="relative mt-0.5 inline-flex h-5 w-5 shrink-0 rounded-full border"
+                          :class="
+                            isExitTaskDone(row, idx)
+                              ? 'border-sky-400/50 bg-sky-500/15'
+                              : 'border-slate-600/60 bg-slate-950'
+                          "
+                          aria-hidden="true"
+                        >
+                          <span
+                            v-if="isExitTaskDone(row, idx)"
+                            class="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-200"
+                          />
+                        </span>
+                        <span
+                          class="text-sm"
+                          :class="isExitTaskDone(row, idx) ? 'text-slate-400 line-through' : 'text-slate-200'"
+                        >
+                          {{ task }}
+                        </span>
+                      </label>
+                    </div>
+                    <div class="text-xs text-slate-400">Checked items are saved in this browser.</div>
+                  </div>
+                </td>
+              </tr>
+            </template>
+
+            <tr v-if="!offboardingPending && !offboardingError && filteredOffboardingEmployees.length === 0" class="border-t border-slate-800">
+              <td colspan="6" class="px-3 py-6 text-center text-slate-300">
+                No employees in offboarding. Mark offboarding in Odoo.
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
     <hr v-if="!isReportMode" class="border-slate-800" />
 
-    <section v-if="!isReportMode" class="space-y-3">
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <div class="space-y-1">
+    <section v-if="!isReportMode" class="min-w-0 space-y-3">
+      <div class="flex min-w-0 flex-wrap items-start justify-between gap-3">
+        <div class="min-w-0 space-y-1">
           <h2 class="text-base font-semibold text-slate-200">Upcoming Onboarding Check-ins</h2>
           <p class="text-xs text-slate-400">Shows 1–6 month check-ins when they are due within the next 14 days (probation &lt; 6 months).</p>
         </div>
@@ -970,7 +856,7 @@
           Failed to load onboarding check-ins.
           <div v-if="probationNewHiresErrorMessage" class="mt-2 text-xs text-red-200/80">{{ probationNewHiresErrorMessage }}</div>
         </div>
-        <div v-else>
+        <div v-else class="min-w-0">
           <NewHireCheckinsTable :items="filteredCheckinsNewHires" :checkin-filter="upcomingCheckinsFilter" />
         </div>
       </div>
@@ -978,13 +864,13 @@
 
     <hr v-if="!isReportMode" class="border-slate-800" />
 
-    <section v-if="!isReportMode" class="space-y-3">
-      <div class="space-y-1">
-        <h2 class="text-base font-semibold text-slate-200">Recent Separations</h2>
+    <section v-if="!isReportMode" class="min-w-0 space-y-3">
+      <div class="min-w-0 space-y-1">
+        <h2 id="recent-separations" class="scroll-mt-24 text-base font-semibold text-slate-200">Recent Separations</h2>
         <p class="text-xs text-slate-400">Employees where Active = false (resigned / fired / retired).</p>
       </div>
 
-      <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
         <div class="text-sm text-slate-300">Archived employees (by month, from Odoo write date).</div>
         <div class="flex flex-wrap items-center gap-2">
           <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
@@ -1014,40 +900,51 @@
         Failed to load employees.
         <div v-if="separationsErrorMessage" class="mt-2 text-xs text-red-200/80">{{ separationsErrorMessage }}</div>
       </div>
-      <div v-else class="overflow-hidden rounded-md border border-slate-800 bg-slate-900">
-        <div class="overflow-x-auto">
-          <table class="min-w-full text-left text-sm">
-            <thead class="bg-slate-950 text-slate-300">
-              <tr>
-                <th class="px-4 py-3 font-medium">Name</th>
-                <th class="px-4 py-3 font-medium">Department</th>
-                <th class="px-4 py-3 font-medium">Position</th>
-                <th class="px-4 py-3 font-medium">Country</th>
-                <th class="px-4 py-3 font-medium">Start Date</th>
-                <th class="px-4 py-3 font-medium">Separation Date</th>
-                <th class="px-4 py-3 font-medium">Type</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="e in recentSeparations" :key="e.employeeKey" class="border-t border-slate-800">
-                <td class="px-4 py-3 text-slate-50">{{ e.name }}</td>
-                <td class="px-4 py-3 text-slate-200">{{ e.department }}</td>
-                <td class="px-4 py-3 text-slate-200">{{ e.position }}</td>
-                <td class="px-4 py-3 text-slate-200">{{ e.countryAssigned }}</td>
-                <td class="px-4 py-3 text-slate-200">{{ formatYmdDateOrDash(e.startDate) }}</td>
-                <td class="px-4 py-3 text-slate-200">{{ formatYmdDateOrDash(e.separatedAt) }}</td>
-                <td class="px-4 py-3">
-                  <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium" :class="separationTypeBadgeClass(e.separationType)">
-                    {{ formatSeparationType(e.separationType) }}
-                  </span>
-                </td>
-              </tr>
-              <tr v-if="recentSeparations.length === 0" class="border-t border-slate-800">
-                <td colspan="7" class="px-4 py-6 text-center text-slate-300">No separations found for this month.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      <div
+        v-else
+        id="recent-separations-table"
+        class="scroll-mt-24 rounded-md border border-slate-800 bg-slate-900"
+      >
+        <table class="w-full table-fixed border-collapse text-left text-sm">
+          <colgroup>
+            <col style="width: 16%" />
+            <col style="width: 15%" />
+            <col style="width: 16%" />
+            <col style="width: 13%" />
+            <col style="width: 12%" />
+            <col style="width: 12%" />
+            <col style="width: 16%" />
+          </colgroup>
+          <thead class="bg-slate-950 text-slate-300">
+            <tr>
+              <th class="px-3 py-3 align-bottom font-medium">Name</th>
+              <th class="px-3 py-3 align-bottom font-medium">Department</th>
+              <th class="px-3 py-3 align-bottom font-medium">Position</th>
+              <th class="px-3 py-3 align-bottom font-medium">Country</th>
+              <th class="px-3 py-3 align-bottom font-medium">Start</th>
+              <th class="px-3 py-3 align-bottom font-medium">Separated</th>
+              <th class="px-3 py-3 align-bottom font-medium">Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="e in recentSeparations" :key="e.employeeKey" class="border-t border-slate-800 align-top">
+              <td class="min-w-0 break-words px-3 py-3 text-slate-50">{{ e.name }}</td>
+              <td class="min-w-0 break-words px-3 py-3 text-slate-200">{{ e.department }}</td>
+              <td class="min-w-0 break-words px-3 py-3 text-slate-200">{{ e.position }}</td>
+              <td class="min-w-0 break-words px-3 py-3 text-slate-200">{{ e.countryAssigned }}</td>
+              <td class="min-w-0 whitespace-nowrap px-3 py-3 tabular-nums text-slate-200">{{ formatYmdDateOrDash(e.startDate) }}</td>
+              <td class="min-w-0 whitespace-nowrap px-3 py-3 tabular-nums text-slate-200">{{ formatYmdDateOrDash(e.separatedAt) }}</td>
+              <td class="min-w-0 px-3 py-3 align-top">
+                <span :class="[tableDataBadgeClass, separationTypeBadgeClass(e.separationType)]">
+                  {{ formatSeparationType(e.separationType) }}
+                </span>
+              </td>
+            </tr>
+            <tr v-if="recentSeparations.length === 0" class="border-t border-slate-800">
+              <td colspan="7" class="px-3 py-6 text-center text-slate-300">No separations found for this month.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
   </div>
@@ -1055,9 +952,11 @@
 
 <script setup lang="ts">
 import { formatYmdDateOrDash } from '~/utils/dates'
+import { formatTenureReadable } from '~/utils/tenure'
+import { tableDataBadgeClass } from '~/utils/tableBadge'
 import { ensureUsaOption } from '~/utils/countryOptions'
-import DateInput from '~/components/DateInput.vue'
 import NewHireCheckinsTable from '~/components/NewHireCheckinsTable.vue'
+import { firstQueryString, parseYyyyMm, recruitmentDeeplinkScrollId } from '~/utils/recruitmentDeeplink'
 
 const route = useRoute()
 const isReportMode = computed(() => route.query.report === '1')
@@ -1116,7 +1015,12 @@ type Employee = {
   startDate: string | null
   countryAssigned: string
   employeeStatus: string
+  departureReason?: string
+  lastWorkingDay?: string | null
+  offboardingPhase?: string
 }
+
+type OffboardingEmployee = Employee
 
 type OdooSeparationsRow = {
   employeeKey: string
@@ -1224,20 +1128,34 @@ const {
   pending: vacanciesPending,
   error: vacanciesError,
   refresh: refreshVacancies
-} = await useFetch<Vacancy[]>('/api/vacancies')
+} = useFetch<Vacancy[]>('/api/vacancies')
 const vacancies = computed(() => vacanciesData.value ?? [])
 const vacanciesErrorMessage = computed(() => getErrorMessage(vacanciesError.value))
 
 const REPORT_TOP_VACANCIES = 12
 const REPORT_TOP_CANDIDATES = 15
-const vacanciesForDisplay = computed(() => (isReportMode.value ? vacancies.value.slice(0, REPORT_TOP_VACANCIES) : vacancies.value))
+
+const selectedVacancyCountry = ref('')
+const vacancyListCountries = computed(() =>
+  ensureUsaOption(uniqueSorted(vacancies.value.map((v) => (v.country ?? '').trim()).filter(Boolean)))
+)
+
+const vacanciesFiltered = computed(() => {
+  const c = selectedVacancyCountry.value.trim()
+  if (!c) return vacancies.value
+  return vacancies.value.filter((v) => (v.country ?? '').trim() === c)
+})
+
+const vacanciesForDisplay = computed(() =>
+  isReportMode.value ? vacanciesFiltered.value.slice(0, REPORT_TOP_VACANCIES) : vacanciesFiltered.value
+)
 
 const {
   data: criticalRecruitmentData,
   pending: criticalRecruitmentPending,
   error: criticalRecruitmentError,
   refresh: refreshCriticalRecruitment
-} = await useFetch<CriticalRecruitment[]>('/api/critical-recruitment')
+} = useFetch<CriticalRecruitment[]>('/api/critical-recruitment')
 const criticalRecruitment = computed(() => criticalRecruitmentData.value ?? [])
 const criticalRecruitmentErrorMessage = computed(() => getErrorMessage(criticalRecruitmentError.value))
 
@@ -1247,7 +1165,7 @@ const {
   data: odooNewHiresData,
   pending: odooNewHiresPending,
   error: odooNewHiresError
-} = await useFetch<OdooNewHiresResponse>('/api/odoo/new-hires', { query: newHireQuery })
+} = useFetch<OdooNewHiresResponse>('/api/odoo/new-hires', { query: newHireQuery })
 
 const newHireMonths = computed(() => odooNewHiresData.value?.months ?? [])
 const odooNewHires = computed(() => odooNewHiresData.value?.items ?? [])
@@ -1319,35 +1237,35 @@ function normalizeExitChecklistArray(value: unknown) {
   return out
 }
 
-function exitRowKey(row: OffboardingRow) {
-  return `off:${row.id}`
+function exitRowKey(row: { employeeKey: string }) {
+  return `emp:${row.employeeKey}`
 }
 
-function exitChecklistFor(row: OffboardingRow) {
+function exitChecklistFor(row: { employeeKey: string }) {
   const k = exitRowKey(row)
   const existing = exitByRowId.value[k]
   if (existing && Array.isArray(existing) && existing.length === EXIT_TASKS.length) return existing
   return new Array(EXIT_TASKS.length).fill(false) as boolean[]
 }
 
-function isExitTaskDone(row: OffboardingRow, idx: number) {
+function isExitTaskDone(row: { employeeKey: string }, idx: number) {
   return exitChecklistFor(row)[idx] === true
 }
 
-function setExitTaskDone(row: OffboardingRow, idx: number, done: boolean) {
+function setExitTaskDone(row: { employeeKey: string }, idx: number, done: boolean) {
   const k = exitRowKey(row)
   const next = exitChecklistFor(row).slice()
   next[idx] = done
   exitByRowId.value = { ...exitByRowId.value, [k]: next }
 }
 
-function exitDoneCount(row: OffboardingRow) {
+function exitDoneCount(row: { employeeKey: string }) {
   return exitChecklistFor(row).filter(Boolean).length
 }
 
-const expandedExitChecklistId = ref<string | null>(null)
-function toggleExitChecklist(row: OffboardingRow) {
-  expandedExitChecklistId.value = expandedExitChecklistId.value === row.id ? null : row.id
+const expandedExitChecklistKey = ref<string | null>(null)
+function toggleExitChecklist(row: { employeeKey: string }) {
+  expandedExitChecklistKey.value = expandedExitChecklistKey.value === row.employeeKey ? null : row.employeeKey
 }
 
 function safeParseObject(input: string | null) {
@@ -1452,7 +1370,7 @@ const {
   data: probationNewHiresData,
   pending: probationNewHiresPending,
   error: probationNewHiresError
-} = await useFetch<OdooNewHiresResponse>('/api/odoo/new-hires', { query: { probation: '1' } })
+} = useFetch<OdooNewHiresResponse>('/api/odoo/new-hires', { query: { probation: '1' } })
 const probationNewHires = computed(() => probationNewHiresData.value?.items ?? [])
 const probationNewHiresErrorMessage = computed(() => getErrorMessage(probationNewHiresError.value))
 
@@ -1466,7 +1384,7 @@ const filteredCheckinsNewHires = computed(() => {
   return selected ? items.filter((n) => n.countryAssigned === selected) : items
 })
 
-const { data: employeesData, pending: employeesPending, error: employeesError } = await useFetch<Employee[]>('/api/odoo/employees')
+const { data: employeesData, pending: employeesPending, error: employeesError } = useFetch<Employee[]>('/api/odoo/employees')
 const employeesErrorMessage = computed(() => getErrorMessage(employeesError.value))
 
 const selectedSeparationMonth = ref('')
@@ -1475,7 +1393,7 @@ const {
   data: separationsData,
   pending: separationsPending,
   error: separationsError
-} = await useFetch<OdooSeparationsResponse>('/api/odoo/separations', { query: separationsQuery })
+} = useFetch<OdooSeparationsResponse>('/api/odoo/separations', { query: separationsQuery })
 const separationsErrorMessage = computed(() => getErrorMessage(separationsError.value))
 
 const separationMonths = computed(() => separationsData.value?.months ?? [])
@@ -1493,6 +1411,83 @@ const recentSeparations = computed(() => {
   const filtered = selected ? items.filter((e) => e.countryAssigned === selected) : items
   return filtered.slice().sort((a, b) => a.name.localeCompare(b.name))
 })
+
+/** Month filters for HR Analytics deep links (scroll runs when Odoo fetches for those sections finish). */
+function applyRecruitmentDeepLink() {
+  if (!import.meta.client) return
+  const id = recruitmentDeeplinkScrollId(route)
+  if (id === 'recent-separations') {
+    const m = parseYyyyMm(route.query.sepMonth)
+    if (m) selectedSeparationMonth.value = m
+    return
+  }
+  if (id === 'recent-new-hires') {
+    const m = parseYyyyMm(route.query.hireMonth)
+    if (m) selectedNewHireMonth.value = m
+  }
+}
+
+watch(
+  () =>
+    [
+      recruitmentDeeplinkScrollId(route),
+      firstQueryString(route.query.sepMonth),
+      firstQueryString(route.query.hireMonth),
+      route.hash
+    ] as const,
+  () => applyRecruitmentDeepLink(),
+  { flush: 'post', immediate: true }
+)
+
+function prefersReducedMotionClient() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+function resolveRecruitmentDeeplinkScrollEl(id: 'recent-separations' | 'recent-new-hires') {
+  if (id === 'recent-new-hires') {
+    return document.getElementById('recent-new-hires-table') ?? document.getElementById('recent-new-hires')
+  }
+  return document.getElementById('recent-separations-table') ?? document.getElementById('recent-separations')
+}
+
+function scrollRecruitmentDeeplinkIntoView() {
+  if (!import.meta.client) return
+  const id = recruitmentDeeplinkScrollId(route)
+  if (!id) return
+  if (id === 'recent-separations' && separationsPending.value) return
+  if (id === 'recent-new-hires' && odooNewHiresPending.value) return
+
+  const run = () => {
+    const el = resolveRecruitmentDeeplinkScrollEl(id)
+    if (!el) return
+    if (prefersReducedMotionClient()) el.scrollIntoView({ block: 'start' })
+    else el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setTimeout(run, 0)
+      })
+    })
+  })
+}
+
+watch(
+  () => ({
+    id: recruitmentDeeplinkScrollId(route),
+    fullPath: route.fullPath,
+    sepPending: separationsPending.value,
+    hirPending: odooNewHiresPending.value
+  }),
+  (s) => {
+    if (!s.id) return
+    if (s.id === 'recent-separations' && s.sepPending) return
+    if (s.id === 'recent-new-hires' && s.hirPending) return
+    scrollRecruitmentDeeplinkIntoView()
+  },
+  { flush: 'post', immediate: true }
+)
 
 const vacancyCountries = computed(() => ensureUsaOption(uniqueSorted((employeesData.value ?? []).map((e) => e.countryAssigned))))
 const vacancyDepartments = computed(() => uniqueSorted((employeesData.value ?? []).map((e) => e.department)))
@@ -1536,211 +1531,63 @@ function separationTypeBadgeClass(value: OdooSeparationsRow['separationType']) {
   return 'border-slate-700 bg-slate-900 text-slate-200'
 }
 
-type OffboardingDepartureType = '' | 'resigned' | 'retired' | 'fired' | 'other'
-type OffboardingStatus = '' | 'separation_confirmation' | 'exit_formalities' | 'internal_feedback'
+type OffboardingDepartureKind = 'resigned' | 'retired' | 'fired' | 'other'
 
-type OffboardingRow = {
-  id: string
-  name: string
-  country: string
-  departureType: OffboardingDepartureType
-  status: OffboardingStatus
-  effectiveDate: string
+function normalizeDepartureReasonFromOdoo(reason: string | undefined): 'resigned' | 'retired' | 'fired' | null {
+  const v = (reason ?? '').trim().toLowerCase()
+  if (!v) return null
+  if (v === 'resigned' || v.startsWith('resign')) return 'resigned'
+  if (v === 'retired' || v.startsWith('retire')) return 'retired'
+  if (v === 'fired' || v.startsWith('fire') || v.includes('terminated') || v.includes('termination')) return 'fired'
+  return null
 }
 
-const offboardingDepartureTypes = [
-  { value: 'resigned', label: 'Resigned' },
-  { value: 'retired', label: 'Retired' },
-  { value: 'fired', label: 'Fired' },
-  { value: 'other', label: 'Other' }
-] as const
-
-const offboardingStatuses = [
-  { value: 'separation_confirmation', label: 'Separation Confirmation' },
-  { value: 'exit_formalities', label: 'Exit Formalities' },
-  { value: 'internal_feedback', label: 'Internal Feedback' }
-] as const
-
-const OFFBOARDING_STORAGE_KEY = 'hr-dashboard:offboarding-manual:v1'
-const offboardingRows = ref<OffboardingRow[]>([])
-const showOffboardingCreateForm = ref(false)
-const offboardingCreateForm = reactive({
-  name: '',
-  country: '',
-  departureType: '' as OffboardingDepartureType,
-  status: '' as OffboardingStatus,
-  effectiveDate: ''
-})
-const offboardingCreateError = ref('')
-
-const offboardingEditId = ref<string | null>(null)
-const offboardingEditForm = reactive({
-  name: '',
-  country: '',
-  departureType: '' as OffboardingDepartureType,
-  status: '' as OffboardingStatus,
-  effectiveDate: ''
-})
-const offboardingEditError = ref('')
-
-const selectedOffboardingCountry = ref('')
-const offboardingCountries = computed(() => ensureUsaOption(uniqueSorted(offboardingRows.value.map((r) => r.country))))
-const filteredOffboardingRows = computed(() => {
-  const selected = selectedOffboardingCountry.value.trim()
-  const items = offboardingRows.value ?? []
-  return selected ? items.filter((r) => r.country === selected) : items
-})
-
-function safeParseArray(input: string | null) {
-  if (!input) return null
-  try {
-    const v = JSON.parse(input) as unknown
-    if (!Array.isArray(v)) return null
-    return v as unknown[]
-  } catch {
-    return null
-  }
+function offboardingDepartureKind(row: OffboardingEmployee): OffboardingDepartureKind | null {
+  const n = normalizeDepartureReasonFromOdoo(row.departureReason)
+  if (n) return n
+  if (row.departureReason?.trim()) return 'other'
+  return null
 }
 
-function newOffboardingId() {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
-  return `${Date.now()}_${Math.random().toString(16).slice(2)}`
-}
-
-function cancelOffboardingCreate() {
-  offboardingCreateError.value = ''
-  showOffboardingCreateForm.value = false
-  offboardingCreateForm.name = ''
-  offboardingCreateForm.country = ''
-  offboardingCreateForm.departureType = ''
-  offboardingCreateForm.status = ''
-  offboardingCreateForm.effectiveDate = ''
-}
-
-function createOffboarding() {
-  offboardingCreateError.value = ''
-  offboardingRows.value = [
-    ...offboardingRows.value,
-    {
-      id: newOffboardingId(),
-      name: offboardingCreateForm.name.trim(),
-      country: offboardingCreateForm.country,
-      departureType: offboardingCreateForm.departureType,
-      status: offboardingCreateForm.status,
-      effectiveDate: offboardingCreateForm.effectiveDate.trim()
-    }
-  ]
-  cancelOffboardingCreate()
-}
-
-function startEditOffboarding(row: OffboardingRow) {
-  offboardingEditError.value = ''
-  offboardingEditId.value = row.id
-  offboardingEditForm.name = row.name
-  offboardingEditForm.country = row.country
-  offboardingEditForm.departureType = row.departureType
-  offboardingEditForm.status = row.status
-  offboardingEditForm.effectiveDate = row.effectiveDate
-}
-
-function cancelEditOffboarding() {
-  offboardingEditId.value = null
-  offboardingEditError.value = ''
-}
-
-function saveEditOffboarding() {
-  const id = offboardingEditId.value
-  if (!id) return
-  offboardingEditError.value = ''
-  offboardingRows.value = offboardingRows.value.map((r) =>
-    r.id === id
-      ? {
-          ...r,
-          name: offboardingEditForm.name.trim(),
-          country: offboardingEditForm.country,
-          departureType: offboardingEditForm.departureType,
-          status: offboardingEditForm.status,
-          effectiveDate: offboardingEditForm.effectiveDate.trim()
-        }
-      : r
-  )
-  cancelEditOffboarding()
-}
-
-function deleteOffboarding(id: string) {
-  offboardingRows.value = offboardingRows.value.filter((r) => r.id !== id)
-  if (offboardingEditId.value === id) cancelEditOffboarding()
-}
-
-function offboardingDepartureTypeLabel(value: OffboardingDepartureType) {
+function offboardingDepartureTypeLabel(value: OffboardingDepartureKind) {
   if (value === 'resigned') return 'Resigned'
   if (value === 'retired') return 'Retired'
   if (value === 'fired') return 'Fired'
-  if (value === 'other') return 'Other'
-  return '—'
+  return 'Other'
 }
 
-function offboardingStatusLabel(value: OffboardingStatus) {
-  if (value === 'separation_confirmation') return 'Separation Confirmation'
-  if (value === 'exit_formalities') return 'Exit Formalities'
-  if (value === 'internal_feedback') return 'Internal Feedback'
-  return '—'
-}
-
-function offboardingDepartureTypeBadgeClass(value: Exclude<OffboardingDepartureType, ''>) {
+function offboardingDepartureTypeBadgeClass(value: OffboardingDepartureKind) {
   if (value === 'resigned') return 'border-amber-500/40 bg-amber-950/40 text-amber-100'
   if (value === 'retired') return 'border-violet-400/30 bg-violet-500/10 text-violet-200'
   if (value === 'fired') return 'border-red-500/40 bg-red-950/40 text-red-100'
   return 'border-sky-900/60 bg-sky-950/30 text-sky-200'
 }
 
-function offboardingStatusBadgeClass(value: Exclude<OffboardingStatus, ''>) {
-  if (value === 'separation_confirmation') return 'border-sky-900/60 bg-sky-950/30 text-sky-200'
-  if (value === 'exit_formalities') return 'border-amber-900/60 bg-amber-950/30 text-amber-200'
-  return 'border-violet-900/60 bg-violet-950/30 text-violet-200'
+function offboardingWorkflowLabel(row: OffboardingEmployee) {
+  return row.offboardingPhase?.trim() || 'Offboarding'
 }
 
-onMounted(() => {
-  if (typeof window === 'undefined') return
-  const raw = safeParseArray(window.localStorage.getItem(OFFBOARDING_STORAGE_KEY))
-  if (!raw) return
-  const next: OffboardingRow[] = []
-  for (const v of raw) {
-    if (!v || typeof v !== 'object' || Array.isArray(v)) continue
-    const o = v as Record<string, unknown>
-    const id = typeof o.id === 'string' ? o.id : ''
-    const name = typeof o.name === 'string' ? o.name : ''
-    const country = typeof o.country === 'string' ? o.country : ''
-    const departureType = typeof o.departureType === 'string' ? o.departureType : ''
-    const status = typeof o.status === 'string' ? o.status : ''
-    const effectiveDate = typeof o.effectiveDate === 'string' ? o.effectiveDate : ''
+function offboardingWorkflowBadgeClass(row: OffboardingEmployee) {
+  if (row.offboardingPhase?.trim()) return 'border-violet-400/30 bg-violet-500/10 text-violet-200'
+  return 'border-amber-500/35 bg-amber-500/10 text-amber-200'
+}
 
-    const isDepartureType =
-      departureType === '' || departureType === 'resigned' || departureType === 'retired' || departureType === 'fired' || departureType === 'other'
-    const isStatus =
-      status === '' || status === 'separation_confirmation' || status === 'exit_formalities' || status === 'internal_feedback'
-    if (!id || !isDepartureType || !isStatus) continue
-
-    next.push({
-      id,
-      name,
-      country,
-      departureType: departureType as OffboardingDepartureType,
-      status: status as OffboardingStatus,
-      effectiveDate
-    })
-  }
-  offboardingRows.value = next
-})
-
-watch(
-  offboardingRows,
-  (v) => {
-    if (typeof window === 'undefined') return
-    window.localStorage.setItem(OFFBOARDING_STORAGE_KEY, JSON.stringify(v))
-  },
-  { deep: true }
+const {
+  data: offboardingData,
+  pending: offboardingPending,
+  error: offboardingError
+} = useFetch<OffboardingEmployee[]>('/api/odoo/offboarding')
+const offboardingErrorMessage = computed(() => getErrorMessage(offboardingError.value))
+const offboardingEmployees = computed(() => offboardingData.value ?? [])
+const selectedOffboardingCountry = ref('')
+const offboardingCountries = computed(() =>
+  ensureUsaOption(uniqueSorted(offboardingEmployees.value.map((r) => r.countryAssigned)))
 )
+const filteredOffboardingEmployees = computed(() => {
+  const selected = selectedOffboardingCountry.value.trim()
+  const items = offboardingEmployees.value ?? []
+  return selected ? items.filter((r) => r.countryAssigned === selected) : items
+})
 
 const showVacancyForm = ref(false)
 const vacancyForm = reactive({ positionTitle: '', department: '', country: '', priority: '' })

@@ -1,14 +1,14 @@
 <template>
-  <div ref="rootEl" class="relative inline-block">
+  <div ref="rootEl" class="relative block w-full min-w-0">
     <button
       type="button"
-      class="inline-flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-xs font-semibold outline-none ring-0 transition focus-visible:ring-2 focus-visible:ring-sky-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+      class="flex w-full min-w-0 max-w-full items-start gap-1.5 rounded-lg border px-2 py-1.5 text-left text-xs font-semibold outline-none ring-0 transition focus-visible:ring-2 focus-visible:ring-sky-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
       :class="badgeClass"
       @click="toggle"
       @keydown.escape.prevent="close"
     >
-      <span class="whitespace-nowrap">{{ labelFor(modelValue) }}</span>
-      <svg class="h-3.5 w-3.5 opacity-80" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <span class="min-w-0 flex-1 break-words whitespace-normal">{{ labelFor(modelValue) }}</span>
+      <svg class="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-80" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
         <path
           fill-rule="evenodd"
           d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.24a.75.75 0 0 1-1.06 0L5.21 8.29a.75.75 0 0 1 .02-1.08Z"

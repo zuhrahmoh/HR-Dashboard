@@ -37,6 +37,12 @@ model DisciplinaryCase {
   createdAt       DateTime @default(now())
 }
 
+model DisciplinaryCaseInclude {
+  odooCaseKey     String   @id
+  includeInReport Boolean  @default(false)
+  updatedAt       DateTime @updatedAt
+}
+
 model ContractChange {
   id           String   @id @default(uuid()) @db.Uuid
   employeeName String

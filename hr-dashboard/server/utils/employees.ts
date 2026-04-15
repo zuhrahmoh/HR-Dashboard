@@ -17,6 +17,10 @@ export type Employee = {
   talentRating?: string
   employeeType?: string
   departureReason?: string
+  /** Planned last day from Odoo (e.g. while still active in offboarding). */
+  lastWorkingDay?: string | null
+  /** Optional HR workflow label from Odoo (e.g. separation stage). */
+  offboardingPhase?: string
   separatedAt: string | null
   createdAt: string | null
   tenure?: string

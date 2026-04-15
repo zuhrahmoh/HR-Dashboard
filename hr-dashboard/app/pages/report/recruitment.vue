@@ -80,8 +80,8 @@
                 <td class="px-3 py-2 text-slate-900">{{ c.candidateName || '—' }}</td>
                 <td class="px-3 py-2 text-slate-700">{{ c.position || '—' }}</td>
                 <td class="px-3 py-2 text-slate-700">{{ c.country || '—' }}</td>
-                <td class="px-3 py-2">
-                  <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold" :class="stageBadgeClass(c.stage)">
+                <td class="min-w-0 px-3 py-2">
+                  <span :class="[tableDataBadgeClass, stageBadgeClass(c.stage)]">
                     {{ normalizeStageLabel(c.stage) || '—' }}
                   </span>
                 </td>
@@ -103,6 +103,7 @@
 
 <script setup lang="ts">
 import { formatYmdDateOrDash } from '~/utils/dates'
+import { tableDataBadgeClass } from '~/utils/tableBadge'
 import ReportKpiTile from '~/components/ReportKpiTile.vue'
 
 type HomeAnalytics = {

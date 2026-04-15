@@ -8,6 +8,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
+    "db:seed-headcount": "tsx scripts/seed-headcount-snapshots.ts",
     "db:import": "tsx scripts/import-json-to-db.ts",
     "generate": "nuxt generate",
     "preview": "nuxt preview",

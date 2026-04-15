@@ -54,6 +54,7 @@ export const ModelName = {
   Vacancy: 'Vacancy',
   CriticalRecruitment: 'CriticalRecruitment',
   DisciplinaryCase: 'DisciplinaryCase',
+  DisciplinaryCaseInclude: 'DisciplinaryCaseInclude',
   ContractChange: 'ContractChange',
   MedicalEnrollment: 'MedicalEnrollment',
   EapReferral: 'EapReferral',
@@ -114,6 +115,15 @@ export const DisciplinaryCaseScalarFieldEnum = {
 } as const
 
 export type DisciplinaryCaseScalarFieldEnum = (typeof DisciplinaryCaseScalarFieldEnum)[keyof typeof DisciplinaryCaseScalarFieldEnum]
+
+
+export const DisciplinaryCaseIncludeScalarFieldEnum = {
+  odooCaseKey: 'odooCaseKey',
+  includeInReport: 'includeInReport',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DisciplinaryCaseIncludeScalarFieldEnum = (typeof DisciplinaryCaseIncludeScalarFieldEnum)[keyof typeof DisciplinaryCaseIncludeScalarFieldEnum]
 
 
 export const ContractChangeScalarFieldEnum = {

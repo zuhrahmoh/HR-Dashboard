@@ -47,11 +47,10 @@ type ExpensesResponse = {
   items: Array<{
     country: string
     grossSalary: number
-    paye: number
     overtime: number
     vc: number
-    healthSurcharge: number
     nisCompany: number
+    medicalPlanEmployer: number
     totalOutgoingExpenses: number
     total: number
   }>

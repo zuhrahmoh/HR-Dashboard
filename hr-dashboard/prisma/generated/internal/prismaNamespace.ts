@@ -387,6 +387,7 @@ export const ModelName = {
   Vacancy: 'Vacancy',
   CriticalRecruitment: 'CriticalRecruitment',
   DisciplinaryCase: 'DisciplinaryCase',
+  DisciplinaryCaseInclude: 'DisciplinaryCaseInclude',
   ContractChange: 'ContractChange',
   MedicalEnrollment: 'MedicalEnrollment',
   EapReferral: 'EapReferral',
@@ -407,7 +408,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "vacancy" | "criticalRecruitment" | "disciplinaryCase" | "contractChange" | "medicalEnrollment" | "eapReferral" | "cPlayerNote" | "headcountSnapshot"
+    modelProps: "vacancy" | "criticalRecruitment" | "disciplinaryCase" | "disciplinaryCaseInclude" | "contractChange" | "medicalEnrollment" | "eapReferral" | "cPlayerNote" | "headcountSnapshot"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -630,6 +631,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.DisciplinaryCaseCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.DisciplinaryCaseCountAggregateOutputType> | number
+        }
+      }
+    }
+    DisciplinaryCaseInclude: {
+      payload: Prisma.$DisciplinaryCaseIncludePayload<ExtArgs>
+      fields: Prisma.DisciplinaryCaseIncludeFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DisciplinaryCaseIncludeFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseIncludePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DisciplinaryCaseIncludeFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseIncludePayload>
+        }
+        findFirst: {
+          args: Prisma.DisciplinaryCaseIncludeFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseIncludePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DisciplinaryCaseIncludeFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseIncludePayload>
+        }
+        findMany: {
+          args: Prisma.DisciplinaryCaseIncludeFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseIncludePayload>[]
+        }
+        create: {
+          args: Prisma.DisciplinaryCaseIncludeCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseIncludePayload>
+        }
+        createMany: {
+          args: Prisma.DisciplinaryCaseIncludeCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DisciplinaryCaseIncludeCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseIncludePayload>[]
+        }
+        delete: {
+          args: Prisma.DisciplinaryCaseIncludeDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseIncludePayload>
+        }
+        update: {
+          args: Prisma.DisciplinaryCaseIncludeUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseIncludePayload>
+        }
+        deleteMany: {
+          args: Prisma.DisciplinaryCaseIncludeDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DisciplinaryCaseIncludeUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DisciplinaryCaseIncludeUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseIncludePayload>[]
+        }
+        upsert: {
+          args: Prisma.DisciplinaryCaseIncludeUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseIncludePayload>
+        }
+        aggregate: {
+          args: Prisma.DisciplinaryCaseIncludeAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDisciplinaryCaseInclude>
+        }
+        groupBy: {
+          args: Prisma.DisciplinaryCaseIncludeGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DisciplinaryCaseIncludeGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DisciplinaryCaseIncludeCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DisciplinaryCaseIncludeCountAggregateOutputType> | number
         }
       }
     }
@@ -1081,6 +1156,15 @@ export const DisciplinaryCaseScalarFieldEnum = {
 export type DisciplinaryCaseScalarFieldEnum = (typeof DisciplinaryCaseScalarFieldEnum)[keyof typeof DisciplinaryCaseScalarFieldEnum]
 
 
+export const DisciplinaryCaseIncludeScalarFieldEnum = {
+  odooCaseKey: 'odooCaseKey',
+  includeInReport: 'includeInReport',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DisciplinaryCaseIncludeScalarFieldEnum = (typeof DisciplinaryCaseIncludeScalarFieldEnum)[keyof typeof DisciplinaryCaseIncludeScalarFieldEnum]
+
+
 export const ContractChangeScalarFieldEnum = {
   id: 'id',
   employeeName: 'employeeName',
@@ -1348,6 +1432,7 @@ export type GlobalOmitConfig = {
   vacancy?: Prisma.VacancyOmit
   criticalRecruitment?: Prisma.CriticalRecruitmentOmit
   disciplinaryCase?: Prisma.DisciplinaryCaseOmit
+  disciplinaryCaseInclude?: Prisma.DisciplinaryCaseIncludeOmit
   contractChange?: Prisma.ContractChangeOmit
   medicalEnrollment?: Prisma.MedicalEnrollmentOmit
   eapReferral?: Prisma.EapReferralOmit
