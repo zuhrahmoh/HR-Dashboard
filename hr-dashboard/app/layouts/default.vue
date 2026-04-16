@@ -5,10 +5,17 @@
         v-if="!isReportMode"
         class="sticky top-0 flex h-screen w-56 shrink-0 flex-col overflow-y-auto border-r border-slate-800/80 bg-slate-950"
       >
-        <div class="px-4 py-4">
-          <div class="text-base font-semibold tracking-tight text-slate-50">HR Dashboard</div>
+        <div class="shrink-0 px-4 py-4">
+          <NuxtLink to="/odoo" class="block focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950">
+            <img
+              src="/Ramps-Logo-Original-white.png"
+              alt="Ramps Logistics"
+              class="h-12 w-auto max-w-full object-contain object-left"
+              loading="eager"
+            />
+          </NuxtLink>
         </div>
-        <nav class="flex-1 px-2 pb-4">
+        <nav class="min-h-0 flex-1 overflow-y-auto px-2 pb-4">
           <div class="px-2 pb-2 text-[11px] font-semibold tracking-wide text-slate-400">MENU</div>
 
           <ul class="space-y-2">
@@ -81,6 +88,50 @@
             <div v-if="reportError" class="mt-2 text-xs text-red-200">{{ reportError }}</div>
           </div>
         </nav>
+        <div
+          v-if="auth?.authenticated && auth.user"
+          class="shrink-0 border-t border-slate-800/80 px-4 py-3 text-left"
+        >
+          <div class="flex min-w-0 items-start gap-2">
+            <svg
+              class="mt-0.5 h-5 w-5 shrink-0 text-slate-500"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path
+                d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+              />
+            </svg>
+            <div class="min-w-0 flex-1 truncate text-sm font-bold text-slate-50" :title="auth.user.email || undefined">
+              {{ userDisplayName }}
+            </div>
+          </div>
+          <NuxtLink
+            to="/auth/logout"
+            class="mt-3 inline-flex items-center gap-1.5 rounded-md bg-slate-800 px-2 py-1 font-mono text-xs font-normal text-slate-50 ring-1 ring-slate-700/80 hover:bg-slate-700 hover:text-slate-50"
+          >
+            <span>Sign out</span>
+            <svg
+              class="h-3 w-3 shrink-0 text-slate-300"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path
+                d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"
+              />
+            </svg>
+          </NuxtLink>
+        </div>
       </aside>
 
       <main class="min-w-0 flex-1 p-6">
@@ -92,6 +143,16 @@
 
 <script setup lang="ts">
 const route = useRoute()
+const { data: auth } = await useFetch<{ authenticated: boolean; user: { name: string; email: string } | null }>('/api/auth/me', {
+  key: 'auth-me'
+})
+
+const userDisplayName = computed(() => {
+  const u = auth.value?.user
+  if (!u) return ''
+  return (u.name ?? '').trim() || u.email || 'Signed in'
+})
+
 const isReportMode = computed(() => (route.query.report ?? '') === '1')
 
 useHead(() => ({

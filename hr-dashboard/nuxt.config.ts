@@ -1,7 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
-  devServer: { host: '127.0.0.1', port: 3000 },
+  devServer: { host: 'localhost', port: 3000 },
   devtools: { enabled: true },
   modules: ['@nuxtjs/tailwindcss'],
   css: ['~/assets/css/tailwind.css'],
@@ -15,6 +15,14 @@ export default defineNuxtConfig({
     }
   },
   runtimeConfig: {
+    sessionPassword: process.env.NUXT_SESSION_PASSWORD || '',
+    auth: {
+      tenantId: process.env.AUTH_TENANT_ID || '',
+      clientId: process.env.AUTH_CLIENT_ID || '',
+      clientSecret: process.env.AUTH_CLIENT_SECRET || '',
+      redirectUri: process.env.AUTH_REDIRECT_URI || 'http://localhost:3000/auth/callback',
+      requiredRole: process.env.AUTH_REQUIRED_ROLE || 'HR.User'
+    },
     graph: {
       tenantId: process.env.GRAPH_TENANT_ID || '',
       clientId: process.env.GRAPH_CLIENT_ID || '',

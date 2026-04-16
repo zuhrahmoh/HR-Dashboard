@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-6" :data-report-ready="reportReady ? '1' : undefined">
     <div class="space-y-1">
-      <h1 class="text-3xl font-semibold">HR Analytics</h1>
-      <p class="text-base text-slate-300">Employee analytics sourced from the Odoo Employee module.</p>
+      <h1 class="text-3xl font-semibold">HR Dashboard</h1>
+      <p class="text-base text-slate-300">Employee analytics sourced from the Odoo(Laser) Employee module.</p>
     </div>
 
     <hr class="border-slate-800" />
