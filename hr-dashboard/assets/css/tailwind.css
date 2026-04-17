@@ -6,7 +6,7 @@
 
 @layer base {
   html {
-    @apply bg-slate-950 text-slate-100 antialiased;
+    @apply bg-hr-page text-slate-900 antialiased;
     font-family: theme('fontFamily.sans');
   }
 
@@ -14,8 +14,18 @@
     @apply overflow-x-clip;
   }
 
+  h1,
+  h2,
+  h3 {
+    @apply text-hr-navy;
+  }
+
   :focus-visible {
-    @apply outline-none ring-2 ring-sky-400/60 ring-offset-2 ring-offset-slate-950;
+    @apply outline-none ring-2 ring-sky-500/50 ring-offset-2 ring-offset-hr-page;
+  }
+
+  hr {
+    @apply border-hr-navy/25;
   }
 }
 
@@ -25,6 +35,10 @@
   html[data-report='1'] body {
     background: #fff !important;
     color: rgb(15 23 42) !important; /* slate-900 */
+  }
+
+  html[data-report='1'] .bg-hr-page {
+    background-color: #fff !important;
   }
 
   html[data-report='1'] * {

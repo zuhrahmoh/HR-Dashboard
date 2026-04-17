@@ -2,10 +2,10 @@
   <div class="space-y-6" :data-report-ready="reportReady ? '1' : undefined">
     <div class="space-y-1">
       <h1 class="text-3xl font-semibold">Expenses</h1>
-      <p class="text-base text-slate-300">Global expense breakdown snapshot.</p>
+      <p class="text-base text-slate-600">Global expense breakdown snapshot.</p>
     </div>
 
-    <hr class="border-slate-800" />
+    <hr />
 
     <section class="space-y-4">
       <ReportKpiTile
@@ -18,7 +18,7 @@
 
       <section class="report-fragment-box rounded-lg border border-slate-200 bg-white p-4">
         <div class="space-y-1">
-          <h2 class="text-base font-semibold text-slate-900">Global expense breakdown</h2>
+          <h2 class="text-base font-semibold text-hr-navy">Global expense breakdown</h2>
           <p class="text-sm text-slate-600">General expenses breakdown by country (grid).</p>
         </div>
 

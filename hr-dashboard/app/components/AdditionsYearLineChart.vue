@@ -1,31 +1,32 @@
 <template>
-  <div class="mt-2">
-    <div v-if="items.length === 0" class="text-sm text-slate-300">No additions data.</div>
+  <div class="flex min-h-0 flex-1 flex-col">
+    <div v-if="items.length === 0" class="text-sm text-slate-600">No additions data.</div>
 
-    <div v-else class="space-y-3">
-      <div class="flex items-center justify-between text-sm">
-        <div class="text-slate-300">Yearly additions</div>
-        <div class="tabular-nums text-slate-50">{{ total }}</div>
-      </div>
+    <div v-else class="flex min-h-0 flex-1 flex-col gap-3">
+      <h3 class="shrink-0 text-lg font-semibold text-hr-navy">{{ heading }}</h3>
 
-      <div ref="wrapEl" class="relative">
+      <div ref="wrapEl" class="relative min-h-0 flex-1">
         <div
           v-if="hover"
-          class="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-md border border-slate-700 bg-slate-950/95 px-2 py-1 text-xs font-semibold text-slate-100 shadow-lg shadow-black/30"
+          class="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-hr-navy shadow-lg shadow-slate-900/10"
           :style="{ left: `${tooltipLeft}px`, top: `${tooltipTop}px` }"
         >
           {{ hover.label }}: {{ hover.value }}
         </div>
 
-        <svg viewBox="0 0 640 240" class="h-40 w-full">
+        <svg
+          viewBox="0 0 640 240"
+          class="absolute inset-0 h-full w-full"
+          preserveAspectRatio="xMidYMid meet"
+        >
           <rect x="0" y="0" width="640" height="240" fill="transparent" />
 
           <g :transform="`translate(${padL},${padT})`">
-            <path :d="areaPath" fill="rgb(236 72 153 / 0.12)" stroke="none" />
+            <path :d="areaPath" fill="rgb(74 222 128 / 0.15)" stroke="none" />
             <path
               :d="linePath"
               fill="none"
-              stroke="rgb(236 72 153)"
+              stroke="rgb(21 128 61)"
               stroke-width="3"
               stroke-linejoin="round"
               stroke-linecap="round"
@@ -41,21 +42,35 @@
                 @pointermove="onPointMove($event)"
                 @pointerleave="onPointLeave"
               />
-              <circle :cx="p.x" :cy="p.y" r="4" fill="rgb(236 72 153)" />
+              <circle :cx="p.x" :cy="p.y" r="4" fill="rgb(21 128 61)" />
             </template>
 
-            <line :x1="0" :y1="innerH" :x2="innerW" :y2="innerH" stroke="rgb(30 41 59)" stroke-width="2" />
-            <line x1="0" y1="0" x2="0" :y2="innerH" stroke="rgb(30 41 59)" stroke-width="2" />
+            <line :x1="0" :y1="innerH" :x2="innerW" :y2="innerH" stroke="rgb(13 27 62)" stroke-width="2" />
+            <line x1="0" y1="0" x2="0" :y2="innerH" stroke="rgb(13 27 62)" stroke-width="2" />
 
             <template v-for="t in xTicks" :key="t.year">
-              <text :x="t.x" :y="innerH + 18" text-anchor="middle" font-size="12" fill="rgb(148 163 184)">
+              <text
+                :x="t.x"
+                :y="innerH + 22"
+                text-anchor="middle"
+                font-size="15"
+                font-weight="500"
+                fill="rgb(51 65 85)"
+              >
                 {{ t.year }}
               </text>
             </template>
 
             <template v-for="t in yTicks" :key="t.value">
-              <line :x1="0" :y1="t.y" :x2="innerW" :y2="t.y" stroke="rgb(30 41 59)" stroke-width="1" />
-              <text :x="-10" :y="t.y + 4" text-anchor="end" font-size="12" fill="rgb(148 163 184)">
+              <line :x1="0" :y1="t.y" :x2="innerW" :y2="t.y" stroke="rgb(203 213 225)" stroke-width="1" />
+              <text
+                :x="-6"
+                :y="t.y + 5"
+                text-anchor="end"
+                font-size="15"
+                font-weight="500"
+                fill="rgb(51 65 85)"
+              >
                 {{ t.value }}
               </text>
             </template>
@@ -69,9 +84,13 @@
 <script setup lang="ts">
 type YearPoint = { year: number; count: number }
 
-const props = defineProps<{
-  items: YearPoint[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    items: YearPoint[]
+    heading?: string
+  }>(),
+  { heading: 'Employee Additions Over Time' }
+)
 
 const items = computed(() =>
   (props.items ?? [])
@@ -80,14 +99,12 @@ const items = computed(() =>
     .sort((a, b) => a.year - b.year)
 )
 
-const total = computed(() => items.value.reduce((acc, i) => acc + i.count, 0))
-
 const W = 640
 const H = 240
-const padL = 44
+const padL = 54
 const padR = 18
-const padT = 12
-const padB = 34
+const padT = 16
+const padB = 42
 const innerW = W - padL - padR
 const innerH = H - padT - padB
 
@@ -183,4 +200,3 @@ const yTicks = computed(() => {
   return ticks
 })
 </script>
-

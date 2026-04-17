@@ -2,15 +2,15 @@
   <div class="space-y-6" :data-report-ready="reportReady ? '1' : undefined">
     <div class="space-y-1">
       <h1 class="text-2xl font-semibold">Progressive Discipline</h1>
-      <p class="text-slate-300">
+      <p class="text-slate-600">
         Case rows from Odoo (employee profile → HR Settings). The Include in Report column is stored in the dashboard database for summaries only, not in Odoo.
       </p>
     </div>
 
-    <hr class="border-slate-800" />
+    <hr />
 
-    <div class="rounded-md border border-slate-700 bg-slate-800/20 p-3 text-xs text-slate-200">
-      <div class="flex items-center gap-2 font-semibold text-slate-100">
+    <div class="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-800">
+      <div class="flex items-center gap-2 font-semibold text-hr-navy">
         <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 text-amber-300">
           <path
             fill-rule="evenodd"
@@ -20,7 +20,7 @@
         </svg>
         <span>Progressive Discipline</span>
       </div>
-      <div class="mt-2 space-y-1 text-slate-200/90">
+      <div class="mt-2 space-y-1 text-slate-800/90">
         <div>
           1. Investigation of matter - Receive and acknowledge matter from complainant, (b) information gathering and investigation, (c) discuss and decide if to dismiss or file charge against employee and set hearing.
         </div>
@@ -34,17 +34,17 @@
     </div>
 
     <section class="space-y-3">
-      <h2 class="text-base font-semibold text-slate-200">Cases</h2>
+      <h2 class="text-base font-semibold text-hr-navy">Cases</h2>
 
-      <div v-if="pending && cases.length === 0" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
+      <div v-if="pending && cases.length === 0" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">Loading…</div>
       <div v-else-if="error && cases.length === 0" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
         Failed to load cases.
         <div v-if="errorMessage" class="mt-2 text-xs text-red-200/80">{{ errorMessage }}</div>
       </div>
-      <div v-else class="overflow-hidden rounded-md border border-slate-800 bg-slate-900">
+      <div v-else class="overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
         <div class="overflow-x-auto">
           <table class="min-w-full text-left text-sm">
-            <thead class="bg-slate-950 text-slate-300">
+            <thead class="bg-slate-100 text-slate-600">
               <tr>
                 <th class="px-4 py-3 font-medium">Employee</th>
                 <th class="px-4 py-3 font-medium">Country</th>
@@ -55,32 +55,32 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="c in casesForDisplay" :key="c.id" class="border-t border-slate-800 align-top">
-                <td class="px-4 py-3 text-slate-50">{{ c.employeeName }}</td>
-                <td class="px-4 py-3 text-slate-200">{{ c.country || '—' }}</td>
-                <td class="px-4 py-3 text-slate-200">{{ c.summary }}</td>
+              <tr v-for="c in casesForDisplay" :key="c.id" class="border-t border-hr-navy/25 align-top">
+                <td class="px-4 py-3 text-slate-900">{{ c.employeeName }}</td>
+                <td class="px-4 py-3 text-slate-800">{{ c.country || '—' }}</td>
+                <td class="px-4 py-3 text-slate-800">{{ c.summary }}</td>
                 <td class="min-w-0 px-4 py-3">
                   <span :class="[tableDataBadgeClass, statusBadgeClass(c.status)]">
                     {{ c.status }}
                   </span>
                 </td>
-                <td class="px-4 py-3 text-slate-200">{{ formatDate(c.createdAt) }}</td>
+                <td class="px-4 py-3 text-slate-800">{{ formatDate(c.createdAt) }}</td>
                 <td class="px-4 py-3">
-                  <label class="inline-flex items-center gap-2 text-xs font-medium text-slate-200">
+                  <label class="inline-flex items-center gap-2 text-xs font-medium text-slate-800">
                     <input
                       type="checkbox"
-                      class="relative h-5 w-5 appearance-none rounded border border-slate-600 bg-transparent align-middle checked:border-slate-950 checked:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-slate-500/40 focus:ring-offset-0 disabled:opacity-60 checked:after:absolute checked:after:left-1/2 checked:after:top-1/2 checked:after:h-2.5 checked:after:w-1.5 checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 checked:after:rotate-45 checked:after:border-b-2 checked:after:border-r-2 checked:after:border-white checked:after:content-['']"
+                      class="relative h-5 w-5 appearance-none rounded border border-slate-600 bg-transparent align-middle checked:border-hr-navy checked:bg-hr-navy focus:outline-none focus:ring-2 focus:ring-slate-500/40 focus:ring-offset-0 disabled:opacity-60 checked:after:absolute checked:after:left-1/2 checked:after:top-1/2 checked:after:h-2.5 checked:after:w-1.5 checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 checked:after:rotate-45 checked:after:border-b-2 checked:after:border-r-2 checked:after:border-white checked:after:content-['']"
                       :checked="!!c.includeInReport"
                       :disabled="!!includeSaving[c.id]"
                       @change="onIncludeChange(c, $event)"
                     />
-                    <span class="text-slate-300">Include</span>
+                    <span class="text-slate-600">Include</span>
                   </label>
                 </td>
               </tr>
 
-              <tr v-if="cases.length === 0" class="border-t border-slate-800">
-                <td colspan="6" class="px-4 py-6 text-center text-slate-300">No cases yet.</td>
+              <tr v-if="cases.length === 0" class="border-t border-hr-navy/25">
+                <td colspan="6" class="px-4 py-6 text-center text-slate-600">No cases yet.</td>
               </tr>
             </tbody>
           </table>
@@ -203,12 +203,12 @@ function normalizeStatus(value: string) {
 
 function statusBadgeClass(value: string) {
   const v = normalizeStatus(value)
-  if (v === 'investigation') return 'border-sky-900/60 bg-sky-950/30 text-sky-200'
-  if (v === 'disciplinary meeting') return 'border-amber-900/60 bg-amber-950/30 text-amber-200'
-  if (v === 'conciliation') return 'border-blue-900/60 bg-blue-950/30 text-blue-200'
-  if (v === 'outcome to be communicated') return 'border-indigo-900/60 bg-indigo-950/30 text-indigo-200'
-  if (v === 'finalize outcome') return 'border-violet-900/60 bg-violet-950/30 text-violet-200'
-  return 'border-slate-700 bg-slate-900 text-slate-200'
+  if (v === 'investigation') return 'border-sky-200 bg-sky-50 text-sky-800'
+  if (v === 'disciplinary meeting') return 'border-amber-200 bg-amber-50 text-amber-900'
+  if (v === 'conciliation') return 'border-blue-200 bg-blue-50 text-blue-800'
+  if (v === 'outcome to be communicated') return 'border-indigo-200 bg-indigo-50 text-indigo-800'
+  if (v === 'finalize outcome') return 'border-violet-200 bg-violet-50 text-violet-800'
+  return 'border-slate-200 bg-slate-50 text-slate-700'
 }
 
 const reportReady = ref(false)

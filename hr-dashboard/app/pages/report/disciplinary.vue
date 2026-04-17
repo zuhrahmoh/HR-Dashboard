@@ -2,10 +2,10 @@
   <div class="space-y-6" :data-report-ready="reportReady ? '1' : undefined">
     <div class="space-y-1">
       <h1 class="text-3xl font-semibold">Disciplinary</h1>
-      <p class="text-base text-slate-300">Active disciplinary cases snapshot.</p>
+      <p class="text-base text-slate-600">Active disciplinary cases snapshot.</p>
     </div>
 
-    <hr class="border-slate-800" />
+    <hr />
 
     <section class="space-y-4">
       <ReportKpiTile
@@ -18,7 +18,7 @@
 
       <section class="rounded-lg border border-slate-200 bg-white p-4">
         <div class="space-y-1">
-          <h2 class="text-base font-semibold text-slate-900">Cases</h2>
+          <h2 class="text-base font-semibold text-hr-navy">Cases</h2>
           <p class="text-sm text-slate-600">Table view (created date omitted in report).</p>
         </div>
 
@@ -33,7 +33,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="c in casesForDisplay" :key="c.id" class="border-t border-slate-200 align-top">
+              <tr v-for="c in casesForDisplay" :key="c.id" class="border-t border-hr-navy/25 align-top">
                 <td class="px-3 py-2 text-slate-900">{{ c.employeeName || '—' }}</td>
                 <td class="px-3 py-2 text-slate-700">{{ c.country || '—' }}</td>
                 <td class="px-3 py-2 text-slate-700">{{ c.summary || '—' }}</td>
@@ -43,7 +43,7 @@
                   </span>
                 </td>
               </tr>
-              <tr v-if="casesForDisplay.length === 0" class="border-t border-slate-200">
+              <tr v-if="casesForDisplay.length === 0" class="border-t border-hr-navy/25">
                 <td colspan="4" class="px-3 py-6 text-center text-slate-600">No cases yet.</td>
               </tr>
             </tbody>
@@ -124,7 +124,9 @@ function normalizeStatus(value: string) {
 function statusBadgeClass(value: string) {
   const v = normalizeStatus(value)
   if (v === 'investigation') return 'border-sky-200 bg-sky-50 text-sky-800'
-  if (v === 'disciplinary meeting') return 'border-amber-200 bg-amber-50 text-amber-800'
+  if (v === 'disciplinary meeting') return 'border-amber-200 bg-amber-50 text-amber-900'
+  if (v === 'conciliation') return 'border-blue-200 bg-blue-50 text-blue-800'
+  if (v === 'outcome to be communicated') return 'border-indigo-200 bg-indigo-50 text-indigo-800'
   if (v === 'finalize outcome') return 'border-violet-200 bg-violet-50 text-violet-800'
   return 'border-slate-200 bg-slate-50 text-slate-700'
 }

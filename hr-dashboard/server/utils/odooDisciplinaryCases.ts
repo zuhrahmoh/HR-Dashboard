@@ -104,6 +104,35 @@ function resolveEmployeeField(info: Record<string, FieldDef>): string {
   return hit || 'employee_id'
 }
 
+function mapDisciplineRowsToOutput(
+  rows: Record<string, unknown>[],
+  fieldInfo: Record<string, FieldDef>,
+  employeeField: string,
+  byOdooId: Map<number, Employee>
+): OdooDisciplinaryCaseRow[] {
+  const statusDef = fieldInfo.status
+  const out: OdooDisciplinaryCaseRow[] = []
+  for (const r of rows) {
+    const lineId = r?.id
+    if (typeof lineId !== 'number' || !Number.isFinite(lineId)) continue
+    const empId = asEmployeeId(r[employeeField])
+    const emp = empId != null ? byOdooId.get(empId) : undefined
+    const id = `odoo-dc-${lineId}`
+
+    out.push({
+      id,
+      employeeName: (emp?.name ?? '').trim() || many2oneName(r[employeeField]) || 'Unknown employee',
+      department: emp?.department,
+      country: emp?.countryAssigned,
+      summary: safeString(r.case_summary).trim() || '—',
+      status: fieldInfo.status ? mapSelectionToLabel(statusDef, r.status) : safeString(r.status).trim() || '—',
+      includeInReport: false,
+      createdAt: toIsoFromOdooDatetime(r.create_date ?? r.date_created)
+    })
+  }
+  return out
+}
+
 export async function loadOdooDisciplinaryCases(): Promise<OdooDisciplinaryCaseRow[]> {
   const lineModel = getDisciplineLineModel()
   const employees = await loadEmployeesFromOdoo({ includeInactive: true })
@@ -130,28 +159,40 @@ export async function loadOdooDisciplinaryCases(): Promise<OdooDisciplinaryCaseR
     throw createError({ statusCode: 502, statusMessage: 'Unexpected Odoo response for discipline cases.' })
   }
 
-  const statusDef = fieldInfo.status
+  const out = mapDisciplineRowsToOutput(rows, fieldInfo, employeeField, byOdooId)
 
-  const out: OdooDisciplinaryCaseRow[] = []
-  for (const r of rows) {
-    const lineId = r?.id
-    if (typeof lineId !== 'number' || !Number.isFinite(lineId)) continue
-    const empId = asEmployeeId(r[employeeField])
-    const emp = empId != null ? byOdooId.get(empId) : undefined
-    const id = `odoo-dc-${lineId}`
+  const flagMap = await getDisciplinaryIncludeMap(out.map((row) => row.id))
+  return out.map((row) => ({ ...row, includeInReport: flagMap.get(row.id) ?? false }))
+}
 
-    out.push({
-      id,
-      employeeName: (emp?.name ?? '').trim() || many2oneName(r[employeeField]) || 'Unknown employee',
-      department: emp?.department,
-      country: emp?.countryAssigned,
-      summary: safeString(r.case_summary).trim() || '—',
-      status: fieldInfo.status ? mapSelectionToLabel(statusDef, r.status) : safeString(r.status).trim() || '—',
-      includeInReport: false,
-      createdAt: toIsoFromOdooDatetime(r.create_date ?? r.date_created)
-    })
+export async function loadOdooDisciplinaryCasesForEmployeeKey(employeeKey: string): Promise<OdooDisciplinaryCaseRow[]> {
+  const odooId = employeeIdFromKey(employeeKey)
+  if (odooId == null) return []
+
+  const lineModel = getDisciplineLineModel()
+  const employees = await loadEmployeesFromOdoo()
+  const byOdooId = buildEmployeeIndex(employees)
+
+  const fieldInfo = await fieldsGetFull(lineModel)
+  const employeeField = resolveEmployeeField(fieldInfo)
+
+  const candidateFields = ['id', employeeField, 'case_summary', 'status', 'date_created', 'create_date', 'write_date']
+
+  let fields = pickExistingFields(fieldInfo, candidateFields)
+  if (!fields.includes('id')) fields = ['id', ...fields]
+  if (!fields.includes(employeeField) && fieldInfo[employeeField]) fields = [...fields, employeeField]
+
+  const domain: unknown[] = [[employeeField, '=', odooId]]
+  const client = await getOdooClient()
+  const rows = await client.executeKw<Record<string, unknown>[]>(lineModel, 'search_read', [domain], {
+    fields,
+    order: 'create_date desc'
+  })
+  if (!Array.isArray(rows)) {
+    throw createError({ statusCode: 502, statusMessage: 'Unexpected Odoo response for discipline cases.' })
   }
 
+  const out = mapDisciplineRowsToOutput(rows, fieldInfo, employeeField, byOdooId)
   const flagMap = await getDisciplinaryIncludeMap(out.map((row) => row.id))
   return out.map((row) => ({ ...row, includeInReport: flagMap.get(row.id) ?? false }))
 }

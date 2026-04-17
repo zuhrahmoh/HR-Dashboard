@@ -2,35 +2,35 @@
   <div class="min-w-0 space-y-6">
     <div class="space-y-1">
       <h1 class="text-2xl font-semibold">Employee Contract Management</h1>
-      <p class="text-slate-300">Track employee contract information. Contract changes are maintained in Odoo (employee profile → Contract notification).</p>
+      <p class="text-slate-600">Track employee contract information. Contract changes are maintained in Odoo (employee profile → Contract notification).</p>
     </div>
 
-    <hr class="border-slate-800" />
+    <hr />
 
     <section class="min-w-0 space-y-3">
       <div class="flex min-w-0 flex-wrap items-start justify-between gap-4">
         <div class="space-y-1">
-          <h2 class="text-base font-semibold text-slate-200">Contract Changes</h2>
+          <h2 class="text-base font-semibold text-hr-navy">Contract Changes</h2>
           <p class="text-xs text-slate-400">Read-only: sourced from Odoo employee profiles.</p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
-          <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
             <span class="whitespace-nowrap">Country</span>
             <select
               v-model="filters.country"
-              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+              class="h-8 rounded-md border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-slate-400"
             >
               <option value="">All</option>
               <option v-for="c in countries" :key="c" :value="c">{{ c }}</option>
             </select>
           </label>
 
-          <div class="flex items-center gap-2 text-sm font-medium text-slate-300">
+          <div class="flex items-center gap-2 text-sm font-medium text-slate-600">
             <span class="whitespace-nowrap">Change type</span>
             <div ref="filterChangeTypeEl" class="relative">
               <button
                 type="button"
-                class="flex h-8 min-w-[11rem] items-center justify-between gap-2 rounded-md border border-slate-800 bg-slate-950 px-2 text-left text-sm text-slate-100 hover:bg-slate-900/40"
+                class="flex h-8 min-w-[11rem] items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 text-left text-sm text-slate-900 hover:bg-slate-50"
                 aria-haspopup="listbox"
                 :aria-expanded="filterChangeTypeOpen"
                 @click="filterChangeTypeOpen = !filterChangeTypeOpen"
@@ -47,14 +47,14 @@
               </button>
               <div
                 v-if="filterChangeTypeOpen"
-                class="absolute z-30 right-0 mt-1 max-h-56 w-max min-w-full overflow-auto rounded-md border border-slate-800 bg-slate-950 py-1 shadow-lg"
+                class="absolute z-30 right-0 mt-1 max-h-56 w-max min-w-full overflow-auto rounded-md border border-slate-200 bg-slate-50 py-1 shadow-lg"
                 role="listbox"
                 @keydown.escape.prevent="filterChangeTypeOpen = false"
               >
                 <label
                   v-for="t in changeTypeFilterOptions"
                   :key="t"
-                  class="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-slate-900/40"
+                  class="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50"
                 >
                   <input v-model="filters.changeTypes" type="checkbox" :value="t" class="h-4 w-4 accent-slate-200" />
                   <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium" :class="changeTypeBadgeClass(t)">
@@ -68,7 +68,7 @@
           <button
             v-if="hasActiveFilters"
             type="button"
-            class="rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800/40"
+            class="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-800 hover:bg-slate-100"
             @click="clearFilters"
           >
             Clear
@@ -78,13 +78,13 @@
         </div>
       </div>
 
-      <div v-if="pending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
+      <div v-if="pending" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">Loading…</div>
       <div v-else-if="error" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
         Failed to load contract changes.
         <div v-if="errorMessage" class="mt-2 text-xs text-red-200/80">{{ errorMessage }}</div>
       </div>
 
-      <div v-else class="rounded-md border border-slate-800 bg-slate-900">
+      <div v-else class="rounded-md border border-slate-200 bg-white shadow-card">
         <table class="w-full table-fixed border-collapse text-left text-sm">
           <colgroup>
             <col style="width: 15%" />
@@ -95,7 +95,7 @@
             <col style="width: 14%" />
             <col style="width: 20%" />
           </colgroup>
-          <thead class="bg-slate-950 text-slate-300">
+          <thead class="bg-slate-100 text-slate-600">
             <tr>
               <th class="px-3 py-3 align-bottom font-medium">Employee</th>
               <th class="px-3 py-3 align-bottom font-medium">Country</th>
@@ -107,11 +107,11 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in filteredContractChanges" :key="row.id" class="border-t border-slate-800 align-top">
-              <td class="min-w-0 break-words px-3 py-3 align-top text-slate-50">{{ row.employeeName }}</td>
-              <td class="min-w-0 break-words px-3 py-3 align-top text-slate-200">{{ row.country || '—' }}</td>
-              <td class="min-w-0 break-words px-3 py-3 align-top text-slate-200">{{ row.department }}</td>
-              <td class="min-w-0 break-words px-3 py-3 align-top text-slate-200">{{ row.position }}</td>
+            <tr v-for="row in filteredContractChanges" :key="row.id" class="border-t border-hr-navy/25 align-top">
+              <td class="min-w-0 break-words px-3 py-3 align-top text-slate-900">{{ row.employeeName }}</td>
+              <td class="min-w-0 break-words px-3 py-3 align-top text-slate-800">{{ row.country || '—' }}</td>
+              <td class="min-w-0 break-words px-3 py-3 align-top text-slate-800">{{ row.department }}</td>
+              <td class="min-w-0 break-words px-3 py-3 align-top text-slate-800">{{ row.position }}</td>
               <td class="min-w-0 px-3 py-3 align-top">
                 <div class="flex flex-wrap content-start gap-1.5">
                   <span v-for="t in row.changeTypes" :key="t" :class="[tableDataBadgeClass, changeTypeBadgeClass(t)]">
@@ -125,57 +125,46 @@
                   {{ row.status || '—' }}
                 </span>
               </td>
-              <td class="min-w-0 px-3 py-3 align-top text-slate-200">
+              <td class="min-w-0 px-3 py-3 align-top text-slate-800">
                 <div class="break-words whitespace-pre-wrap">{{ row.description }}</div>
               </td>
             </tr>
 
-            <tr v-if="contractChanges.length === 0" class="border-t border-slate-800">
-              <td colspan="7" class="px-3 py-6 text-center text-slate-300">No contract changes yet.</td>
+            <tr v-if="contractChanges.length === 0" class="border-t border-hr-navy/25">
+              <td colspan="7" class="px-3 py-6 text-center text-slate-600">No contract changes yet.</td>
             </tr>
-            <tr v-else-if="filteredContractChanges.length === 0" class="border-t border-slate-800">
-              <td colspan="7" class="px-3 py-6 text-center text-slate-300">No contract changes match the filters.</td>
+            <tr v-else-if="filteredContractChanges.length === 0" class="border-t border-hr-navy/25">
+              <td colspan="7" class="px-3 py-6 text-center text-slate-600">No contract changes match the filters.</td>
             </tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <hr class="border-slate-800" />
+    <hr />
 
-    <section class="min-w-0 space-y-3">
-      <div class="flex min-w-0 flex-wrap items-end justify-between gap-3">
-        <div class="min-w-0 space-y-1">
-          <h2 class="text-lg font-semibold text-slate-200">Upcoming Contract End Dates</h2>
-          <p class="text-xs text-slate-400">
-            Contract/probation end dates within the next {{ upcomingWindowDays }} days. 6 week notices highlighted.
-          </p>
-        </div>
-
-        <label class="space-y-1">
-          <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">Window</div>
-          <select
-            v-model="upcomingWindowDays"
-            class="h-9 rounded-md border border-slate-700 bg-slate-950/40 px-2 text-sm text-slate-200 focus:border-slate-500 focus:outline-none"
-          >
-            <option value="30">Next 30 days</option>
-            <option value="60">Next 60 days</option>
-            <option value="90">Next 90 days</option>
-          </select>
-        </label>
+    <section class="min-w-0 space-y-2">
+      <div class="min-w-0 space-y-2">
+        <h2 class="text-xl font-semibold text-hr-navy">Upcoming Contract End Dates</h2>
+        <p class="mb-6 text-sm text-slate-500">
+          Contract/probation end dates within the next {{ upcomingWindowDays }} days. 6 week notices highlighted.
+        </p>
+        <hr />
       </div>
 
-      <div v-if="upcomingPending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
+      <div v-if="upcomingPending" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">Loading…</div>
       <div v-else-if="upcomingError" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
         Failed to load upcoming contracts.
         <div v-if="upcomingErrorMessage" class="mt-2 text-xs text-red-200/80">{{ upcomingErrorMessage }}</div>
       </div>
-      <UpcomingContractsTable
-        v-else
-        :upcoming-contract-items="upcomingContractExpiries"
-        :upcoming-probation-items="upcomingProbations"
-        :expired-contract-items="expiredContracts"
-      />
+      <div v-else class="mt-40">
+        <UpcomingContractsTable
+          v-model:window-days="upcomingWindowDays"
+          :upcoming-contract-items="upcomingContractExpiries"
+          :upcoming-probation-items="upcomingProbations"
+          :expired-contract-items="expiredContracts"
+        />
+      </div>
     </section>
   </div>
 </template>
@@ -244,24 +233,43 @@ function uniqueSorted(values: string[]) {
   return Array.from(new Set(values.map((v) => v.trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b))
 }
 
+/** Explicit light surfaces (hex) so badge colors never drift from cascade or palette tweaks. */
 function changeTypeBadgeClass(value: string) {
   const v = value.trim()
-  if (v === 'Salary') return 'border-emerald-900/60 bg-emerald-950/30 text-emerald-200'
-  if (v === 'Role') return 'border-cyan-900/60 bg-cyan-950/30 text-cyan-200'
-  if (v === 'Reporting') return 'border-teal-900/60 bg-teal-950/30 text-teal-200'
-  if (v === 'Job Title') return 'border-sky-900/60 bg-sky-950/30 text-sky-200'
-  if (v === 'Contract Extension') return 'border-violet-900/60 bg-violet-950/30 text-violet-200'
-  if (v === 'Non-Renewal') return 'border-red-900/60 bg-red-950/30 text-red-200'
-  return 'border-slate-700 bg-slate-900 text-slate-200'
+  if (v === 'Salary') return 'border-[#bbf7d0] bg-[#ecfdf5] text-[#047857]'
+  if (v === 'Role') return 'border-[#a5f3fc] bg-[#ecfeff] text-[#0e7490]'
+  if (v === 'Reporting') return 'border-[#99f6e4] bg-[#f0fdfa] text-[#0f766e]'
+  if (v === 'Job Title') return 'border-[#bae6fd] bg-[#f0f9ff] text-[#0369a1]'
+  if (v === 'Contract Extension') return 'border-[#ddd6fe] bg-[#f5f3ff] text-[#5b21b6]'
+  if (v === 'Non-Renewal') return 'border-[#fecaca] bg-[#fef2f2] text-[#b91c1c]'
+  return 'border-[#e2e8f0] bg-[#f8fafc] text-[#475569]'
 }
 
 function statusBadgeClass(value: string) {
   const v = value.trim().toLowerCase()
-  if (v.includes('approved') && !v.includes('unapproved')) return 'border-emerald-900/60 bg-emerald-950/30 text-emerald-200'
-  if (v.includes('hold')) return 'border-slate-700 bg-slate-900 text-slate-200'
-  if (v.includes('approval') && v.includes('required')) return 'border-amber-900/60 bg-amber-950/30 text-amber-200'
-  if (!v) return 'border-slate-700 bg-slate-900 text-slate-200'
-  return 'border-amber-900/60 bg-amber-950/30 text-amber-200'
+  if (!v) return 'border-[#e2e8f0] bg-[#f8fafc] text-[#475569]'
+  if (v.includes('unapproved') || v.includes('not approved') || v.includes('rejected')) {
+    return 'border-[#fecaca] bg-[#fef2f2] text-[#b91c1c]'
+  }
+  if (v.includes('hold')) return 'border-[#e2e8f0] bg-[#f8fafc] text-[#475569]'
+  if (
+    (v.includes('approved') || v.includes('complete')) &&
+    !v.includes('approval required') &&
+    !v.includes('pending') &&
+    !v.includes('await')
+  ) {
+    return 'border-[#bbf7d0] bg-[#ecfdf5] text-[#047857]'
+  }
+  if (
+    v.includes('approval') ||
+    v.includes('required') ||
+    v.includes('pending') ||
+    v.includes('await') ||
+    v.includes('review')
+  ) {
+    return 'border-[#bae6fd] bg-[#f0f9ff] text-[#0369a1]'
+  }
+  return 'border-[#e2e8f0] bg-[#f8fafc] text-[#475569]'
 }
 
 function getErrorMessage(error: unknown) {

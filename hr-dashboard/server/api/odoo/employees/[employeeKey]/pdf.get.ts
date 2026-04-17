@@ -50,7 +50,9 @@ export default defineEventHandler(async (event) => {
     employment: {
       startDate: dashify(employee.startDate),
       tenure: dashify(employee.tenure),
-      contractOrProbationEnd: dashify(employee.contractOrProbationEndDate),
+      probationEnd: dashify(employee.probationEndDate),
+      contractStart: dashify(employee.contractStartDate),
+      contractEnd: dashify(employee.contractEndDate),
       gender: dashify(employee.gender),
       employeeKey: dashify(employee.employeeKey)
     },

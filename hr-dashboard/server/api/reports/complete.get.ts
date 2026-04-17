@@ -23,6 +23,7 @@ function isoNowForFooter() {
 export default defineEventHandler(async (event) => {
   const origin = requestOrigin(event)
   const generatedAt = isoNowForFooter()
+  const cookieHeader = getHeader(event, 'cookie') || ''
   const q = getQuery(event)
   const reportMonthRaw = typeof q.reportMonth === 'string' ? q.reportMonth.trim() : ''
   const reportMonth = /^\d{4}-\d{2}$/.test(reportMonthRaw) ? reportMonthRaw : ''
@@ -48,7 +49,8 @@ export default defineEventHandler(async (event) => {
 
   try {
     const context = await browser.newContext({
-      viewport: { width: 1440, height: 900 }
+      viewport: { width: 1440, height: 900 },
+      extraHTTPHeaders: cookieHeader ? { cookie: cookieHeader } : undefined
     })
 
     const pdfParts: Uint8Array[] = []

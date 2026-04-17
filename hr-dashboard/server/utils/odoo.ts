@@ -135,8 +135,8 @@ export async function getOdooClient() {
   }
 
   async function fieldsGet(model: string) {
-    return await executeKw<Record<string, { type?: string; string?: string }>>(model, 'fields_get', [], {
-      attributes: ['type', 'string']
+    return await executeKw<Record<string, { type?: string; string?: string; relation?: string }>>(model, 'fields_get', [], {
+      attributes: ['type', 'string', 'relation']
     })
   }
 

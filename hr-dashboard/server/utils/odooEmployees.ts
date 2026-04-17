@@ -24,8 +24,56 @@ function pickFirstExistingField(fields: Record<string, unknown>, candidates: str
 }
 
 function many2oneName(v: unknown) {
-  if (Array.isArray(v) && typeof v[1] === 'string') return v[1]
+  if (Array.isArray(v)) {
+    if (v.length >= 2) {
+      const label = v[1]
+      if (typeof label === 'string' && label.trim()) return label.trim()
+      if (label != null && label !== false) return safeString(label).trim()
+    }
+    return ''
+  }
+  if (v && typeof v === 'object') {
+    const o = v as Record<string, unknown>
+    if (typeof o.display_name === 'string' && o.display_name.trim()) return o.display_name.trim()
+    if (typeof o.name === 'string' && o.name.trim()) return o.name.trim()
+  }
   return ''
+}
+
+function extractRelatedRecordId(raw: unknown): number | null {
+  if (raw === false || raw == null) return null
+  if (typeof raw === 'number' && Number.isFinite(raw) && raw > 0) return raw
+  if (Array.isArray(raw) && typeof raw[0] === 'number' && Number.isFinite(raw[0]) && raw[0] > 0) return raw[0]
+  if (typeof raw === 'object' && raw !== null && 'id' in raw) {
+    const id = (raw as { id: unknown }).id
+    if (typeof id === 'number' && Number.isFinite(id) && id > 0) return id
+  }
+  return null
+}
+
+async function readIdNameMapForModel(
+  client: Awaited<ReturnType<typeof getOdooClient>>,
+  model: string,
+  ids: number[]
+): Promise<Map<number, string>> {
+  const map = new Map<number, string>()
+  const unique = [...new Set(ids)].filter((x) => Number.isFinite(x) && x > 0)
+  if (!unique.length || !model.trim()) return map
+  const chunkSize = 80
+  for (let i = 0; i < unique.length; i += chunkSize) {
+    const chunk = unique.slice(i, i + chunkSize)
+    const rows = await client.executeKw<Array<Record<string, unknown>>>(model.trim(), 'read', [chunk], {
+      fields: ['id', 'name']
+    })
+    if (!Array.isArray(rows)) continue
+    for (const rec of rows) {
+      const id = rec?.id
+      if (!Number.isFinite(id)) continue
+      const label = (typeof rec.name === 'string' && rec.name.trim()) || `#${id}`
+      map.set(Number(id), label)
+    }
+  }
+  return map
 }
 
 function toYmd(v: unknown): string | null {
@@ -55,7 +103,7 @@ const WORK_PHONE_FIELD_CANDIDATES = [
   'x_office_phone'
 ]
 
-type OdooFieldDef = { type?: string; string?: string }
+type OdooFieldDef = { type?: string; string?: string; relation?: string }
 
 /**
  * Standard + common Studio names. Ambiguous `phone` is last — work line may reuse it.
@@ -212,12 +260,56 @@ function rawIndicatesOffboarding(raw: unknown, fieldType: string | undefined): b
   return false
 }
 
-async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean }): Promise<Employee[]> {
-  const ttlMs = getCacheTtlMs()
-  const cache = opts.includeInactive ? cachedIncludingInactive : cachedActiveOnly
-  if (cache && ttlMs > 0 && Date.now() - cache.fetchedAtMs < ttlMs) return cache.employees
+function buildDisplayFromHrField(fieldDefs: Record<string, { type?: string }>) {
+  return function displayFromHrField(row: Record<string, unknown>, fieldName: string | null): string {
+    if (!fieldName) return ''
+    const t = (fieldDefs[fieldName]?.type ?? '').toLowerCase()
+    const raw = row[fieldName]
+    if (t === 'many2one') return (many2oneName(raw) || safeString(raw)).trim()
+    if (t === 'selection') return selectionDisplayString(raw)
+    if (t === 'boolean') return raw === true ? 'Yes' : raw === false ? 'No' : ''
+    if ((t === 'integer' || t === 'float') && typeof raw === 'number' && Number.isFinite(raw) && raw > 0 && Math.floor(raw) === raw) {
+      return ''
+    }
+    return (many2oneName(raw) || safeString(raw)).trim()
+  }
+}
 
-  const client = await getOdooClient()
+type HrEmployeeMappingCtx = {
+  fieldDefs: Record<string, { type?: string; relation?: string }>
+  displayFromHrField: ReturnType<typeof buildDisplayFromHrField>
+  countryField: string | null
+  companyField: string | null
+  workAddressField: string | null
+  startDateField: string | null
+  contractEndField: string | null
+  probationEndField: string | null
+  contractDateStartField: string | null
+  contractDateEndField: string | null
+  contractTrialEndField: string | null
+  talentRoleField: string | null
+  playerRatingField: string | null
+  leaderRatingField: string | null
+  talentRatingField: string | null
+  employmentTypeField: string | null
+  birthDateField: string | null
+  departureReasonField: string | null
+  offboardingStateField: string | null
+  offboardingPhaseField: string | null
+  departureDateField: string | null
+  tenureField: string | null
+  workEmailField: string | null
+  personalEmailField: string | null
+  workPhoneFields: string[]
+  personalPhoneFields: string[]
+  managerField: string | null
+  eltField: string | null
+}
+
+async function prepareHrEmployeeMappingCtx(client: Awaited<ReturnType<typeof getOdooClient>>): Promise<{
+  ctx: HrEmployeeMappingCtx
+  fields: string[]
+}> {
   const fieldInfo = await client.fieldsGet('hr.employee')
   const contractFieldInfo = await client.fieldsGet('hr.contract').catch(() => ({}))
 
@@ -259,6 +351,13 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
     'x_probation_end'
   ])
 
+  const contractDateStartField = pickFirstExistingField(contractFieldInfo, [
+    'date_start',
+    'x_date_start',
+    'contract_start_date',
+    'x_contract_start_date',
+    'start_date'
+  ])
   const contractDateEndField = pickFirstExistingField(contractFieldInfo, [
     'date_end',
     'x_date_end',
@@ -369,7 +468,27 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
   const workPhoneFields = existingFieldsInOrder(fieldInfo as Record<string, unknown>, WORK_PHONE_FIELD_CANDIDATES)
   const personalPhoneFields = buildPersonalPhoneFieldOrder(fieldInfo as Record<string, OdooFieldDef>)
 
-  const fieldDefs = fieldInfo as Record<string, { type?: string }>
+  const managerField = pickFirstExistingField(fieldInfo, [
+    'manager',
+    'manager_id',
+    'x_manager_id',
+    'x_manager',
+    'x_line_manager_id',
+    'x_line_manager',
+    'line_manager_id'
+  ])
+  const eltField = pickFirstExistingField(fieldInfo, [
+    'elt',
+    'elt_id',
+    'x_elt_id',
+    'x_elt',
+    'x_executive_leadership_team_id',
+    'x_el_team_id',
+    'x_elt_member_id'
+  ])
+
+  const fieldDefs = fieldInfo as Record<string, { type?: string; relation?: string }>
+  const displayFromHrField = buildDisplayFromHrField(fieldDefs)
 
   const fields = Array.from(
     new Set(
@@ -384,6 +503,8 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
         'job_title',
         'job_id',
         'parent_id',
+        managerField,
+        eltField,
         'gender',
         countryField,
         workAddressField,
@@ -409,15 +530,76 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
     )
   ) as string[]
 
-  const rows = await client.executeKw<any[]>(
-    'hr.employee',
-    'search_read',
-    [[]],
-    opts.includeInactive ? { fields, context: { active_test: false } } : { fields }
-  )
-  if (!Array.isArray(rows)) {
-    throw createError({ statusCode: 502, statusMessage: 'Unexpected Odoo response for employees.' })
+  return {
+    ctx: {
+      fieldDefs,
+      displayFromHrField,
+      countryField,
+      companyField,
+      workAddressField,
+      startDateField,
+      contractEndField,
+      probationEndField,
+      contractDateStartField,
+      contractDateEndField,
+      contractTrialEndField,
+      talentRoleField,
+      playerRatingField,
+      leaderRatingField,
+      talentRatingField,
+      employmentTypeField,
+      birthDateField,
+      departureReasonField,
+      offboardingStateField,
+      offboardingPhaseField,
+      departureDateField,
+      tenureField,
+      workEmailField,
+      personalEmailField,
+      workPhoneFields,
+      personalPhoneFields,
+      managerField,
+      eltField
+    },
+    fields
   }
+}
+
+async function mapHrRowsToEmployees(
+  client: Awaited<ReturnType<typeof getOdooClient>>,
+  rows: Array<Record<string, unknown>>,
+  ctx: HrEmployeeMappingCtx
+): Promise<Employee[]> {
+  const {
+    fieldDefs,
+    displayFromHrField,
+    countryField,
+    companyField,
+    workAddressField,
+    startDateField,
+    contractEndField,
+    probationEndField,
+    contractDateStartField,
+    contractDateEndField,
+    contractTrialEndField,
+    talentRoleField,
+    playerRatingField,
+    leaderRatingField,
+    talentRatingField,
+    employmentTypeField,
+    birthDateField,
+    departureReasonField,
+    offboardingStateField,
+    offboardingPhaseField,
+    departureDateField,
+    tenureField,
+    workEmailField,
+    personalEmailField,
+    workPhoneFields,
+    personalPhoneFields,
+    managerField,
+    eltField
+  } = ctx
 
   const contractIds = Array.from(
     new Set(
@@ -428,8 +610,10 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
   )
 
   const contractById = new Map<number, Record<string, unknown>>()
-  if (contractIds.length > 0 && (contractDateEndField || contractTrialEndField)) {
-    const contractFields = Array.from(new Set([contractDateEndField, contractTrialEndField].filter(Boolean))) as string[]
+  if (contractIds.length > 0 && (contractDateStartField || contractDateEndField || contractTrialEndField)) {
+    const contractFields = Array.from(
+      new Set([contractDateStartField, contractDateEndField, contractTrialEndField].filter(Boolean))
+    ) as string[]
     if (contractFields.length > 0) {
       const contractRows = await client.executeKw<any[]>(
         'hr.contract',
@@ -446,6 +630,41 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
     }
   }
 
+  function relationModelForField(fieldName: string | null, fallback: string) {
+    if (!fieldName) return fallback
+    const rel = fieldDefs[fieldName]?.relation
+    return typeof rel === 'string' && rel.trim() ? rel.trim() : fallback
+  }
+
+  const idsByModel = new Map<string, Set<number>>()
+  for (const r of rows) {
+    const row = r as Record<string, unknown>
+    for (const fieldName of [managerField, eltField] as const) {
+      if (!fieldName) continue
+      if (displayFromHrField(row, fieldName)) continue
+      const id = extractRelatedRecordId(row[fieldName])
+      if (id == null) continue
+      const model = relationModelForField(fieldName, 'hr.employee')
+      if (!idsByModel.has(model)) idsByModel.set(model, new Set())
+      idsByModel.get(model)!.add(id)
+    }
+  }
+
+  const displayNameByModel = new Map<string, Map<number, string>>()
+  for (const [model, idSet] of idsByModel.entries()) {
+    displayNameByModel.set(model, await readIdNameMapForModel(client, model, [...idSet]))
+  }
+
+  function displayManagerOrElt(row: Record<string, unknown>, fieldName: string | null): string {
+    if (!fieldName) return ''
+    const direct = displayFromHrField(row, fieldName)
+    if (direct) return direct
+    const id = extractRelatedRecordId(row[fieldName])
+    if (id == null) return ''
+    const model = relationModelForField(fieldName, 'hr.employee')
+    return (displayNameByModel.get(model)?.get(id) ?? '').trim()
+  }
+
   const employees: Employee[] = rows.map((r) => {
     const id = r?.id
     if (!Number.isFinite(id)) {
@@ -453,7 +672,8 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
     }
 
     const isActive = Boolean(r?.active)
-    const position = (r?.job_title && safeString(r.job_title).trim()) || many2oneName(r?.job_id) || ''
+    const position =
+      safeString(r?.job_title).trim() || many2oneName(r?.job_id) || ''
 
     const rawCountry = countryField ? r?.[countryField] : null
     const countryAssigned = (many2oneName(rawCountry) || safeString(rawCountry)).trim()
@@ -495,6 +715,9 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
     const lastWorkingDayYmd = departureDateField ? toYmd(r?.[departureDateField]) : null
     const offPhaseRaw = offboardingPhaseField ? selectionDisplayString(r?.[offboardingPhaseField]) : ''
 
+    const managerDisplay = displayManagerOrElt(r as Record<string, unknown>, managerField)
+    const eltDisplay = displayManagerOrElt(r as Record<string, unknown>, eltField)
+
     const employee: Employee = {
       employeeKey: `odoo-${id}`,
       name: safeString(r?.name).trim(),
@@ -508,6 +731,9 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
       employeeStatus,
       gender: formatGenderForDisplay(safeString(r?.gender)),
       reportingTo: many2oneName(r?.parent_id) || undefined,
+      manager: managerDisplay || undefined,
+      elt: eltDisplay || undefined,
+      contractStartDate: null,
       contractEndDate: null,
       probationEndDate: null,
       contractOrProbationEndDate: null,
@@ -534,6 +760,9 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
     const contractId = Array.isArray(r?.contract_id) ? r.contract_id[0] : null
     const linkedContract = Number.isFinite(contractId) ? contractById.get(Number(contractId)) : null
 
+    const contractStartFromContract =
+      linkedContract && contractDateStartField ? toYmd(linkedContract[contractDateStartField]) : null
+
     const contractEndFromContract =
       linkedContract && contractDateEndField ? toYmd(linkedContract[contractDateEndField]) : null
     const contractEndFromEmployee = contractEndField ? toYmd(r?.[contractEndField]) : null
@@ -547,6 +776,7 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
 
     const contractEnd = clampContractLikeEndDate(contractEndRaw, startYmd)
     const probationEnd = clampProbationEndDate(probationEndRaw, startYmd)
+    employee.contractStartDate = contractStartFromContract
     employee.contractEndDate = contractEnd
     employee.probationEndDate = probationEnd
     employee.contractOrProbationEndDate =
@@ -576,6 +806,27 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
     return employee
   })
 
+  return employees
+}
+
+async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean }): Promise<Employee[]> {
+  const ttlMs = getCacheTtlMs()
+  const cache = opts.includeInactive ? cachedIncludingInactive : cachedActiveOnly
+  if (cache && ttlMs > 0 && Date.now() - cache.fetchedAtMs < ttlMs) return cache.employees
+
+  const client = await getOdooClient()
+  const { ctx, fields } = await prepareHrEmployeeMappingCtx(client)
+  const rows = await client.executeKw<any[]>(
+    'hr.employee',
+    'search_read',
+    [[]],
+    opts.includeInactive ? { fields, context: { active_test: false } } : { fields }
+  )
+  if (!Array.isArray(rows)) {
+    throw createError({ statusCode: 502, statusMessage: 'Unexpected Odoo response for employees.' })
+  }
+
+  const employees = await mapHrRowsToEmployees(client, rows, ctx)
   const employeesFiltered = employees.filter((e) => !shouldExcludeOdooEmployee(e))
   const employeesDeduped = dedupeOdooEmployees(employeesFiltered)
   const nextCache = { fetchedAtMs: Date.now(), employees: employeesDeduped }
@@ -584,13 +835,43 @@ async function loadEmployeesFromOdooInternal(opts: { includeInactive: boolean })
   return employeesDeduped
 }
 
+async function fetchOdooEmployeeByDatabaseId(id: number): Promise<Employee | null> {
+  const client = await getOdooClient()
+  const { ctx, fields } = await prepareHrEmployeeMappingCtx(client)
+  const rows = await client.executeKw<any[]>(
+    'hr.employee',
+    'search_read',
+    [[['id', '=', id]]],
+    { fields, limit: 1, context: { active_test: false } }
+  )
+  if (!Array.isArray(rows) || rows.length === 0) return null
+  const employees = await mapHrRowsToEmployees(client, rows, ctx)
+  const employeesFiltered = employees.filter((e) => !shouldExcludeOdooEmployee(e))
+  const deduped = dedupeOdooEmployees(employeesFiltered)
+  return deduped[0] ?? null
+}
+
 export async function loadEmployeesFromOdoo(opts?: { includeInactive?: boolean }): Promise<Employee[]> {
   return await loadEmployeesFromOdooInternal({ includeInactive: Boolean(opts?.includeInactive) })
 }
 
-export async function getOdooEmployeeByKey(employeeKey: string) {
+export async function getOdooEmployeeByKey(employeeKey: string): Promise<Employee | null> {
   if (!employeeKey.startsWith('odoo-')) return null
-  const employees = await loadEmployeesFromOdoo()
-  return employees.find((e) => e.employeeKey === employeeKey) ?? null
+  const m = /^odoo-(\d+)$/.exec(employeeKey)
+  if (!m) return null
+  const id = Number(m[1])
+  if (!Number.isFinite(id)) return null
+
+  const ttlMs = getCacheTtlMs()
+  const now = Date.now()
+  const caches: CachedEmployees[] = []
+  if (cachedActiveOnly && ttlMs > 0 && now - cachedActiveOnly.fetchedAtMs < ttlMs) caches.push(cachedActiveOnly)
+  if (cachedIncludingInactive && ttlMs > 0 && now - cachedIncludingInactive.fetchedAtMs < ttlMs) caches.push(cachedIncludingInactive)
+  for (const c of caches) {
+    const hit = c.employees.find((e) => e.employeeKey === employeeKey)
+    if (hit) return hit
+  }
+
+  return await fetchOdooEmployeeByDatabaseId(id)
 }
 

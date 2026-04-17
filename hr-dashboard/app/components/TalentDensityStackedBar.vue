@@ -2,27 +2,27 @@
   <div class="space-y-3">
     <div class="flex items-start justify-between gap-4">
       <div class="min-w-0">
-        <h3 class="truncate text-base font-semibold text-slate-200" :title="title">{{ title }}</h3>
-        <p class="text-sm text-slate-400">Total: {{ total }}</p>
+        <h3 class="truncate text-base font-semibold text-hr-navy" :title="title">{{ title }}</h3>
+        <p class="text-sm text-slate-500">Total: {{ total }}</p>
       </div>
     </div>
 
-    <div v-if="total === 0" class="text-base text-slate-300">No rating data.</div>
+    <div v-if="total === 0" class="text-base text-slate-600">No rating data.</div>
 
     <div v-else class="space-y-2">
       <div v-for="row in rows" :key="row.bucket" class="grid grid-cols-12 items-center gap-3">
-        <div class="col-span-4 truncate text-base text-slate-200" :title="row.bucket">
+        <div class="col-span-4 truncate text-base text-slate-800" :title="row.bucket">
           {{ row.bucket }}
         </div>
 
         <div class="col-span-6">
-          <div class="h-2 w-full overflow-hidden rounded bg-slate-800">
+          <div class="h-2 w-full overflow-hidden rounded bg-slate-200">
             <div :class="['h-full rounded', row.colorClass]" :style="{ width: row.widthPct }" />
           </div>
         </div>
 
-        <div class="col-span-2 text-right text-base tabular-nums text-slate-200">
-          {{ row.count }} <span class="text-sm text-slate-400 tabular-nums">({{ row.pctLabel }})</span>
+        <div class="col-span-2 text-right text-base tabular-nums text-slate-800">
+          {{ row.count }} <span class="text-sm text-slate-500 tabular-nums">({{ row.pctLabel }})</span>
         </div>
       </div>
     </div>
@@ -39,11 +39,11 @@ const props = defineProps<{
 
 function colorForBucket(bucket: string) {
   const b = bucket.trim().toUpperCase()
-  if (b === 'A') return 'bg-emerald-400'
-  if (b === 'B+') return 'bg-sky-400'
-  if (b === 'B') return 'bg-amber-400'
-  if (b === 'B-') return 'bg-rose-400'
-  if (b === 'C') return 'bg-slate-500'
+  if (b === 'A') return 'bg-hr-chart-mint'
+  if (b === 'B+') return 'bg-hr-chart-blue'
+  if (b === 'B') return 'bg-hr-chart-amber'
+  if (b === 'B-') return 'bg-rose-600'
+  if (b === 'C') return 'bg-slate-600'
   return 'bg-slate-400'
 }
 

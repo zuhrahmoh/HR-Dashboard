@@ -13,7 +13,7 @@ export default defineEventHandler(async () => {
   const keys = Object.keys(fieldInfo ?? {})
 
   const interesting = keys
-    .filter((k) => /(talent|player|leader|rating|probation|contract|end)/i.test(k))
+    .filter((k) => /(talent|player|leader|rating|probation|contract|end|manager|elt|leadership)/i.test(k))
     .sort((a, b) => a.localeCompare(b))
 
   const detected = {
@@ -39,6 +39,24 @@ export default defineEventHandler(async () => {
       'probation_end_date',
       'x_end_of_probation',
       'x_probation_end'
+    ]),
+    managerField: pickFirstExistingField(fieldInfo, [
+      'manager',
+      'manager_id',
+      'x_manager_id',
+      'x_manager',
+      'x_line_manager_id',
+      'x_line_manager',
+      'line_manager_id'
+    ]),
+    eltField: pickFirstExistingField(fieldInfo, [
+      'elt',
+      'elt_id',
+      'x_elt_id',
+      'x_elt',
+      'x_executive_leadership_team_id',
+      'x_el_team_id',
+      'x_elt_member_id'
     ])
   }
 

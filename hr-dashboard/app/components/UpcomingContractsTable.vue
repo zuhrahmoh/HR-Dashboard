@@ -1,46 +1,42 @@
 <template>
   <div class="min-w-0 space-y-3">
-    <div class="flex items-center justify-end">
-      <div class="inline-flex overflow-hidden rounded-md border border-slate-700 bg-slate-900">
-        <button
-          type="button"
-          :class="unitButtonClass('days')"
-          @click="unitMode = 'days'"
-        >
-          Days
-        </button>
-        <button
-          type="button"
-          :class="unitButtonClass('weeks')"
-          @click="unitMode = 'weeks'"
-        >
-          Weeks
-        </button>
-        <button
-          type="button"
-          :class="unitButtonClass('both')"
-          @click="unitMode = 'both'"
-        >
-          Days+Weeks
-        </button>
-      </div>
-    </div>
-
     <div
       v-if="upcomingContractGroups.length === 0 && upcomingProbationGroups.length === 0 && pendingExpiryGroups.length === 0"
-      class="rounded-md border border-slate-800 bg-slate-900 p-4 text-sm text-slate-200"
+      class="space-y-3"
     >
-      No contract/probation end dates to review.
+      <div class="flex justify-end">
+        <UpcomingContractsFilterBar v-model:window-days="windowDays" v-model:unit-mode="unitMode" />
+      </div>
+      <div class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-sm text-slate-800">
+        No contract/probation end dates to review.
+      </div>
     </div>
 
     <div v-else class="space-y-6">
-      <div v-if="upcomingContractGroups.length > 0" class="space-y-4">
-        <h3 class="text-lg font-semibold text-slate-100">Upcoming contract expiries</h3>
+      <div v-if="upcomingContractGroups.length > 0" class="pt-8">
+        <h3 class="mb-0 flex items-center gap-2 text-lg font-semibold leading-none text-hr-navy">
+          <svg class="h-3.5 w-3.5 shrink-0 text-hr-navy" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+            <path d="M2 1v10l8-5-8-5z" />
+          </svg>
+          Upcoming contract expiries
+        </h3>
 
-        <section v-for="group in upcomingContractGroups" :key="`upcoming_contract__${group.countryKey}`" class="space-y-2">
-          <h4 class="text-base font-semibold text-slate-200">{{ group.countryLabel }}</h4>
+        <div class="space-y-4">
+          <section
+            v-for="(group, idx) in upcomingContractGroups"
+            :key="`upcoming_contract__${group.countryKey}`"
+            class="space-y-1"
+          >
+          <div
+            v-if="filtersAnchorSection === 'contracts' && idx === 0"
+            class="flex min-w-0 flex-nowrap items-end justify-between gap-3"
+          >
+            <h4 class="min-w-0 shrink text-base font-semibold text-hr-navy">{{ group.countryLabel }}</h4>
+            <UpcomingContractsFilterBar v-model:window-days="windowDays" v-model:unit-mode="unitMode" />
+          </div>
+          <h4 v-else class="text-base font-semibold text-hr-navy">{{ group.countryLabel }}</h4>
 
-          <div class="rounded-md border border-slate-800 bg-slate-900">
+          <div class="rounded-md border border-slate-200 bg-white shadow-card">
             <table class="w-full table-fixed border-collapse text-left text-sm">
               <colgroup>
                 <col style="width: 15%" />
@@ -51,7 +47,7 @@
                 <col style="width: 14%" />
                 <col style="width: 12%" />
               </colgroup>
-              <thead class="border-b border-slate-800 text-xs text-slate-400">
+              <thead class="border-b border-hr-navy/25 text-xs text-slate-400">
                 <tr>
                   <th scope="col" class="px-3 py-3 align-bottom font-medium">Name</th>
                   <th scope="col" class="px-3 py-3 align-bottom font-medium">Department</th>
@@ -62,147 +58,177 @@
                   <th scope="col" class="px-3 py-3 text-right align-bottom font-medium">Time left</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-slate-800">
+              <tbody class="divide-y divide-hr-navy/35">
                 <tr
                   v-for="(row, rowIdx) in group.rows"
                   :key="row.key"
                   :class="upcomingRowClass(row, rowIdx, group.rows.length)"
                 >
-                  <td class="min-w-0 px-3 py-3 align-top font-medium break-words text-slate-100">{{ row.name || '—' }}</td>
-                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-300">{{ row.department || '—' }}</td>
-                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-300">{{ row.position || '—' }}</td>
-                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-300">{{ row.reportingTo || '—' }}</td>
-                  <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top tabular-nums text-slate-200">
+                  <td class="min-w-0 px-3 py-3 align-top font-medium break-words text-slate-900">{{ row.name || '—' }}</td>
+                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-600">{{ row.department || '—' }}</td>
+                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-600">{{ row.position || '—' }}</td>
+                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-600">{{ row.reportingTo || '—' }}</td>
+                  <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top tabular-nums text-slate-800">
                     {{ formatYmdDate(row.contractOrProbationEndDate) }}
                   </td>
                   <td class="min-w-0 px-3 py-3 align-top">
                     <StatusBadgeSelect
                       :model-value="getStatusForRow(row)"
-                      @update:model-value="(v) => setStatusForRow(row, v)"
+                      @update:model-value="(v) => void setStatusForRow(row, v)"
                     />
                   </td>
-                  <td class="min-w-0 whitespace-nowrap px-3 py-3 text-right align-top font-bold tabular-nums text-slate-100">
+                  <td class="min-w-0 whitespace-nowrap px-3 py-3 text-right align-top font-bold tabular-nums text-hr-navy">
                     {{ formatRemaining(row.daysRemaining) }}
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
-        </section>
+          </section>
+        </div>
       </div>
 
-      <hr
-        v-if="upcomingContractGroups.length > 0 && (upcomingProbationGroups.length > 0 || pendingExpiryGroups.length > 0)"
-        class="border-slate-800"
-      />
+      <hr v-if="upcomingContractGroups.length > 0 && (upcomingProbationGroups.length > 0 || pendingExpiryGroups.length > 0)" />
 
-      <div v-if="upcomingProbationGroups.length > 0" class="space-y-4">
-        <h3 class="text-lg font-semibold text-slate-100">Upcoming probations</h3>
+      <div v-if="upcomingProbationGroups.length > 0">
+        <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold leading-none text-hr-navy">
+          <svg class="h-3.5 w-3.5 shrink-0 text-hr-navy" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+            <path d="M2 1v10l8-5-8-5z" />
+          </svg>
+          Upcoming probations
+        </h3>
 
-        <section v-for="group in upcomingProbationGroups" :key="`upcoming_probation__${group.countryKey}`" class="space-y-2">
-          <h4 class="text-base font-semibold text-slate-200">{{ group.countryLabel }}</h4>
+        <div class="space-y-4">
+          <section
+            v-for="(group, idx) in upcomingProbationGroups"
+            :key="`upcoming_probation__${group.countryKey}`"
+            class="space-y-1"
+          >
+            <div
+              v-if="filtersAnchorSection === 'probations' && idx === 0"
+              class="flex min-w-0 flex-nowrap items-end justify-between gap-3"
+            >
+              <h4 class="min-w-0 shrink text-base font-semibold text-hr-navy">{{ group.countryLabel }}</h4>
+              <UpcomingContractsFilterBar v-model:window-days="windowDays" v-model:unit-mode="unitMode" />
+            </div>
+            <h4 v-else class="text-base font-semibold text-hr-navy">{{ group.countryLabel }}</h4>
 
-          <div class="rounded-md border border-slate-800 bg-slate-900">
-            <table class="w-full table-fixed border-collapse text-left text-sm">
-              <colgroup>
-                <col style="width: 15%" />
-                <col style="width: 15%" />
-                <col style="width: 16%" />
-                <col style="width: 16%" />
-                <col style="width: 12%" />
-                <col style="width: 14%" />
-                <col style="width: 12%" />
-              </colgroup>
-              <thead class="border-b border-slate-800 text-xs text-slate-400">
-                <tr>
-                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Name</th>
-                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Department</th>
-                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Position</th>
-                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Reporting To</th>
-                  <th scope="col" class="px-3 py-3 align-bottom font-medium">End date</th>
-                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Status</th>
-                  <th scope="col" class="px-3 py-3 text-right align-bottom font-medium">Time left</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-800">
-                <tr
-                  v-for="(row, rowIdx) in group.rows"
-                  :key="row.key"
-                  :class="upcomingRowClass(row, rowIdx, group.rows.length)"
-                >
-                  <td class="min-w-0 px-3 py-3 align-top font-medium break-words text-slate-100">{{ row.name || '—' }}</td>
-                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-300">{{ row.department || '—' }}</td>
-                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-300">{{ row.position || '—' }}</td>
-                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-300">{{ row.reportingTo || '—' }}</td>
-                  <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top tabular-nums text-slate-200">
-                    {{ formatYmdDate(row.contractOrProbationEndDate) }}
-                  </td>
-                  <td class="min-w-0 px-3 py-3 align-top">
-                    <StatusBadgeSelect :model-value="getStatusForRow(row)" @update:model-value="(v) => setStatusForRow(row, v)" />
-                  </td>
-                  <td class="min-w-0 whitespace-nowrap px-3 py-3 text-right align-top font-bold tabular-nums text-slate-100">
-                    {{ formatRemaining(row.daysRemaining) }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
+            <div class="rounded-md border border-slate-200 bg-white shadow-card">
+              <table class="w-full table-fixed border-collapse text-left text-sm">
+                <colgroup>
+                  <col style="width: 15%" />
+                  <col style="width: 15%" />
+                  <col style="width: 16%" />
+                  <col style="width: 16%" />
+                  <col style="width: 12%" />
+                  <col style="width: 14%" />
+                  <col style="width: 12%" />
+                </colgroup>
+                <thead class="border-b border-hr-navy/25 text-xs text-slate-400">
+                  <tr>
+                    <th scope="col" class="px-3 py-3 align-bottom font-medium">Name</th>
+                    <th scope="col" class="px-3 py-3 align-bottom font-medium">Department</th>
+                    <th scope="col" class="px-3 py-3 align-bottom font-medium">Position</th>
+                    <th scope="col" class="px-3 py-3 align-bottom font-medium">Reporting To</th>
+                    <th scope="col" class="px-3 py-3 align-bottom font-medium">End date</th>
+                    <th scope="col" class="px-3 py-3 align-bottom font-medium">Status</th>
+                    <th scope="col" class="px-3 py-3 text-right align-bottom font-medium">Time left</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-hr-navy/35">
+                  <tr
+                    v-for="(row, rowIdx) in group.rows"
+                    :key="row.key"
+                    :class="upcomingRowClass(row, rowIdx, group.rows.length)"
+                  >
+                    <td class="min-w-0 px-3 py-3 align-top font-medium break-words text-slate-900">{{ row.name || '—' }}</td>
+                    <td class="min-w-0 px-3 py-3 align-top break-words text-slate-600">{{ row.department || '—' }}</td>
+                    <td class="min-w-0 px-3 py-3 align-top break-words text-slate-600">{{ row.position || '—' }}</td>
+                    <td class="min-w-0 px-3 py-3 align-top break-words text-slate-600">{{ row.reportingTo || '—' }}</td>
+                    <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top tabular-nums text-slate-800">
+                      {{ formatYmdDate(row.contractOrProbationEndDate) }}
+                    </td>
+                    <td class="min-w-0 px-3 py-3 align-top">
+                      <StatusBadgeSelect :model-value="getStatusForRow(row)" @update:model-value="(v) => void setStatusForRow(row, v)" />
+                    </td>
+                    <td class="min-w-0 whitespace-nowrap px-3 py-3 text-right align-top font-bold tabular-nums text-hr-navy">
+                      {{ formatRemaining(row.daysRemaining) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
       </div>
 
-      <hr v-if="upcomingProbationGroups.length > 0 && pendingExpiryGroups.length > 0" class="border-slate-800" />
+      <hr v-if="upcomingProbationGroups.length > 0 && pendingExpiryGroups.length > 0" />
 
-      <div v-if="pendingExpiryGroups.length > 0" class="space-y-4">
-        <h3 class="text-lg font-semibold text-slate-100">Pending Contract Expiries</h3>
+      <div v-if="pendingExpiryGroups.length > 0">
+        <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold leading-none text-hr-navy">
+          <svg class="h-3.5 w-3.5 shrink-0 text-hr-navy" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+            <path d="M2 1v10l8-5-8-5z" />
+          </svg>
+          Pending Contract Expiries
+        </h3>
 
-        <section v-for="group in pendingExpiryGroups" :key="`pending__${group.countryKey}`" class="space-y-2">
-          <h4 class="text-base font-semibold text-slate-200">{{ group.countryLabel }}</h4>
+        <div class="space-y-4">
+          <section v-for="(group, idx) in pendingExpiryGroups" :key="`pending__${group.countryKey}`" class="space-y-1">
+            <div
+              v-if="filtersAnchorSection === 'pending' && idx === 0"
+              class="flex min-w-0 flex-nowrap items-end justify-between gap-3"
+            >
+              <h4 class="min-w-0 shrink text-base font-semibold text-hr-navy">{{ group.countryLabel }}</h4>
+              <UpcomingContractsFilterBar v-model:window-days="windowDays" v-model:unit-mode="unitMode" />
+            </div>
+            <h4 v-else class="text-base font-semibold text-hr-navy">{{ group.countryLabel }}</h4>
 
-          <div class="rounded-md border border-slate-800 bg-slate-900">
-            <table class="w-full table-fixed border-collapse text-left text-sm">
-              <colgroup>
-                <col style="width: 15%" />
-                <col style="width: 15%" />
-                <col style="width: 16%" />
-                <col style="width: 16%" />
-                <col style="width: 12%" />
-                <col style="width: 14%" />
-                <col style="width: 12%" />
-              </colgroup>
-              <thead class="border-b border-slate-800 text-xs text-slate-400">
-                <tr>
-                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Name</th>
-                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Department</th>
-                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Position</th>
-                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Reporting To</th>
-                  <th scope="col" class="px-3 py-3 align-bottom font-medium">End date</th>
-                  <th scope="col" class="px-3 py-3 align-bottom font-medium">Status</th>
-                  <th scope="col" class="px-3 py-3 text-right align-bottom font-medium">Time left</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-800">
-                <tr v-for="row in group.rows" :key="row.key" class="text-slate-200">
-                  <td class="min-w-0 px-3 py-3 align-top font-medium break-words text-slate-100">{{ row.name || '—' }}</td>
-                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-300">{{ row.department || '—' }}</td>
-                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-300">{{ row.position || '—' }}</td>
-                  <td class="min-w-0 px-3 py-3 align-top break-words text-slate-300">{{ row.reportingTo || '—' }}</td>
-                  <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top tabular-nums text-slate-200">
-                    {{ formatYmdDate(row.contractOrProbationEndDate) }}
-                  </td>
-                  <td class="min-w-0 px-3 py-3 align-top">
-                    <StatusBadgeSelect
-                      :model-value="getStatusForRow(row)"
-                      @update:model-value="(v) => setStatusForRow(row, v)"
-                    />
-                  </td>
-                  <td class="min-w-0 whitespace-nowrap px-3 py-3 text-right align-top font-bold tabular-nums text-slate-100">
-                    {{ formatRemaining(row.daysRemaining) }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
+            <div class="rounded-md border border-slate-200 bg-white shadow-card">
+              <table class="w-full table-fixed border-collapse text-left text-sm">
+                <colgroup>
+                  <col style="width: 15%" />
+                  <col style="width: 15%" />
+                  <col style="width: 16%" />
+                  <col style="width: 16%" />
+                  <col style="width: 12%" />
+                  <col style="width: 14%" />
+                  <col style="width: 12%" />
+                </colgroup>
+                <thead class="border-b border-hr-navy/25 text-xs text-slate-400">
+                  <tr>
+                    <th scope="col" class="px-3 py-3 align-bottom font-medium">Name</th>
+                    <th scope="col" class="px-3 py-3 align-bottom font-medium">Department</th>
+                    <th scope="col" class="px-3 py-3 align-bottom font-medium">Position</th>
+                    <th scope="col" class="px-3 py-3 align-bottom font-medium">Reporting To</th>
+                    <th scope="col" class="px-3 py-3 align-bottom font-medium">End date</th>
+                    <th scope="col" class="px-3 py-3 align-bottom font-medium">Status</th>
+                    <th scope="col" class="px-3 py-3 text-right align-bottom font-medium">Time left</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-hr-navy/35">
+                  <tr v-for="row in group.rows" :key="row.key" class="text-slate-800">
+                    <td class="min-w-0 px-3 py-3 align-top font-medium break-words text-slate-900">{{ row.name || '—' }}</td>
+                    <td class="min-w-0 px-3 py-3 align-top break-words text-slate-600">{{ row.department || '—' }}</td>
+                    <td class="min-w-0 px-3 py-3 align-top break-words text-slate-600">{{ row.position || '—' }}</td>
+                    <td class="min-w-0 px-3 py-3 align-top break-words text-slate-600">{{ row.reportingTo || '—' }}</td>
+                    <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top tabular-nums text-slate-800">
+                      {{ formatYmdDate(row.contractOrProbationEndDate) }}
+                    </td>
+                    <td class="min-w-0 px-3 py-3 align-top">
+                      <StatusBadgeSelect
+                        :model-value="getStatusForRow(row)"
+                        @update:model-value="(v) => void setStatusForRow(row, v)"
+                      />
+                    </td>
+                    <td class="min-w-0 whitespace-nowrap px-3 py-3 text-right align-top font-bold tabular-nums text-hr-navy">
+                      {{ formatRemaining(row.daysRemaining) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   </div>
@@ -229,6 +255,8 @@ const props = defineProps<{
   expiredContractItems: Item[]
 }>()
 
+const windowDays = defineModel<'30' | '60' | '90'>('windowDays', { required: true })
+
 type StatusKey =
   | 'not_started'
   | 'discussion_in_progress'
@@ -236,20 +264,42 @@ type StatusKey =
   | 'contracted_extension'
   | 'unsuccessful_probation'
 
-const STORAGE_KEY = 'hr-dashboard:upcoming-contracts-status:v2'
+const LEGACY_STORAGE_KEY = 'hr-dashboard:upcoming-contracts-status:v2'
 
 const statusByRowKey = ref<Record<string, StatusKey>>({})
 
+const { data: statusesPayload, refresh: refreshStatuses } = useFetch<{ statuses: Record<string, string> }>(
+  '/api/upcoming-contract-expiry-statuses'
+)
+
+function normalizeLegacyStatusValue(value: unknown): StatusKey {
+  if (value === 'not_started') return 'not_started'
+  if (value === 'discussion_in_progress') return 'discussion_in_progress'
+  if (value === 'confirmed_for_permanency') return 'confirmed_for_permanency'
+  if (value === 'contracted_extension') return 'contracted_extension'
+  if (value === 'unsuccessful_probation') return 'unsuccessful_probation'
+  if (value === '' || value === 'no_action' || value === 'pending') return 'not_started'
+  if (value === 'in_progress') return 'discussion_in_progress'
+  if (value === 'completed' || value === 'done') return 'confirmed_for_permanency'
+  return 'not_started'
+}
+
+watch(
+  statusesPayload,
+  (p) => {
+    if (!p?.statuses) return
+    const next: Record<string, StatusKey> = {}
+    for (const [k, raw] of Object.entries(p.statuses)) {
+      const v = normalizeLegacyStatusValue(raw)
+      if (v !== 'not_started') next[k] = v
+    }
+    statusByRowKey.value = next
+  },
+  { immediate: true }
+)
+
 type UnitMode = 'days' | 'weeks' | 'both'
 const unitMode = ref<UnitMode>('both')
-
-function unitButtonClass(mode: UnitMode) {
-  const active = unitMode.value === mode
-  return [
-    'px-3 py-1.5 text-xs font-semibold',
-    active ? 'bg-slate-800 text-slate-50' : 'text-slate-200 hover:bg-slate-800/60'
-  ]
-}
 
 function weeksFromDaysCeil(days: number) {
   const d = Number(days)
@@ -261,7 +311,7 @@ function weeksFromDaysCeil(days: number) {
 function formatRemaining(daysRemaining: number) {
   const d = Number(daysRemaining)
   if (!Number.isFinite(d)) return '—'
-  if (unitMode.value === 'days') return String(d)
+  if (unitMode.value === 'days') return `${d}d`
   const w = weeksFromDaysCeil(d)
   if (unitMode.value === 'weeks') return `${w}w`
   return `${d}d (${w}w)`
@@ -300,39 +350,24 @@ function storageKeyForFields(input: {
   return `row:${name}|${country}|${pos}|end:${end}`
 }
 
-onMounted(() => {
-  const obj = safeParseObject(window.localStorage.getItem(STORAGE_KEY))
+onMounted(async () => {
+  if (typeof window === 'undefined') return
+  const raw = window.localStorage.getItem(LEGACY_STORAGE_KEY)
+  if (!raw) return
+  const obj = safeParseObject(raw)
   if (!obj) return
-  const next: Record<string, StatusKey> = {}
-  for (const [k, v] of Object.entries(obj)) {
-    if (typeof k !== 'string') continue
-    if (
-      v === 'not_started' ||
-      v === 'discussion_in_progress' ||
-      v === 'confirmed_for_permanency' ||
-      v === 'contracted_extension' ||
-      v === 'unsuccessful_probation'
-    ) {
-      next[k] = v
-      continue
+  try {
+    for (const [k, rawVal] of Object.entries(obj)) {
+      if (typeof k !== 'string') continue
+      const status = normalizeLegacyStatusValue(rawVal)
+      await $fetch('/api/upcoming-contract-expiry-statuses', { method: 'PUT', body: { rowKey: k, status } })
     }
-
-    // Migrate legacy values from earlier iterations.
-    if (v === '' || v === 'no_action' || v === 'pending') next[k] = 'not_started'
-    else if (v === 'in_progress') next[k] = 'discussion_in_progress'
-    else if (v === 'completed' || v === 'done') next[k] = 'confirmed_for_permanency'
+    window.localStorage.removeItem(LEGACY_STORAGE_KEY)
+    await refreshStatuses()
+  } catch {
+    // Leave legacy localStorage if migration fails (e.g. offline).
   }
-  statusByRowKey.value = next
 })
-
-watch(
-  statusByRowKey,
-  (v) => {
-    if (typeof window === 'undefined') return
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(v))
-  },
-  { deep: true }
-)
 
 function normalizeCountry(country: string) {
   const trimmed = (country ?? '').trim()
@@ -363,9 +398,19 @@ function getStatusForRow(row: Row): StatusKey {
   return statusByRowKey.value[k] ?? 'not_started'
 }
 
-function setStatusForRow(row: Row, status: StatusKey) {
+async function setStatusForRow(row: Row, status: StatusKey) {
   const k = storageKeyForRow(row)
-  statusByRowKey.value = { ...statusByRowKey.value, [k]: status }
+  const prev = { ...statusByRowKey.value }
+  const next = { ...statusByRowKey.value }
+  if (status === 'not_started') delete next[k]
+  else next[k] = status
+  statusByRowKey.value = next
+  try {
+    await $fetch('/api/upcoming-contract-expiry-statuses', { method: 'PUT', body: { rowKey: k, status } })
+    await refreshStatuses()
+  } catch {
+    statusByRowKey.value = prev
+  }
 }
 
 function countrySortRank(country: string) {
@@ -418,16 +463,23 @@ const SIX_WEEKS_DAYS = 42
 function upcomingRowClass(row: Row, rowIdx: number, rowCount: number) {
   const shouldHighlight = row.daysRemaining > 0 && row.daysRemaining <= SIX_WEEKS_DAYS
   const bottomEdge =
-    shouldHighlight && rowIdx === rowCount - 1 ? 'shadow-[inset_0_-1px_0_rgba(216,180,254,0.45)]' : ''
+    shouldHighlight && rowIdx === rowCount - 1 ? 'shadow-[inset_0_-1px_0_rgba(244,114,182,0.4)]' : ''
   return [
-    'text-slate-200',
-    shouldHighlight ? 'bg-[#190030] ring-1 ring-inset ring-purple-300/40' : '',
+    'text-slate-800',
+    shouldHighlight ? 'bg-pink-100 ring-1 ring-inset ring-pink-200/90' : '',
     bottomEdge,
   ]
 }
 
 const pendingExpiryGroups = computed(() => {
   return groupByCountry(expiredRows.value)
+})
+
+const filtersAnchorSection = computed(() => {
+  if (upcomingContractGroups.value.length > 0) return 'contracts' as const
+  if (upcomingProbationGroups.value.length > 0) return 'probations' as const
+  if (pendingExpiryGroups.value.length > 0) return 'pending' as const
+  return null
 })
 </script>
 

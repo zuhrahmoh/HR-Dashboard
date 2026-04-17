@@ -3,7 +3,7 @@
     <div class="flex items-start justify-between gap-3">
       <div class="min-w-0">
         <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ label }}</div>
-        <div class="mt-2 text-3xl font-semibold tabular-nums text-slate-900">{{ value }}</div>
+        <div class="mt-2 text-3xl font-semibold tabular-nums text-hr-navy">{{ value }}</div>
         <div v-if="subtitle" class="mt-1 text-sm text-slate-600">{{ subtitle }}</div>
         <div v-if="insight" class="mt-2 text-sm text-slate-700">{{ insight }}</div>
       </div>

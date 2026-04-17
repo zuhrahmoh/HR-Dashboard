@@ -3,13 +3,13 @@
     <div class="flex flex-wrap items-end justify-between gap-3">
       <div class="space-y-1">
         <h1 class="text-3xl font-semibold">HR Dashboard — Executive Summary</h1>
-        <p class="text-base text-slate-300">
+        <p class="text-base text-slate-600">
           High-level snapshot generated from the live dashboard data sources.
         </p>
       </div>
     </div>
 
-    <hr class="border-slate-800" />
+    <hr />
 
     <section class="space-y-3">
       <ReportSectionHeader title="Key metrics" subtitle="Workforce, hiring, vacancies and cases." />

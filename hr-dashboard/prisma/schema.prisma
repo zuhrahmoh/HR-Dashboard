@@ -105,3 +105,27 @@ model HeadcountSnapshot {
   createdAt DateTime @default(now())
 }
 
+model UpcomingContractExpiryStatus {
+  rowKey    String   @id @db.Text
+  status    String
+  updatedAt DateTime @updatedAt
+}
+
+model RecruitmentOnboardingChecklist {
+  rowKey     String   @id @db.Text
+  taskStates Json
+  updatedAt  DateTime @updatedAt
+}
+
+model RecruitmentExitChecklist {
+  rowKey     String   @id @db.Text
+  taskStates Json
+  updatedAt  DateTime @updatedAt
+}
+
+model NewHireCheckinStatus {
+  rowKey    String   @id @db.Text
+  status    String
+  updatedAt DateTime @updatedAt
+}
+

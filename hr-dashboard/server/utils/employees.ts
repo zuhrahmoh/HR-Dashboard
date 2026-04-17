@@ -11,6 +11,12 @@ export type Employee = {
   employeeStatus: string
   gender?: string
   reportingTo?: string
+  /** Line manager when stored separately from `parent_id` / reporting (Laser custom fields). */
+  manager?: string
+  /** Executive Leadership Team (name or related employee from Odoo). */
+  elt?: string
+  /** Current hr.contract start (fixed-term / contract staff). */
+  contractStartDate?: string | null
   contractEndDate?: string | null
   probationEndDate?: string | null
   contractOrProbationEndDate: string | null

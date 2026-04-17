@@ -1,13 +1,13 @@
 <template>
-  <section class="rounded-md border border-slate-800 bg-slate-900 p-4">
+  <section class="rounded-md border border-slate-200 bg-white shadow-card p-4">
     <div class="flex items-start justify-between gap-4">
       <div class="min-w-0">
-        <h3 class="truncate text-base font-semibold text-slate-100" :title="country">{{ country || '—' }}</h3>
-        <p v-if="month" class="mt-0.5 text-sm text-slate-400">{{ month }}</p>
+        <h3 class="truncate text-base font-semibold text-hr-navy" :title="country">{{ country || '—' }}</h3>
+        <p v-if="monthDisplay" class="mt-0.5 text-sm text-slate-400">{{ monthDisplay }}</p>
       </div>
       <div class="text-right">
         <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Total Outgoing Expenses</div>
-        <div class="text-sm font-semibold tabular-nums text-emerald-400">
+        <div class="text-sm font-semibold tabular-nums text-emerald-700">
           {{ formatCurrency(total) }}
         </div>
         <div v-if="showDeltas" class="mt-0.5 text-xs font-semibold tabular-nums" :class="deltaTextClass(deltaTotal)">
@@ -17,16 +17,16 @@
     </div>
 
     <dl
-      class="mt-4 grid grid-cols-[8.5rem_6.5rem_minmax(0,1fr)] items-center gap-x-1 gap-y-1.5 overflow-hidden rounded-md bg-slate-950/20 p-2.5 text-xs text-slate-200 shadow-lg shadow-black/20"
+      class="mt-4 grid grid-cols-[8.5rem_6.5rem_minmax(0,1fr)] items-center gap-x-1 gap-y-1.5 overflow-hidden rounded-md bg-slate-100 p-2.5 text-xs text-slate-800 shadow-md shadow-slate-900/10"
     >
       <div v-for="row in breakdownRows" :key="row.key" class="contents">
-        <dt class="min-w-0 truncate text-slate-400" :title="row.label">{{ row.label }}</dt>
-        <dd>
-          <div class="h-1.5 w-full overflow-hidden rounded bg-slate-800">
-            <div class="h-full rounded bg-slate-200" :style="{ width: row.widthPct }" />
+        <dt class="min-w-0 truncate font-medium text-slate-800" :title="row.label">{{ row.label }}</dt>
+        <dd class="min-w-0">
+          <div class="h-1.5 w-full overflow-hidden rounded bg-slate-200">
+            <div class="h-full min-w-0 rounded bg-hr-navy" :style="{ width: row.widthPct }" />
           </div>
         </dd>
-        <dd class="min-w-0 justify-self-end break-words text-right tabular-nums text-xs font-semibold leading-tight text-slate-100">
+        <dd class="min-w-0 justify-self-end break-words text-right tabular-nums text-xs font-semibold leading-tight text-slate-900">
           <div class="flex flex-col items-end">
             <div>{{ formatCurrency(row.value) }}</div>
             <div v-if="showDeltas" class="text-[11px] font-semibold tabular-nums leading-tight" :class="deltaTextClass(row.delta)">
@@ -40,6 +40,8 @@
 </template>
 
 <script setup lang="ts">
+import { formatExpenseMonthLabel } from '~/utils/formatExpenseMonth'
+
 const props = defineProps<{
   country: string
   month: string | null
@@ -90,13 +92,13 @@ function formatDelta(v: number) {
 
 function deltaTextClass(v: number) {
   const n = Number.isFinite(v) ? v : 0
-  if (n > 0) return 'text-emerald-300'
+  if (n > 0) return 'text-emerald-600'
   if (n < 0) return 'text-rose-300'
   return 'text-slate-400'
 }
 
 const country = computed(() => props.country)
-const month = computed(() => props.month)
+const monthDisplay = computed(() => formatExpenseMonthLabel(props.month))
 const grossSalary = computed(() => props.grossSalary)
 const overtime = computed(() => props.overtime)
 const vc = computed(() => props.vc)

@@ -2,20 +2,20 @@
   <div class="min-w-0 space-y-6" :data-report-ready="reportReady ? '1' : undefined">
     <div class="space-y-1">
       <h1 class="text-2xl font-semibold">Recruitment &amp; Onboarding</h1>
-      <p class="text-slate-300">Track critical vacancies, recruitment, onboarding and offboarding processes.</p>
+      <p class="text-slate-600">Track critical vacancies, recruitment, onboarding and offboarding processes.</p>
     </div>
 
-    <hr v-if="!isReportMode" class="border-slate-800" />
+    <hr v-if="!isReportMode" />
 
     <section class="space-y-3">
       <div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
-        <h2 class="text-base font-semibold text-slate-200">Critical Vacancies</h2>
+        <h2 class="text-base font-semibold text-hr-navy">Critical Vacancies</h2>
         <div class="flex flex-wrap items-center gap-2">
-          <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
             <span class="whitespace-nowrap">Country</span>
             <select
               v-model="selectedVacancyCountry"
-              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+              class="h-8 rounded-md border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-slate-400"
             >
               <option value="">All</option>
               <option v-for="c in vacancyListCountries" :key="c" :value="c">{{ c }}</option>
@@ -24,7 +24,7 @@
           <button
             v-if="!showVacancyForm"
             type="button"
-            class="inline-flex items-center rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800/40"
+            class="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-800 hover:bg-slate-100"
             @click="showVacancyForm = true"
           >
             <span aria-hidden="true" class="mr-1.5 font-semibold">+</span>
@@ -35,43 +35,43 @@
 
       <form
         v-if="showVacancyForm"
-        class="rounded-md border border-slate-800 bg-slate-900 p-4"
+        class="rounded-md border border-slate-200 bg-white shadow-card p-4"
         @submit.prevent="createVacancy"
       >
         <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
           <label class="block">
-            <div class="mb-1 text-sm text-slate-300">Position Title</div>
+            <div class="mb-1 text-sm text-slate-600">Position Title</div>
             <input
               v-model="vacancyForm.positionTitle"
               type="text"
-              class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50 placeholder:text-slate-500"
+              class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500"
             />
           </label>
           <label class="block">
-            <div class="mb-1 text-sm text-slate-300">Department</div>
+            <div class="mb-1 text-sm text-slate-600">Department</div>
             <select
               v-model="vacancyForm.department"
-              class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+              class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
             >
               <option value="" disabled>Select department</option>
               <option v-for="d in vacancyDepartments" :key="d" :value="d">{{ d }}</option>
             </select>
           </label>
           <label class="block">
-            <div class="mb-1 text-sm text-slate-300">Country</div>
+            <div class="mb-1 text-sm text-slate-600">Country</div>
             <select
               v-model="vacancyForm.country"
-              class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+              class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
             >
               <option value="" disabled>Select country</option>
               <option v-for="c in vacancyCountries" :key="c" :value="c">{{ c }}</option>
             </select>
           </label>
           <label class="block">
-            <div class="mb-1 text-sm text-slate-300">Priority</div>
+            <div class="mb-1 text-sm text-slate-600">Priority</div>
             <select
               v-model="vacancyForm.priority"
-              class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+              class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
             >
               <option value="" disabled>Select priority</option>
               <option v-for="p in vacancyPriorities" :key="p" :value="p">{{ formatPriority(p) }}</option>
@@ -84,14 +84,14 @@
           <div class="ml-auto flex items-center gap-2">
             <button
               type="button"
-              class="rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800/40"
+              class="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-800 hover:bg-slate-100"
               @click="cancelVacancyCreate"
             >
               Cancel
             </button>
             <button
               type="submit"
-              class="inline-flex items-center rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800/40 disabled:opacity-60"
+              class="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-800 hover:bg-slate-100 disabled:opacity-60"
               :disabled="vacancySaving"
             >
               <span aria-hidden="true" class="mr-1.5 font-semibold">+</span>
@@ -101,26 +101,26 @@
         </div>
       </form>
 
-      <div v-if="vacanciesPending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
+      <div v-if="vacanciesPending" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">Loading…</div>
       <div v-else-if="vacanciesError" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
         Failed to load vacancies.
         <div v-if="vacanciesErrorMessage" class="mt-2 text-xs text-red-200/80">{{ vacanciesErrorMessage }}</div>
       </div>
-      <div v-else-if="(vacancies?.length ?? 0) === 0" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">
+      <div v-else-if="(vacancies?.length ?? 0) === 0" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">
         No vacancies yet.
       </div>
       <div
         v-else-if="vacanciesForDisplay.length === 0"
-        class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200"
+        class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800"
       >
         No critical vacancies for this country.
       </div>
       <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-        <div v-for="v in vacanciesForDisplay" :key="v.id" class="rounded-md border border-slate-800 bg-slate-900 p-3">
+        <div v-for="v in vacanciesForDisplay" :key="v.id" class="rounded-md border border-slate-200 bg-white shadow-card p-3">
           <div class="flex items-start justify-between gap-4">
             <div class="min-w-0">
-              <div class="truncate text-sm font-semibold text-slate-50">{{ v.positionTitle }}</div>
-              <div class="mt-1 text-xs text-slate-300">{{ v.department }} · {{ v.country }}</div>
+              <div class="truncate text-sm font-semibold text-hr-navy">{{ v.positionTitle }}</div>
+              <div class="mt-1 text-xs text-slate-600">{{ v.department }} · {{ v.country }}</div>
               <div class="mt-2">
                 <span :class="[tableDataBadgeClass, priorityBadgeClass(v.priority)]">
                   {{ formatPriority(v.priority) }}
@@ -131,14 +131,14 @@
             <div class="shrink-0 space-x-2">
               <button
                 type="button"
-                class="rounded-md border border-slate-800 bg-slate-950 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800/40"
+                class="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-800 hover:bg-slate-100"
                 @click="startEditVacancy(v)"
               >
                 Edit
               </button>
               <button
                 type="button"
-                class="rounded-md border border-slate-800 bg-slate-950 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800/40"
+                class="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-800 hover:bg-slate-100"
                 @click="deleteVacancy(v.id)"
               >
                 Delete
@@ -149,38 +149,38 @@
           <form v-if="vacancyEditId === v.id" class="mt-4 space-y-3" @submit.prevent="saveEditVacancy">
             <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
               <label class="block">
-                <div class="mb-1 text-xs text-slate-300">Position Title</div>
+                <div class="mb-1 text-xs text-slate-600">Position Title</div>
                 <input
                   v-model="vacancyEditForm.positionTitle"
                   type="text"
-                  class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+                  class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
                 />
               </label>
               <label class="block">
-                <div class="mb-1 text-xs text-slate-300">Department</div>
+                <div class="mb-1 text-xs text-slate-600">Department</div>
                 <select
                   v-model="vacancyEditForm.department"
-                  class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+                  class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
                 >
                   <option value="" disabled>Select department</option>
                   <option v-for="d in vacancyDepartments" :key="d" :value="d">{{ d }}</option>
                 </select>
               </label>
               <label class="block">
-                <div class="mb-1 text-xs text-slate-300">Country</div>
+                <div class="mb-1 text-xs text-slate-600">Country</div>
                 <select
                   v-model="vacancyEditForm.country"
-                  class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+                  class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
                 >
                   <option value="" disabled>Select country</option>
                   <option v-for="c in vacancyCountries" :key="c" :value="c">{{ c }}</option>
                 </select>
               </label>
               <label class="block">
-                <div class="mb-1 text-xs text-slate-300">Priority</div>
+                <div class="mb-1 text-xs text-slate-600">Priority</div>
                 <select
                   v-model="vacancyEditForm.priority"
-                  class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+                  class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
                 >
                   <option value="" disabled>Select priority</option>
                   <option v-for="p in vacancyPriorities" :key="p" :value="p">{{ formatPriority(p) }}</option>
@@ -193,14 +193,14 @@
             <div class="flex items-center justify-end gap-2">
               <button
                 type="button"
-                class="rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800/40"
+                class="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-800 hover:bg-slate-100"
                 @click="cancelEditVacancy"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                class="rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800/40 disabled:opacity-60"
+                class="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-800 hover:bg-slate-100 disabled:opacity-60"
                 :disabled="vacancySaving"
               >
                 Save
@@ -216,8 +216,8 @@
         Showing top {{ vacanciesForDisplay.length }} vacancies. See the dashboard for the full list.
       </div>
 
-      <div class="rounded-md border border-slate-700 bg-slate-800/20 p-3 text-xs text-slate-200">
-        <div class="flex items-center gap-2 font-semibold text-slate-100">
+      <div class="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-800">
+        <div class="flex items-center gap-2 font-semibold text-hr-navy">
           <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 text-amber-300">
             <path
               fill-rule="evenodd"
@@ -227,7 +227,7 @@
           </svg>
           <span>Shortlisting of Candidates</span>
         </div>
-        <div class="mt-2 space-y-1 text-slate-200/90">
+        <div class="mt-2 space-y-1 text-slate-800/90">
           <div>
             (a) Receive, review, and acknowledge request. Determine if to proceed with obtaining approval or dismiss, based on HR’s assessment for the need for the resource.
           </div>
@@ -241,27 +241,27 @@
       </div>
     </section>
 
-    <hr v-if="!isReportMode" class="border-slate-800" />
+    <hr v-if="!isReportMode" />
 
     <section class="min-w-0 space-y-3">
       <div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
-        <h2 class="text-base font-semibold text-slate-200">Recruitment &amp; Onboarding</h2>
+        <h2 class="text-base font-semibold text-hr-navy">Recruitment &amp; Onboarding</h2>
         <div class="flex flex-wrap items-center gap-2">
-          <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
             <span class="whitespace-nowrap">Country</span>
             <select
               v-model="selectedRecruitmentCountry"
-              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+              class="h-8 rounded-md border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-slate-400"
             >
               <option value="">All</option>
               <option v-for="c in criticalRecruitmentCountries" :key="c" :value="c">{{ c }}</option>
             </select>
           </label>
-          <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
             <span class="whitespace-nowrap">Stage</span>
             <select
               v-model="selectedRecruitmentStage"
-              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+              class="h-8 rounded-md border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-slate-400"
             >
               <option value="">All</option>
               <option v-for="s in criticalRecruitmentStages" :key="s" :value="s">{{ s }}</option>
@@ -270,7 +270,7 @@
           <button
             v-if="!showCriticalRecruitmentForm"
             type="button"
-            class="inline-flex items-center rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800/40"
+            class="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-800 hover:bg-slate-100"
             @click="showCriticalRecruitmentForm = true"
           >
             <span aria-hidden="true" class="mr-1.5 font-semibold">+</span>
@@ -281,52 +281,52 @@
 
       <form
         v-if="showCriticalRecruitmentForm"
-        class="rounded-md border border-slate-800 bg-slate-900 p-4"
+        class="rounded-md border border-slate-200 bg-white shadow-card p-4"
         @submit.prevent="createCriticalRecruitment"
       >
         <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
           <label class="block">
-            <div class="mb-1 text-sm text-slate-300">Candidate Name</div>
+            <div class="mb-1 text-sm text-slate-600">Candidate Name</div>
             <input
               v-model="criticalRecruitmentForm.candidateName"
               type="text"
-              class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+              class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
             />
           </label>
           <label class="block">
-            <div class="mb-1 text-sm text-slate-300">Position</div>
+            <div class="mb-1 text-sm text-slate-600">Position</div>
             <input
               v-model="criticalRecruitmentForm.position"
               type="text"
-              class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+              class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
             />
           </label>
           <label class="block">
-            <div class="mb-1 text-sm text-slate-300">Country</div>
+            <div class="mb-1 text-sm text-slate-600">Country</div>
             <select
               v-model="criticalRecruitmentForm.country"
-              class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+              class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
             >
               <option value="" disabled>Select country</option>
               <option v-for="c in vacancyCountries" :key="c" :value="c">{{ c }}</option>
             </select>
           </label>
           <label class="block">
-            <div class="mb-1 text-sm text-slate-300">Stage</div>
+            <div class="mb-1 text-sm text-slate-600">Stage</div>
             <select
               v-model="criticalRecruitmentForm.stage"
-              class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+              class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
             >
               <option value="" disabled>Select stage</option>
               <option v-for="s in criticalRecruitmentStages" :key="s" :value="s">{{ s }}</option>
             </select>
           </label>
           <label class="block md:col-span-4">
-            <div class="mb-1 text-sm text-slate-300">Notes (optional)</div>
+            <div class="mb-1 text-sm text-slate-600">Notes (optional)</div>
             <input
               v-model="criticalRecruitmentForm.notes"
               type="text"
-              class="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50 placeholder:text-slate-500"
+              class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500"
               placeholder="Add any notes for this candidate…"
             />
           </label>
@@ -337,14 +337,14 @@
           <div class="ml-auto flex items-center gap-2">
             <button
               type="button"
-              class="rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800/40"
+              class="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-800 hover:bg-slate-100"
               @click="cancelCriticalRecruitmentCreate"
             >
               Cancel
             </button>
             <button
               type="submit"
-              class="inline-flex items-center rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800/40 disabled:opacity-60"
+              class="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-800 hover:bg-slate-100 disabled:opacity-60"
               :disabled="criticalRecruitmentSaving"
             >
               <span aria-hidden="true" class="mr-1.5 font-semibold">+</span>
@@ -354,7 +354,7 @@
         </div>
       </form>
 
-      <div v-if="criticalRecruitmentPending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
+      <div v-if="criticalRecruitmentPending" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">Loading…</div>
       <div
         v-else-if="criticalRecruitmentError"
         class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200"
@@ -362,7 +362,7 @@
         Failed to load recruitment.
         <div v-if="criticalRecruitmentErrorMessage" class="mt-2 text-xs text-red-200/80">{{ criticalRecruitmentErrorMessage }}</div>
       </div>
-      <div v-else class="rounded-md border border-slate-800 bg-slate-900">
+      <div v-else class="rounded-md border border-slate-200 bg-white shadow-card">
         <table class="w-full table-fixed border-collapse text-left text-sm">
           <colgroup>
             <col style="width: 18%" />
@@ -372,7 +372,7 @@
             <col style="width: 27%" />
             <col style="width: 12%" />
           </colgroup>
-          <thead class="bg-slate-950 text-slate-300">
+          <thead class="bg-slate-100 text-slate-600">
             <tr>
               <th class="px-3 py-3 align-bottom font-medium">Candidate</th>
               <th class="px-3 py-3 align-bottom font-medium">Position</th>
@@ -383,26 +383,26 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="c in criticalRecruitmentForDisplay" :key="c.id" class="border-t border-slate-800">
+            <tr v-for="c in criticalRecruitmentForDisplay" :key="c.id" class="border-t border-hr-navy/25">
               <template v-if="criticalRecruitmentEditId === c.id">
                 <td class="min-w-0 px-3 py-3 align-top">
                   <input
                     v-model="criticalRecruitmentEditForm.candidateName"
                     type="text"
-                    class="w-full min-w-0 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+                    class="w-full min-w-0 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
                   />
                 </td>
                 <td class="min-w-0 px-3 py-3 align-top">
                   <input
                     v-model="criticalRecruitmentEditForm.position"
                     type="text"
-                    class="w-full min-w-0 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+                    class="w-full min-w-0 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
                   />
                 </td>
                 <td class="min-w-0 px-3 py-3 align-top">
                   <select
                     v-model="criticalRecruitmentEditForm.country"
-                    class="w-full min-w-0 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+                    class="w-full min-w-0 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
                   >
                     <option value="" disabled>Select country</option>
                     <option v-for="c in vacancyCountries" :key="c" :value="c">{{ c }}</option>
@@ -411,7 +411,7 @@
                 <td class="min-w-0 px-3 py-3 align-top">
                   <select
                     v-model="criticalRecruitmentEditForm.stage"
-                    class="w-full min-w-0 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+                    class="w-full min-w-0 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
                   >
                     <option value="" disabled>Select stage</option>
                     <option v-for="s in criticalRecruitmentStages" :key="s" :value="s">{{ s }}</option>
@@ -421,7 +421,7 @@
                   <input
                     v-model="criticalRecruitmentEditForm.notes"
                     type="text"
-                    class="w-full min-w-0 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-50 placeholder:text-slate-500"
+                    class="w-full min-w-0 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500"
                     placeholder="Notes…"
                   />
                 </td>
@@ -429,14 +429,14 @@
                     <div class="flex justify-end gap-2">
                       <button
                         type="button"
-                        class="rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-800/40"
+                        class="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-800 hover:bg-slate-100"
                         @click="cancelEditCriticalRecruitment"
                       >
                         Cancel
                       </button>
                       <button
                         type="button"
-                        class="rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-800/40 disabled:opacity-60"
+                        class="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-800 hover:bg-slate-100 disabled:opacity-60"
                         :disabled="criticalRecruitmentSaving"
                         @click="saveEditCriticalRecruitment"
                       >
@@ -448,15 +448,15 @@
                 </template>
 
                 <template v-else>
-                  <td class="min-w-0 break-words px-3 py-3 align-top text-slate-50">{{ c.candidateName }}</td>
-                  <td class="min-w-0 break-words px-3 py-3 align-top text-slate-200">{{ c.position }}</td>
-                  <td class="min-w-0 break-words px-3 py-3 align-top text-slate-200">{{ c.country }}</td>
+                  <td class="min-w-0 break-words px-3 py-3 align-top text-slate-900">{{ c.candidateName }}</td>
+                  <td class="min-w-0 break-words px-3 py-3 align-top text-slate-800">{{ c.position }}</td>
+                  <td class="min-w-0 break-words px-3 py-3 align-top text-slate-800">{{ c.country }}</td>
                   <td class="min-w-0 px-3 py-3 align-top">
                     <span :class="[tableDataBadgeClass, criticalRecruitmentStageBadgeClass(c.stage)]">
                       {{ normalizeRecruitmentStage(c.stage) }}
                     </span>
                   </td>
-                  <td class="min-w-0 px-3 py-3 align-top text-slate-200">
+                  <td class="min-w-0 px-3 py-3 align-top text-slate-800">
                     <div class="break-words whitespace-normal" :class="isReportMode ? 'report-clamp-2' : ''">
                       {{ c.notes || '—' }}
                     </div>
@@ -465,7 +465,7 @@
                     <div class="flex justify-end gap-2">
                       <button
                         type="button"
-                        class="rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-800/40"
+                        class="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-800 hover:bg-slate-100"
                         @click="startEditCriticalRecruitment(c)"
                       >
                         Edit
@@ -482,8 +482,8 @@
                 </template>
               </tr>
 
-              <tr v-if="(filteredCriticalRecruitment?.length ?? 0) === 0" class="border-t border-slate-800">
-                <td colspan="6" class="px-3 py-6 text-center text-slate-300">No candidates found.</td>
+              <tr v-if="(filteredCriticalRecruitment?.length ?? 0) === 0" class="border-t border-hr-navy/25">
+                <td colspan="6" class="px-3 py-6 text-center text-slate-600">No candidates found.</td>
               </tr>
             </tbody>
         </table>
@@ -493,27 +493,27 @@
       </div>
     </section>
 
-    <hr v-if="!isReportMode" class="border-slate-800" />
+    <hr v-if="!isReportMode" />
 
     <section v-if="!isReportMode" class="min-w-0 space-y-3">
       <div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
-        <h2 id="recent-new-hires" class="scroll-mt-24 text-base font-semibold text-slate-200">New Hires</h2>
+        <h2 id="recent-new-hires" class="scroll-mt-24 text-base font-semibold text-hr-navy">New Hires</h2>
         <div class="flex flex-wrap items-center gap-2">
-          <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
             <span class="whitespace-nowrap">Country</span>
             <select
               v-model="selectedNewHireCountry"
-              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+              class="h-8 rounded-md border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-slate-400"
             >
               <option value="">All</option>
               <option v-for="c in newHireCountries" :key="c" :value="c">{{ c }}</option>
             </select>
           </label>
-          <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
             <span class="whitespace-nowrap">Month</span>
             <select
               v-model="selectedNewHireMonth"
-              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+              class="h-8 rounded-md border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-slate-400"
             >
               <option v-for="m in newHireMonths" :key="m" :value="m">{{ formatMonthLabel(m) }}</option>
             </select>
@@ -521,7 +521,7 @@
         </div>
       </div>
 
-      <div v-if="odooNewHiresPending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
+      <div v-if="odooNewHiresPending" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">Loading…</div>
       <div v-else-if="odooNewHiresError" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
         Failed to load new hires.
         <div v-if="odooNewHiresErrorMessage" class="mt-2 text-xs text-red-200/80">{{ odooNewHiresErrorMessage }}</div>
@@ -529,7 +529,7 @@
       <div
         v-else
         id="recent-new-hires-table"
-        class="scroll-mt-24 rounded-md border border-slate-800 bg-slate-900"
+        class="scroll-mt-24 rounded-md border border-slate-200 bg-white shadow-card"
       >
         <table class="w-full table-fixed border-collapse text-left text-sm">
           <colgroup>
@@ -540,7 +540,7 @@
             <col style="width: 10%" />
             <col style="width: 28%" />
           </colgroup>
-          <thead class="bg-slate-950 text-slate-300">
+          <thead class="bg-slate-100 text-slate-600">
             <tr>
               <th class="px-3 py-3 align-bottom font-medium">Name</th>
               <th class="px-3 py-3 align-bottom font-medium">Position</th>
@@ -552,16 +552,16 @@
           </thead>
           <tbody>
             <template v-for="n in filteredNewHires" :key="n.employeeKey">
-              <tr class="border-t border-slate-800 align-top">
-                <td class="min-w-0 break-words px-3 py-3 text-slate-50">{{ n.name }}</td>
-                <td class="min-w-0 break-words px-3 py-3 text-slate-200">{{ n.position }}</td>
-                <td class="min-w-0 break-words px-3 py-3 text-slate-200">{{ n.countryAssigned }}</td>
-                <td class="min-w-0 whitespace-nowrap px-3 py-3 tabular-nums text-slate-200">{{ formatYmdDateOrDash(n.startDate) }}</td>
-                <td class="min-w-0 px-3 py-3 tabular-nums text-slate-200">{{ formatTenureReadable(n.tenure) }}</td>
+              <tr class="border-t border-hr-navy/25 align-top">
+                <td class="min-w-0 break-words px-3 py-3 text-slate-900">{{ n.name }}</td>
+                <td class="min-w-0 break-words px-3 py-3 text-slate-800">{{ n.position }}</td>
+                <td class="min-w-0 break-words px-3 py-3 text-slate-800">{{ n.countryAssigned }}</td>
+                <td class="min-w-0 whitespace-nowrap px-3 py-3 tabular-nums text-slate-800">{{ formatYmdDateOrDash(n.startDate) }}</td>
+                <td class="min-w-0 px-3 py-3 tabular-nums text-slate-800">{{ formatTenureReadable(n.tenure) }}</td>
                 <td class="min-w-0 px-3 py-3 align-top">
                   <button
                     type="button"
-                    class="inline-flex max-w-full items-center gap-2 rounded-md border border-slate-800 bg-slate-950 px-2 py-1.5 text-xs text-slate-200 hover:bg-slate-800/40"
+                    class="inline-flex max-w-full items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs text-slate-800 hover:bg-slate-100"
                     @click="toggleOnboardingChecklist(n)"
                   >
                     <span class="min-w-0 text-left break-words">
@@ -584,28 +584,28 @@
                   </td>
                 </tr>
 
-              <tr v-if="expandedOnboardingKey === onboardingRowKey(n)" class="border-t border-slate-800">
-                <td colspan="6" class="bg-slate-950/30 px-3 py-4">
+              <tr v-if="expandedOnboardingKey === onboardingRowKey(n)" class="border-t border-hr-navy/25">
+                <td colspan="6" class="bg-slate-100 px-3 py-4">
                     <div class="space-y-3">
-                      <div class="text-xs font-semibold text-slate-200">Onboarding Checklist</div>
+                      <div class="text-xs font-semibold text-hr-navy">Onboarding Checklist</div>
                       <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
                         <label
                           v-for="(task, idx) in ONBOARDING_TASKS"
                           :key="task"
-                          class="flex cursor-pointer items-start gap-2 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 hover:bg-slate-900/40"
+                          class="flex cursor-pointer items-start gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 hover:bg-slate-50"
                         >
                           <input
                             type="checkbox"
                             class="sr-only"
                             :checked="isOnboardingTaskDone(n, idx)"
-                            @change="(e) => setOnboardingTaskDone(n, idx, (e.target as HTMLInputElement).checked)"
+                            @change="(e) => void setOnboardingTaskDone(n, idx, (e.target as HTMLInputElement).checked)"
                           />
                           <span
                             class="relative mt-0.5 inline-flex h-5 w-5 shrink-0 rounded-full border"
                             :class="
                               isOnboardingTaskDone(n, idx)
                                 ? 'border-sky-400/50 bg-sky-500/15'
-                                : 'border-slate-600/60 bg-slate-950'
+                                : 'border-slate-300/80 bg-slate-100'
                             "
                             aria-hidden="true"
                           >
@@ -616,7 +616,7 @@
                           </span>
                           <span
                             class="text-sm"
-                            :class="isOnboardingTaskDone(n, idx) ? 'text-slate-400 line-through' : 'text-slate-200'"
+                            :class="isOnboardingTaskDone(n, idx) ? 'text-slate-400 line-through' : 'text-slate-800'"
                           >
                             {{ task }}
                           </span>
@@ -628,29 +628,29 @@
                 </tr>
               </template>
 
-              <tr v-if="filteredNewHires.length === 0" class="border-t border-slate-800">
-                <td colspan="6" class="px-3 py-6 text-center text-slate-300">No new hires found for this month.</td>
+              <tr v-if="filteredNewHires.length === 0" class="border-t border-hr-navy/25">
+                <td colspan="6" class="px-3 py-6 text-center text-slate-600">No new hires found for this month.</td>
               </tr>
             </tbody>
         </table>
       </div>
     </section>
 
-    <hr v-if="!isReportMode" class="border-slate-800" />
+    <hr v-if="!isReportMode" />
 
     <section v-if="!isReportMode" class="min-w-0 space-y-3">
       <div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
         <div class="min-w-0 space-y-1">
-          <h2 class="text-base font-semibold text-slate-200">Offboarding</h2>
+          <h2 class="text-base font-semibold text-hr-navy">Offboarding</h2>
           <p class="text-xs text-slate-400">
             Pulled from Odoo: employees still active but marked offboarding until their last working day (then archived).
           </p>
         </div>
-        <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+        <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
           <span class="whitespace-nowrap">Country</span>
           <select
             v-model="selectedOffboardingCountry"
-            class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+            class="h-8 rounded-md border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-slate-400"
           >
             <option value="">All</option>
             <option v-for="c in offboardingCountries" :key="c" :value="c">{{ c }}</option>
@@ -658,12 +658,12 @@
         </label>
       </div>
 
-      <div v-if="offboardingPending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
+      <div v-if="offboardingPending" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">Loading…</div>
       <div v-else-if="offboardingError" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
         Failed to load offboarding employees from Odoo.
         <div v-if="offboardingErrorMessage" class="mt-2 text-xs text-red-200/80">{{ offboardingErrorMessage }}</div>
       </div>
-      <div v-else class="rounded-md border border-slate-800 bg-slate-900">
+      <div v-else class="rounded-md border border-slate-200 bg-white shadow-card">
         <table class="w-full table-fixed border-collapse text-left text-sm">
           <colgroup>
             <col style="width: 18%" />
@@ -673,7 +673,7 @@
             <col style="width: 14%" />
             <col style="width: 22%" />
           </colgroup>
-          <thead class="bg-slate-950 text-slate-300">
+          <thead class="bg-slate-100 text-slate-600">
             <tr>
               <th class="px-3 py-3 align-bottom font-medium">Name</th>
               <th class="px-3 py-3 align-bottom font-medium">Country</th>
@@ -685,7 +685,7 @@
           </thead>
           <tbody>
             <template v-for="row in filteredOffboardingEmployees" :key="row.employeeKey">
-              <tr class="border-t border-slate-800 align-top">
+              <tr class="border-t border-hr-navy/25 align-top">
                 <td class="min-w-0 px-3 py-3 align-top font-medium">
                   <NuxtLink
                     :to="`/odoo/employees/${row.employeeKey}`"
@@ -694,31 +694,31 @@
                     {{ row.name || '—' }}
                   </NuxtLink>
                 </td>
-                <td class="min-w-0 break-words px-3 py-3 text-slate-200">{{ row.countryAssigned || '—' }}</td>
-                <td class="min-w-0 px-3 py-3 text-slate-200">
+                <td class="min-w-0 break-words px-3 py-3 text-slate-800">{{ row.countryAssigned || '—' }}</td>
+                <td class="min-w-0 px-3 py-3 text-slate-800">
                   <span
                     v-if="offboardingDepartureKind(row)"
                     :class="[tableDataBadgeClass, offboardingDepartureTypeBadgeClass(offboardingDepartureKind(row)!)]"
                   >
                     {{ offboardingDepartureTypeLabel(offboardingDepartureKind(row)!) }}
                   </span>
-                  <span v-else-if="row.departureReason?.trim()" :class="[tableDataBadgeClass, 'border-slate-600 bg-slate-800 text-slate-200']">
+                  <span v-else-if="row.departureReason?.trim()" :class="[tableDataBadgeClass, 'border-slate-300 bg-slate-200 text-slate-700']">
                     {{ row.departureReason.trim() }}
                   </span>
                   <span v-else class="text-slate-400">—</span>
                 </td>
-                <td class="min-w-0 px-3 py-3 text-slate-200">
+                <td class="min-w-0 px-3 py-3 text-slate-800">
                   <span :class="[tableDataBadgeClass, offboardingWorkflowBadgeClass(row)]">
                     {{ offboardingWorkflowLabel(row) }}
                   </span>
                 </td>
-                <td class="min-w-0 whitespace-nowrap px-3 py-3 tabular-nums text-slate-200">
+                <td class="min-w-0 whitespace-nowrap px-3 py-3 tabular-nums text-slate-800">
                   {{ formatYmdDateOrDash(row.lastWorkingDay ?? null) }}
                 </td>
                 <td class="min-w-0 px-3 py-3 align-top">
                   <button
                     type="button"
-                    class="inline-flex max-w-full items-center gap-2 rounded-md border border-slate-800 bg-slate-950 px-2 py-1.5 text-xs text-slate-200 hover:bg-slate-800/40"
+                    class="inline-flex max-w-full items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs text-slate-800 hover:bg-slate-100"
                     @click="toggleExitChecklist(row)"
                   >
                     <span class="min-w-0 text-left break-words">Checklist ({{ exitDoneCount(row) }}/{{ EXIT_TASKS.length }})</span>
@@ -739,28 +739,28 @@
                 </td>
               </tr>
 
-              <tr v-if="expandedExitChecklistKey === row.employeeKey" class="border-t border-slate-800">
-                <td colspan="6" class="bg-slate-950/30 px-3 py-4">
+              <tr v-if="expandedExitChecklistKey === row.employeeKey" class="border-t border-hr-navy/25">
+                <td colspan="6" class="bg-slate-100 px-3 py-4">
                   <div class="space-y-3">
-                    <div class="text-xs font-semibold text-slate-200">Exit Checklist</div>
+                    <div class="text-xs font-semibold text-hr-navy">Exit Checklist</div>
                     <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
                       <label
                         v-for="(task, idx) in EXIT_TASKS"
                         :key="task"
-                        class="flex cursor-pointer items-start gap-2 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 hover:bg-slate-900/40"
+                        class="flex cursor-pointer items-start gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 hover:bg-slate-50"
                       >
                         <input
                           type="checkbox"
                           class="sr-only"
                           :checked="isExitTaskDone(row, idx)"
-                          @change="(e) => setExitTaskDone(row, idx, (e.target as HTMLInputElement).checked)"
+                          @change="(e) => void setExitTaskDone(row, idx, (e.target as HTMLInputElement).checked)"
                         />
                         <span
                           class="relative mt-0.5 inline-flex h-5 w-5 shrink-0 rounded-full border"
                           :class="
                             isExitTaskDone(row, idx)
                               ? 'border-sky-400/50 bg-sky-500/15'
-                              : 'border-slate-600/60 bg-slate-950'
+                              : 'border-slate-300/80 bg-slate-100'
                           "
                           aria-hidden="true"
                         >
@@ -771,7 +771,7 @@
                         </span>
                         <span
                           class="text-sm"
-                          :class="isExitTaskDone(row, idx) ? 'text-slate-400 line-through' : 'text-slate-200'"
+                          :class="isExitTaskDone(row, idx) ? 'text-slate-400 line-through' : 'text-slate-800'"
                         >
                           {{ task }}
                         </span>
@@ -783,8 +783,8 @@
               </tr>
             </template>
 
-            <tr v-if="!offboardingPending && !offboardingError && filteredOffboardingEmployees.length === 0" class="border-t border-slate-800">
-              <td colspan="6" class="px-3 py-6 text-center text-slate-300">
+            <tr v-if="!offboardingPending && !offboardingError && filteredOffboardingEmployees.length === 0" class="border-t border-hr-navy/25">
+              <td colspan="6" class="px-3 py-6 text-center text-slate-600">
                 No employees in offboarding. Mark offboarding in Odoo.
               </td>
             </tr>
@@ -793,31 +793,31 @@
       </div>
     </section>
 
-    <hr v-if="!isReportMode" class="border-slate-800" />
+    <hr v-if="!isReportMode" />
 
     <section v-if="!isReportMode" class="min-w-0 space-y-3">
       <div class="flex min-w-0 flex-wrap items-start justify-between gap-3">
         <div class="min-w-0 space-y-1">
-          <h2 class="text-base font-semibold text-slate-200">Upcoming Onboarding Check-ins</h2>
+          <h2 class="text-base font-semibold text-hr-navy">Upcoming Onboarding Check-ins</h2>
           <p class="text-xs text-slate-400">Shows 1–6 month check-ins when they are due within the next 14 days (probation &lt; 6 months).</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-          <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
             <span class="whitespace-nowrap">Country</span>
             <select
               v-model="selectedCheckinsCountry"
-              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+              class="h-8 rounded-md border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-slate-400"
             >
               <option value="">All</option>
               <option v-for="c in checkinsCountries" :key="c" :value="c">{{ c }}</option>
             </select>
           </label>
-          <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
             <span class="whitespace-nowrap">Check-in</span>
             <select
               v-model="upcomingCheckinsFilter"
-              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+              class="h-8 rounded-md border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-slate-400"
             >
               <option value="all">All</option>
               <option value="1">1 month</option>
@@ -828,7 +828,7 @@
 
           <button
             type="button"
-            class="inline-flex items-center gap-2 rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800/40"
+            class="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-800 hover:bg-slate-100"
             :aria-expanded="upcomingCheckinsExpanded"
             @click="upcomingCheckinsExpanded = !upcomingCheckinsExpanded"
           >
@@ -836,7 +836,7 @@
             <svg
               viewBox="0 0 20 20"
               fill="currentColor"
-              class="h-4 w-4 text-slate-300 transition-transform"
+              class="h-4 w-4 text-slate-600 transition-transform"
               aria-hidden="true"
               :class="upcomingCheckinsExpanded ? 'rotate-180' : ''"
             >
@@ -851,7 +851,7 @@
       </div>
 
       <div v-if="upcomingCheckinsExpanded">
-        <div v-if="probationNewHiresPending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
+        <div v-if="probationNewHiresPending" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">Loading…</div>
         <div v-else-if="probationNewHiresError" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
           Failed to load onboarding check-ins.
           <div v-if="probationNewHiresErrorMessage" class="mt-2 text-xs text-red-200/80">{{ probationNewHiresErrorMessage }}</div>
@@ -862,32 +862,32 @@
       </div>
     </section>
 
-    <hr v-if="!isReportMode" class="border-slate-800" />
+    <hr v-if="!isReportMode" />
 
     <section v-if="!isReportMode" class="min-w-0 space-y-3">
       <div class="min-w-0 space-y-1">
-        <h2 id="recent-separations" class="scroll-mt-24 text-base font-semibold text-slate-200">Recent Separations</h2>
+        <h2 id="recent-separations" class="scroll-mt-24 text-base font-semibold text-hr-navy">Recent Separations</h2>
         <p class="text-xs text-slate-400">Employees where Active = false (resigned / fired / retired).</p>
       </div>
 
       <div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
-        <div class="text-sm text-slate-300">Archived employees (by month, from Odoo write date).</div>
+        <div class="text-sm text-slate-600">Archived employees (by month, from Odoo write date).</div>
         <div class="flex flex-wrap items-center gap-2">
-          <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
             <span class="whitespace-nowrap">Country</span>
             <select
               v-model="selectedSeparationCountry"
-              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+              class="h-8 rounded-md border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-slate-400"
             >
               <option value="">All</option>
               <option v-for="c in separationCountries" :key="c" :value="c">{{ c }}</option>
             </select>
           </label>
-          <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
             <span class="whitespace-nowrap">Month</span>
             <select
               v-model="selectedSeparationMonth"
-              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+              class="h-8 rounded-md border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-slate-400"
             >
               <option v-for="m in separationMonths" :key="m" :value="m">{{ formatMonthLabel(m) }}</option>
             </select>
@@ -895,7 +895,7 @@
         </div>
       </div>
 
-      <div v-if="separationsPending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
+      <div v-if="separationsPending" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">Loading…</div>
       <div v-else-if="separationsError" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
         Failed to load employees.
         <div v-if="separationsErrorMessage" class="mt-2 text-xs text-red-200/80">{{ separationsErrorMessage }}</div>
@@ -903,7 +903,7 @@
       <div
         v-else
         id="recent-separations-table"
-        class="scroll-mt-24 rounded-md border border-slate-800 bg-slate-900"
+        class="scroll-mt-24 rounded-md border border-slate-200 bg-white shadow-card"
       >
         <table class="w-full table-fixed border-collapse text-left text-sm">
           <colgroup>
@@ -915,7 +915,7 @@
             <col style="width: 12%" />
             <col style="width: 16%" />
           </colgroup>
-          <thead class="bg-slate-950 text-slate-300">
+          <thead class="bg-slate-100 text-slate-600">
             <tr>
               <th class="px-3 py-3 align-bottom font-medium">Name</th>
               <th class="px-3 py-3 align-bottom font-medium">Department</th>
@@ -927,21 +927,21 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="e in recentSeparations" :key="e.employeeKey" class="border-t border-slate-800 align-top">
-              <td class="min-w-0 break-words px-3 py-3 text-slate-50">{{ e.name }}</td>
-              <td class="min-w-0 break-words px-3 py-3 text-slate-200">{{ e.department }}</td>
-              <td class="min-w-0 break-words px-3 py-3 text-slate-200">{{ e.position }}</td>
-              <td class="min-w-0 break-words px-3 py-3 text-slate-200">{{ e.countryAssigned }}</td>
-              <td class="min-w-0 whitespace-nowrap px-3 py-3 tabular-nums text-slate-200">{{ formatYmdDateOrDash(e.startDate) }}</td>
-              <td class="min-w-0 whitespace-nowrap px-3 py-3 tabular-nums text-slate-200">{{ formatYmdDateOrDash(e.separatedAt) }}</td>
+            <tr v-for="e in recentSeparations" :key="e.employeeKey" class="border-t border-hr-navy/25 align-top">
+              <td class="min-w-0 break-words px-3 py-3 text-slate-900">{{ e.name }}</td>
+              <td class="min-w-0 break-words px-3 py-3 text-slate-800">{{ e.department }}</td>
+              <td class="min-w-0 break-words px-3 py-3 text-slate-800">{{ e.position }}</td>
+              <td class="min-w-0 break-words px-3 py-3 text-slate-800">{{ e.countryAssigned }}</td>
+              <td class="min-w-0 whitespace-nowrap px-3 py-3 tabular-nums text-slate-800">{{ formatYmdDateOrDash(e.startDate) }}</td>
+              <td class="min-w-0 whitespace-nowrap px-3 py-3 tabular-nums text-slate-800">{{ formatYmdDateOrDash(e.separatedAt) }}</td>
               <td class="min-w-0 px-3 py-3 align-top">
                 <span :class="[tableDataBadgeClass, separationTypeBadgeClass(e.separationType)]">
                   {{ formatSeparationType(e.separationType) }}
                 </span>
               </td>
             </tr>
-            <tr v-if="recentSeparations.length === 0" class="border-t border-slate-800">
-              <td colspan="7" class="px-3 py-6 text-center text-slate-300">No separations found for this month.</td>
+            <tr v-if="recentSeparations.length === 0" class="border-t border-hr-navy/25">
+              <td colspan="7" class="px-3 py-6 text-center text-slate-600">No separations found for this month.</td>
             </tr>
           </tbody>
         </table>
@@ -955,6 +955,7 @@ import { formatYmdDateOrDash } from '~/utils/dates'
 import { formatTenureReadable } from '~/utils/tenure'
 import { tableDataBadgeClass } from '~/utils/tableBadge'
 import { ensureUsaOption } from '~/utils/countryOptions'
+import { ONBOARDING_TASKS, EXIT_TASKS } from '~/utils/recruitmentChecklistTasks'
 import NewHireCheckinsTable from '~/components/NewHireCheckinsTable.vue'
 import { firstQueryString, parseYyyyMm, recruitmentDeeplinkScrollId } from '~/utils/recruitmentDeeplink'
 
@@ -1057,10 +1058,10 @@ function formatPriority(value: string) {
 
 function priorityBadgeClass(value: string) {
   const v = normalizePriority(value)
-  if (v === 'high') return 'border-red-900/60 bg-red-950/30 text-red-200'
-  if (v === 'medium') return 'border-amber-900/60 bg-amber-950/30 text-amber-200'
-  if (v === 'low') return 'border-emerald-900/60 bg-emerald-950/30 text-emerald-200'
-  return 'border-slate-700 bg-slate-900 text-slate-200'
+  if (v === 'high') return 'border-[#F5B5C4] bg-[#FDF2F4] text-[#6B1C2E]'
+  if (v === 'medium') return 'border-[#FFD591] bg-[#FFF7E6] text-[#874D00]'
+  if (v === 'low') return 'border-[#C2EEE5] bg-[#E9F7F4] text-[#00667E]'
+  return 'border-slate-300 bg-white text-slate-800'
 }
 
 function normalizeStage(value: string) {
@@ -1083,11 +1084,11 @@ function normalizeRecruitmentStage(value: string) {
 
 function criticalRecruitmentStageBadgeClass(value: string) {
   const v = normalizeStage(normalizeRecruitmentStage(value))
-  if (v === 'pre-onboarding stage') return 'border-emerald-900/60 bg-emerald-950/30 text-emerald-200'
-  if (v === 'interview & evaluation stage') return 'border-sky-900/60 bg-sky-950/30 text-sky-200'
-  if (v === 'offer stage') return 'border-violet-900/60 bg-violet-950/30 text-violet-200'
-  if (v === 'feedback stage') return 'border-amber-900/60 bg-amber-950/30 text-amber-200'
-  return 'border-slate-700 bg-slate-900 text-slate-200'
+  if (v === 'pre-onboarding stage') return 'border-emerald-900/60 bg-emerald-950/30 text-emerald-900'
+  if (v === 'interview & evaluation stage') return 'border-sky-900/60 bg-sky-950/30 text-sky-950'
+  if (v === 'offer stage') return 'border-violet-900/60 bg-violet-950/30 text-violet-900'
+  if (v === 'feedback stage') return 'border-amber-900/60 bg-amber-950/30 text-amber-950'
+  return 'border-slate-300 bg-white text-slate-800'
 }
 
 function normalizeNewHireStatus(value: string) {
@@ -1096,10 +1097,10 @@ function normalizeNewHireStatus(value: string) {
 
 function newHireStatusBadgeClass(value: string) {
   const v = normalizeNewHireStatus(value)
-  if (v === 'pre-onboarding stage') return 'border-sky-900/60 bg-sky-950/30 text-sky-200'
-  if (v === 'onboarding') return 'border-amber-900/60 bg-amber-950/30 text-amber-200'
-  if (v === 'hired') return 'border-emerald-900/60 bg-emerald-950/30 text-emerald-200'
-  return 'border-slate-700 bg-slate-900 text-slate-200'
+  if (v === 'pre-onboarding stage') return 'border-sky-900/60 bg-sky-950/30 text-sky-950'
+  if (v === 'onboarding') return 'border-amber-900/60 bg-amber-950/30 text-amber-950'
+  if (v === 'hired') return 'border-emerald-900/60 bg-emerald-950/30 text-emerald-900'
+  return 'border-slate-300 bg-white text-slate-800'
 }
 
 function getErrorMessage(error: unknown) {
@@ -1179,56 +1180,21 @@ const filteredNewHires = computed(() => {
   return selected ? items.filter((n) => n.countryAssigned === selected) : items
 })
 
-const ONBOARDING_TASKS = [
-  'HR Orientation',
-  'HSSEF Orientation',
-  'Received Laptop, Mouse, Bag, Headset, etc',
-  'Received Welcome Package inclusive of welcome note',
-  'Walkaround the Office to meet various departments by HR rep',
-  'Received Security Codes to the Office(s)',
-  'Got access to LASER modules and was shown how to use it',
-  'Addition to Company Phone Plan',
-  "Was added to the Ramps WhatsApp Group for the country",
-  "Was added to the other relevant Ramps What's App Groups",
-  'Nectar Profile Created',
-  'Add to the New Employee Teams Chat',
-  'Was added to the Ramps Email Group for the country',
-  'Checked my Email and Teams to make sure it works properly',
-  'Completed Payroll Form',
-  'Completed Employee Information Update Form',
-  'Reviewed and signed HR Onboarding Policies',
-  'Reviewed the HSSEQ policy'
-] as const
-
 type OnboardingChecklistState = Record<string, boolean[]>
 const ONBOARDING_STORAGE_KEY = 'hr-dashboard:new-hires-onboarding-checklist:v1'
 const onboardingByRowKey = ref<OnboardingChecklistState>({})
 
-const EXIT_TASKS = [
-  'Letter confirming separation of employee (resignation, retirement, termination)',
-  'Inform IBWIL to remove from Medical Plan',
-  'Inform Finance about resignation/removal from Payroll',
-  'Payment of outstanding commissions (Sales personnel)',
-  "Removal of the employee's contents from office or workspace",
-  'Company Cell Phone',
-  'Disconnection from Company phone plan',
-  'Collection of employee Ramps ID card',
-  'Collection of access card',
-  'Collection of Airport Pass',
-  'Collection of Customs Badge',
-  'Exit employee interview',
-  'Notify Airport Authority',
-  'Notify Comptroller of Customs and Excise',
-  'Acceptance of resignation letter (include accrued and utilized vacation days and related vacation pay, commissions, outstanding loans, confirm outstanding salary, commissions due, loans due, cellphone costs due, other amounts due e.g. gas, approved entertainment cost)',
-  'Float',
-  'Company polo/shirt',
-  'Personnel Transfer Book',
-  'Any other pending transaction'
-] as const
-
 type ExitChecklistState = Record<string, boolean[]>
 const EXIT_STORAGE_KEY = 'hr-dashboard:offboarding-exit-checklist:v1'
 const exitByRowId = ref<ExitChecklistState>({})
+
+const { data: onboardingChecklistsPayload, refresh: refreshOnboardingChecklists } = useFetch<{
+  checklists: Record<string, boolean[]>
+}>('/api/recruitment-onboarding-checklists')
+
+const { data: exitChecklistsPayload, refresh: refreshExitChecklists } = useFetch<{
+  checklists: Record<string, boolean[]>
+}>('/api/recruitment-exit-checklists')
 
 function normalizeExitChecklistArray(value: unknown) {
   if (!Array.isArray(value)) return null
@@ -1252,11 +1218,18 @@ function isExitTaskDone(row: { employeeKey: string }, idx: number) {
   return exitChecklistFor(row)[idx] === true
 }
 
-function setExitTaskDone(row: { employeeKey: string }, idx: number, done: boolean) {
+async function setExitTaskDone(row: { employeeKey: string }, idx: number, done: boolean) {
   const k = exitRowKey(row)
+  const prev = { ...exitByRowId.value }
   const next = exitChecklistFor(row).slice()
   next[idx] = done
   exitByRowId.value = { ...exitByRowId.value, [k]: next }
+  try {
+    await $fetch('/api/recruitment-exit-checklists', { method: 'PUT', body: { rowKey: k, taskStates: next } })
+    await refreshExitChecklists()
+  } catch {
+    exitByRowId.value = prev
+  }
 }
 
 function exitDoneCount(row: { employeeKey: string }) {
@@ -1303,11 +1276,18 @@ function isOnboardingTaskDone(n: OdooNewHire, idx: number) {
   return checklistFor(n)[idx] === true
 }
 
-function setOnboardingTaskDone(n: OdooNewHire, idx: number, done: boolean) {
+async function setOnboardingTaskDone(n: OdooNewHire, idx: number, done: boolean) {
   const k = onboardingRowKey(n)
+  const prev = { ...onboardingByRowKey.value }
   const next = checklistFor(n).slice()
   next[idx] = done
   onboardingByRowKey.value = { ...onboardingByRowKey.value, [k]: next }
+  try {
+    await $fetch('/api/recruitment-onboarding-checklists', { method: 'PUT', body: { rowKey: k, taskStates: next } })
+    await refreshOnboardingChecklists()
+  } catch {
+    onboardingByRowKey.value = prev
+  }
 }
 
 function onboardingDoneCount(n: OdooNewHire) {
@@ -1320,45 +1300,75 @@ function toggleOnboardingChecklist(n: OdooNewHire) {
   expandedOnboardingKey.value = expandedOnboardingKey.value === k ? null : k
 }
 
-onMounted(() => {
-  const obj = safeParseObject(window.localStorage.getItem(ONBOARDING_STORAGE_KEY))
-  if (!obj) return
-  const next: OnboardingChecklistState = {}
-  for (const [k, v] of Object.entries(obj)) {
-    if (typeof k !== 'string') continue
-    const normalized = normalizeChecklistArray(v)
-    if (normalized) next[k] = normalized
-  }
-  onboardingByRowKey.value = next
+watch(
+  onboardingChecklistsPayload,
+  (p) => {
+    if (!p?.checklists) return
+    const next: OnboardingChecklistState = {}
+    for (const [k, raw] of Object.entries(p.checklists)) {
+      if (typeof k !== 'string') continue
+      const normalized = normalizeChecklistArray(raw)
+      if (normalized) next[k] = normalized
+    }
+    onboardingByRowKey.value = next
+  },
+  { immediate: true }
+)
 
-  const exitObj = safeParseObject(window.localStorage.getItem(EXIT_STORAGE_KEY))
-  if (!exitObj) return
-  const exitNext: ExitChecklistState = {}
-  for (const [k, v] of Object.entries(exitObj)) {
-    if (typeof k !== 'string') continue
-    const normalized = normalizeExitChecklistArray(v)
-    if (normalized) exitNext[k] = normalized
+watch(
+  exitChecklistsPayload,
+  (p) => {
+    if (!p?.checklists) return
+    const next: ExitChecklistState = {}
+    for (const [k, raw] of Object.entries(p.checklists)) {
+      if (typeof k !== 'string') continue
+      const normalized = normalizeExitChecklistArray(raw)
+      if (normalized) next[k] = normalized
+    }
+    exitByRowId.value = next
+  },
+  { immediate: true }
+)
+
+onMounted(async () => {
+  if (typeof window === 'undefined') return
+  const onboardRaw = window.localStorage.getItem(ONBOARDING_STORAGE_KEY)
+  if (onboardRaw) {
+    const obj = safeParseObject(onboardRaw)
+    if (obj) {
+      try {
+        for (const [k, v] of Object.entries(obj)) {
+          if (typeof k !== 'string') continue
+          const normalized = normalizeChecklistArray(v)
+          if (!normalized) continue
+          await $fetch('/api/recruitment-onboarding-checklists', { method: 'PUT', body: { rowKey: k, taskStates: normalized } })
+        }
+        window.localStorage.removeItem(ONBOARDING_STORAGE_KEY)
+        await refreshOnboardingChecklists()
+      } catch {
+        // Leave localStorage if migration fails (e.g. offline).
+      }
+    }
   }
-  exitByRowId.value = exitNext
+  const exitRaw = window.localStorage.getItem(EXIT_STORAGE_KEY)
+  if (exitRaw) {
+    const exitObj = safeParseObject(exitRaw)
+    if (exitObj) {
+      try {
+        for (const [k, v] of Object.entries(exitObj)) {
+          if (typeof k !== 'string') continue
+          const normalized = normalizeExitChecklistArray(v)
+          if (!normalized) continue
+          await $fetch('/api/recruitment-exit-checklists', { method: 'PUT', body: { rowKey: k, taskStates: normalized } })
+        }
+        window.localStorage.removeItem(EXIT_STORAGE_KEY)
+        await refreshExitChecklists()
+      } catch {
+        // Leave localStorage if migration fails (e.g. offline).
+      }
+    }
+  }
 })
-
-watch(
-  onboardingByRowKey,
-  (v) => {
-    if (typeof window === 'undefined') return
-    window.localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(v))
-  },
-  { deep: true }
-)
-
-watch(
-  exitByRowId,
-  (v) => {
-    if (typeof window === 'undefined') return
-    window.localStorage.setItem(EXIT_STORAGE_KEY, JSON.stringify(v))
-  },
-  { deep: true }
-)
 
 watchEffect(() => {
   if (selectedNewHireMonth.value) return
@@ -1525,10 +1535,10 @@ function formatSeparationType(value: OdooSeparationsRow['separationType']) {
 }
 
 function separationTypeBadgeClass(value: OdooSeparationsRow['separationType']) {
-  if (value === 'resigned') return 'border-amber-500/40 bg-amber-950/40 text-amber-100'
-  if (value === 'retired') return 'border-violet-400/30 bg-violet-500/10 text-violet-200'
-  if (value === 'fired') return 'border-red-500/40 bg-red-950/40 text-red-100'
-  return 'border-slate-700 bg-slate-900 text-slate-200'
+  if (value === 'resigned') return 'border-amber-500/40 bg-amber-950/40 text-amber-950'
+  if (value === 'retired') return 'border-violet-400/30 bg-violet-500/10 text-violet-900'
+  if (value === 'fired') return 'border-red-500/40 bg-red-950/40 text-red-900'
+  return 'border-slate-300 bg-white text-slate-800'
 }
 
 type OffboardingDepartureKind = 'resigned' | 'retired' | 'fired' | 'other'
@@ -1557,10 +1567,10 @@ function offboardingDepartureTypeLabel(value: OffboardingDepartureKind) {
 }
 
 function offboardingDepartureTypeBadgeClass(value: OffboardingDepartureKind) {
-  if (value === 'resigned') return 'border-amber-500/40 bg-amber-950/40 text-amber-100'
-  if (value === 'retired') return 'border-violet-400/30 bg-violet-500/10 text-violet-200'
-  if (value === 'fired') return 'border-red-500/40 bg-red-950/40 text-red-100'
-  return 'border-sky-900/60 bg-sky-950/30 text-sky-200'
+  if (value === 'resigned') return 'border-amber-500/40 bg-amber-950/40 text-amber-950'
+  if (value === 'retired') return 'border-violet-400/30 bg-violet-500/10 text-violet-900'
+  if (value === 'fired') return 'border-red-500/40 bg-red-950/40 text-red-900'
+  return 'border-sky-900/60 bg-sky-950/30 text-sky-950'
 }
 
 function offboardingWorkflowLabel(row: OffboardingEmployee) {
@@ -1568,8 +1578,8 @@ function offboardingWorkflowLabel(row: OffboardingEmployee) {
 }
 
 function offboardingWorkflowBadgeClass(row: OffboardingEmployee) {
-  if (row.offboardingPhase?.trim()) return 'border-violet-400/30 bg-violet-500/10 text-violet-200'
-  return 'border-amber-500/35 bg-amber-500/10 text-amber-200'
+  if (row.offboardingPhase?.trim()) return 'border-violet-400/30 bg-violet-500/10 text-violet-900'
+  return 'border-amber-500/35 bg-amber-500/10 text-amber-950'
 }
 
 const {

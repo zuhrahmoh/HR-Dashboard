@@ -17,10 +17,10 @@
   <section v-else class="rounded-md border border-slate-200 bg-white p-4 report-keep">
     <div class="flex items-start justify-between gap-4">
       <div class="min-w-0">
-        <h3 class="truncate text-sm font-semibold text-slate-900" :title="item.country">{{ item.country || '—' }}</h3>
+        <h3 class="truncate text-sm font-semibold text-hr-navy" :title="item.country">{{ item.country || '—' }}</h3>
         <p v-if="month" class="mt-0.5 text-sm text-slate-600">{{ month }}</p>
       </div>
-      <div class="text-right text-sm font-semibold tabular-nums text-slate-900">
+      <div class="text-right text-sm font-semibold tabular-nums text-hr-navy">
         {{ fmtUsd.format(item.total) }}
       </div>
     </div>

@@ -2,28 +2,28 @@
   <div class="space-y-3">
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div class="space-y-0.5">
-        <h3 class="text-base font-semibold text-slate-200">Average age by country (gender)</h3>
+        <h3 class="text-base font-semibold text-hr-navy">Average age by country (gender)</h3>
         <p class="text-sm text-slate-400">Excludes resigned employees. Uses only employees with a date of birth.</p>
       </div>
 
       <div class="text-right">
         <div class="text-sm font-medium text-slate-400">Company-wide average age</div>
-        <div class="text-lg font-semibold tabular-nums text-slate-50">{{ companyAvgLabel }}</div>
+        <div class="text-lg font-semibold tabular-nums text-hr-navy">{{ companyAvgLabel }}</div>
       </div>
 
-      <div class="flex items-center gap-3 text-sm text-slate-300">
+      <div class="flex items-center gap-3 text-sm text-slate-600">
         <div class="flex items-center gap-2">
-          <span class="h-2.5 w-2.5 rounded-sm bg-sky-400" />
+          <span class="h-2.5 w-2.5 rounded-sm bg-sky-300" />
           <span>Male</span>
         </div>
         <div class="flex items-center gap-2">
-          <span class="h-2.5 w-2.5 rounded-sm bg-pink-400" />
+          <span class="h-2.5 w-2.5 rounded-sm bg-pink-300" />
           <span>Female</span>
         </div>
       </div>
     </div>
 
-    <div v-if="rows.length === 0" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-sm text-slate-200">
+    <div v-if="rows.length === 0" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-sm text-slate-800">
       No age data available. This requires a populated date of birth per employee (CSV source typically doesn’t include DOB; Odoo uses the employee “Birthday” field).
     </div>
 
@@ -41,28 +41,28 @@
         :key="row.countryKey"
         class="grid grid-cols-[7.25rem_1fr_6.5rem_1fr_7.25rem] items-center gap-2 py-1.5"
       >
-        <div class="min-w-0 text-right text-sm font-semibold tabular-nums text-slate-200">
+        <div class="min-w-0 text-right text-sm font-semibold tabular-nums text-slate-800">
           <div class="truncate" :title="`Avg: ${row.maleAgeLabel}`">Avg: {{ row.maleAgeLabel }}</div>
           <div class="truncate text-xs text-slate-400" :title="`Count: ${row.maleCount}`">Count: {{ row.maleCount }}</div>
         </div>
 
         <div class="min-w-0">
-          <div class="relative h-2 w-full overflow-hidden rounded bg-slate-800">
-            <div class="absolute inset-y-0 right-0 rounded bg-sky-400" :style="{ width: row.maleWidthPct }" />
+          <div class="relative h-2 w-full overflow-hidden rounded bg-slate-200">
+            <div class="absolute inset-y-0 right-0 rounded bg-sky-300" :style="{ width: row.maleWidthPct }" />
           </div>
         </div>
 
-        <div class="min-w-0 truncate text-center text-base text-slate-200" :title="row.countryLabel">
+        <div class="min-w-0 truncate text-center text-base text-slate-800" :title="row.countryLabel">
           {{ row.countryLabel }}
         </div>
 
         <div class="min-w-0">
-          <div class="relative h-2 w-full overflow-hidden rounded bg-slate-800">
-            <div class="absolute inset-y-0 left-0 rounded bg-pink-400" :style="{ width: row.femaleWidthPct }" />
+          <div class="relative h-2 w-full overflow-hidden rounded bg-slate-200">
+            <div class="absolute inset-y-0 left-0 rounded bg-pink-300" :style="{ width: row.femaleWidthPct }" />
           </div>
         </div>
 
-        <div class="min-w-0 text-sm font-semibold tabular-nums text-slate-200">
+        <div class="min-w-0 text-sm font-semibold tabular-nums text-slate-800">
           <div class="truncate" :title="`Avg: ${row.femaleAgeLabel}`">Avg: {{ row.femaleAgeLabel }}</div>
           <div class="truncate text-xs text-slate-400" :title="`Count: ${row.femaleCount}`">Count: {{ row.femaleCount }}</div>
         </div>

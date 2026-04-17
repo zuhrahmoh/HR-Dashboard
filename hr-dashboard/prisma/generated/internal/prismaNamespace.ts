@@ -392,7 +392,11 @@ export const ModelName = {
   MedicalEnrollment: 'MedicalEnrollment',
   EapReferral: 'EapReferral',
   CPlayerNote: 'CPlayerNote',
-  HeadcountSnapshot: 'HeadcountSnapshot'
+  HeadcountSnapshot: 'HeadcountSnapshot',
+  UpcomingContractExpiryStatus: 'UpcomingContractExpiryStatus',
+  RecruitmentOnboardingChecklist: 'RecruitmentOnboardingChecklist',
+  RecruitmentExitChecklist: 'RecruitmentExitChecklist',
+  NewHireCheckinStatus: 'NewHireCheckinStatus'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -408,7 +412,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "vacancy" | "criticalRecruitment" | "disciplinaryCase" | "disciplinaryCaseInclude" | "contractChange" | "medicalEnrollment" | "eapReferral" | "cPlayerNote" | "headcountSnapshot"
+    modelProps: "vacancy" | "criticalRecruitment" | "disciplinaryCase" | "disciplinaryCaseInclude" | "contractChange" | "medicalEnrollment" | "eapReferral" | "cPlayerNote" | "headcountSnapshot" | "upcomingContractExpiryStatus" | "recruitmentOnboardingChecklist" | "recruitmentExitChecklist" | "newHireCheckinStatus"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1078,6 +1082,302 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    UpcomingContractExpiryStatus: {
+      payload: Prisma.$UpcomingContractExpiryStatusPayload<ExtArgs>
+      fields: Prisma.UpcomingContractExpiryStatusFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.UpcomingContractExpiryStatusFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UpcomingContractExpiryStatusPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.UpcomingContractExpiryStatusFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UpcomingContractExpiryStatusPayload>
+        }
+        findFirst: {
+          args: Prisma.UpcomingContractExpiryStatusFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UpcomingContractExpiryStatusPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.UpcomingContractExpiryStatusFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UpcomingContractExpiryStatusPayload>
+        }
+        findMany: {
+          args: Prisma.UpcomingContractExpiryStatusFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UpcomingContractExpiryStatusPayload>[]
+        }
+        create: {
+          args: Prisma.UpcomingContractExpiryStatusCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UpcomingContractExpiryStatusPayload>
+        }
+        createMany: {
+          args: Prisma.UpcomingContractExpiryStatusCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.UpcomingContractExpiryStatusCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UpcomingContractExpiryStatusPayload>[]
+        }
+        delete: {
+          args: Prisma.UpcomingContractExpiryStatusDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UpcomingContractExpiryStatusPayload>
+        }
+        update: {
+          args: Prisma.UpcomingContractExpiryStatusUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UpcomingContractExpiryStatusPayload>
+        }
+        deleteMany: {
+          args: Prisma.UpcomingContractExpiryStatusDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.UpcomingContractExpiryStatusUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.UpcomingContractExpiryStatusUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UpcomingContractExpiryStatusPayload>[]
+        }
+        upsert: {
+          args: Prisma.UpcomingContractExpiryStatusUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UpcomingContractExpiryStatusPayload>
+        }
+        aggregate: {
+          args: Prisma.UpcomingContractExpiryStatusAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUpcomingContractExpiryStatus>
+        }
+        groupBy: {
+          args: Prisma.UpcomingContractExpiryStatusGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UpcomingContractExpiryStatusGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.UpcomingContractExpiryStatusCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UpcomingContractExpiryStatusCountAggregateOutputType> | number
+        }
+      }
+    }
+    RecruitmentOnboardingChecklist: {
+      payload: Prisma.$RecruitmentOnboardingChecklistPayload<ExtArgs>
+      fields: Prisma.RecruitmentOnboardingChecklistFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.RecruitmentOnboardingChecklistFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentOnboardingChecklistPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.RecruitmentOnboardingChecklistFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentOnboardingChecklistPayload>
+        }
+        findFirst: {
+          args: Prisma.RecruitmentOnboardingChecklistFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentOnboardingChecklistPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.RecruitmentOnboardingChecklistFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentOnboardingChecklistPayload>
+        }
+        findMany: {
+          args: Prisma.RecruitmentOnboardingChecklistFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentOnboardingChecklistPayload>[]
+        }
+        create: {
+          args: Prisma.RecruitmentOnboardingChecklistCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentOnboardingChecklistPayload>
+        }
+        createMany: {
+          args: Prisma.RecruitmentOnboardingChecklistCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.RecruitmentOnboardingChecklistCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentOnboardingChecklistPayload>[]
+        }
+        delete: {
+          args: Prisma.RecruitmentOnboardingChecklistDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentOnboardingChecklistPayload>
+        }
+        update: {
+          args: Prisma.RecruitmentOnboardingChecklistUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentOnboardingChecklistPayload>
+        }
+        deleteMany: {
+          args: Prisma.RecruitmentOnboardingChecklistDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.RecruitmentOnboardingChecklistUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.RecruitmentOnboardingChecklistUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentOnboardingChecklistPayload>[]
+        }
+        upsert: {
+          args: Prisma.RecruitmentOnboardingChecklistUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentOnboardingChecklistPayload>
+        }
+        aggregate: {
+          args: Prisma.RecruitmentOnboardingChecklistAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateRecruitmentOnboardingChecklist>
+        }
+        groupBy: {
+          args: Prisma.RecruitmentOnboardingChecklistGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RecruitmentOnboardingChecklistGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.RecruitmentOnboardingChecklistCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RecruitmentOnboardingChecklistCountAggregateOutputType> | number
+        }
+      }
+    }
+    RecruitmentExitChecklist: {
+      payload: Prisma.$RecruitmentExitChecklistPayload<ExtArgs>
+      fields: Prisma.RecruitmentExitChecklistFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.RecruitmentExitChecklistFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentExitChecklistPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.RecruitmentExitChecklistFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentExitChecklistPayload>
+        }
+        findFirst: {
+          args: Prisma.RecruitmentExitChecklistFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentExitChecklistPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.RecruitmentExitChecklistFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentExitChecklistPayload>
+        }
+        findMany: {
+          args: Prisma.RecruitmentExitChecklistFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentExitChecklistPayload>[]
+        }
+        create: {
+          args: Prisma.RecruitmentExitChecklistCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentExitChecklistPayload>
+        }
+        createMany: {
+          args: Prisma.RecruitmentExitChecklistCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.RecruitmentExitChecklistCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentExitChecklistPayload>[]
+        }
+        delete: {
+          args: Prisma.RecruitmentExitChecklistDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentExitChecklistPayload>
+        }
+        update: {
+          args: Prisma.RecruitmentExitChecklistUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentExitChecklistPayload>
+        }
+        deleteMany: {
+          args: Prisma.RecruitmentExitChecklistDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.RecruitmentExitChecklistUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.RecruitmentExitChecklistUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentExitChecklistPayload>[]
+        }
+        upsert: {
+          args: Prisma.RecruitmentExitChecklistUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecruitmentExitChecklistPayload>
+        }
+        aggregate: {
+          args: Prisma.RecruitmentExitChecklistAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateRecruitmentExitChecklist>
+        }
+        groupBy: {
+          args: Prisma.RecruitmentExitChecklistGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RecruitmentExitChecklistGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.RecruitmentExitChecklistCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RecruitmentExitChecklistCountAggregateOutputType> | number
+        }
+      }
+    }
+    NewHireCheckinStatus: {
+      payload: Prisma.$NewHireCheckinStatusPayload<ExtArgs>
+      fields: Prisma.NewHireCheckinStatusFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.NewHireCheckinStatusFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewHireCheckinStatusPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.NewHireCheckinStatusFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewHireCheckinStatusPayload>
+        }
+        findFirst: {
+          args: Prisma.NewHireCheckinStatusFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewHireCheckinStatusPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.NewHireCheckinStatusFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewHireCheckinStatusPayload>
+        }
+        findMany: {
+          args: Prisma.NewHireCheckinStatusFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewHireCheckinStatusPayload>[]
+        }
+        create: {
+          args: Prisma.NewHireCheckinStatusCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewHireCheckinStatusPayload>
+        }
+        createMany: {
+          args: Prisma.NewHireCheckinStatusCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.NewHireCheckinStatusCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewHireCheckinStatusPayload>[]
+        }
+        delete: {
+          args: Prisma.NewHireCheckinStatusDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewHireCheckinStatusPayload>
+        }
+        update: {
+          args: Prisma.NewHireCheckinStatusUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewHireCheckinStatusPayload>
+        }
+        deleteMany: {
+          args: Prisma.NewHireCheckinStatusDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.NewHireCheckinStatusUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.NewHireCheckinStatusUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewHireCheckinStatusPayload>[]
+        }
+        upsert: {
+          args: Prisma.NewHireCheckinStatusUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewHireCheckinStatusPayload>
+        }
+        aggregate: {
+          args: Prisma.NewHireCheckinStatusAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateNewHireCheckinStatus>
+        }
+        groupBy: {
+          args: Prisma.NewHireCheckinStatusGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NewHireCheckinStatusGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.NewHireCheckinStatusCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NewHireCheckinStatusCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1242,12 +1542,55 @@ export const HeadcountSnapshotScalarFieldEnum = {
 export type HeadcountSnapshotScalarFieldEnum = (typeof HeadcountSnapshotScalarFieldEnum)[keyof typeof HeadcountSnapshotScalarFieldEnum]
 
 
+export const UpcomingContractExpiryStatusScalarFieldEnum = {
+  rowKey: 'rowKey',
+  status: 'status',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UpcomingContractExpiryStatusScalarFieldEnum = (typeof UpcomingContractExpiryStatusScalarFieldEnum)[keyof typeof UpcomingContractExpiryStatusScalarFieldEnum]
+
+
+export const RecruitmentOnboardingChecklistScalarFieldEnum = {
+  rowKey: 'rowKey',
+  taskStates: 'taskStates',
+  updatedAt: 'updatedAt'
+} as const
+
+export type RecruitmentOnboardingChecklistScalarFieldEnum = (typeof RecruitmentOnboardingChecklistScalarFieldEnum)[keyof typeof RecruitmentOnboardingChecklistScalarFieldEnum]
+
+
+export const RecruitmentExitChecklistScalarFieldEnum = {
+  rowKey: 'rowKey',
+  taskStates: 'taskStates',
+  updatedAt: 'updatedAt'
+} as const
+
+export type RecruitmentExitChecklistScalarFieldEnum = (typeof RecruitmentExitChecklistScalarFieldEnum)[keyof typeof RecruitmentExitChecklistScalarFieldEnum]
+
+
+export const NewHireCheckinStatusScalarFieldEnum = {
+  rowKey: 'rowKey',
+  status: 'status',
+  updatedAt: 'updatedAt'
+} as const
+
+export type NewHireCheckinStatusScalarFieldEnum = (typeof NewHireCheckinStatusScalarFieldEnum)[keyof typeof NewHireCheckinStatusScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {
@@ -1264,6 +1607,15 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
 
@@ -1318,6 +1670,20 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Int[]'
  */
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Json'
+ */
+export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+/**
+ * Reference to a field of type 'QueryMode'
+ */
+export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 
@@ -1438,6 +1804,10 @@ export type GlobalOmitConfig = {
   eapReferral?: Prisma.EapReferralOmit
   cPlayerNote?: Prisma.CPlayerNoteOmit
   headcountSnapshot?: Prisma.HeadcountSnapshotOmit
+  upcomingContractExpiryStatus?: Prisma.UpcomingContractExpiryStatusOmit
+  recruitmentOnboardingChecklist?: Prisma.RecruitmentOnboardingChecklistOmit
+  recruitmentExitChecklist?: Prisma.RecruitmentExitChecklistOmit
+  newHireCheckinStatus?: Prisma.NewHireCheckinStatusOmit
 }
 
 /* Types for Logging */

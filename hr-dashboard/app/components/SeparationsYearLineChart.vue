@@ -1,55 +1,48 @@
 <template>
-  <div class="mt-2">
-    <div v-if="items.length === 0" class="text-sm text-slate-300">No separations data.</div>
+  <div class="flex min-h-0 flex-1 flex-col">
+    <div v-if="items.length === 0" class="text-sm text-slate-600">No separations data.</div>
 
-    <div v-else class="space-y-3">
-      <div class="flex flex-wrap items-center justify-between gap-3 text-sm">
-        <div class="text-slate-300">Yearly separations</div>
-        <div class="flex flex-wrap items-center gap-3">
-          <label v-if="hasTypeSeries" class="flex items-center gap-2 text-sm font-medium text-slate-300">
-            <span class="whitespace-nowrap">Type</span>
-            <select
-              v-model="selectedType"
-              class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
-            >
-              <option value="">All</option>
-              <option v-for="opt in typeOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-            </select>
-          </label>
-          <div class="flex items-center gap-2 tabular-nums text-slate-50">
-            <span>Total</span>
-            <span class="font-semibold">{{ total }}</span>
-            <template v-if="selectedType && overlayTotal !== null">
-              <span class="text-slate-500">·</span>
-              <span class="capitalize text-slate-300">{{ selectedType }}</span>
-              <span class="font-semibold" :style="{ color: overlayStroke }">{{ overlayTotal }}</span>
-            </template>
-          </div>
-        </div>
+    <div v-else class="flex min-h-0 flex-1 flex-col gap-3">
+      <div class="flex shrink-0 flex-wrap items-center justify-between gap-2">
+        <h3 class="text-lg font-semibold text-hr-navy">{{ heading }}</h3>
+        <label v-if="hasTypeSeries" class="flex items-center gap-2 text-sm font-medium text-slate-600">
+          <span class="whitespace-nowrap">Type</span>
+          <select
+            v-model="selectedType"
+            class="h-8 rounded-md border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-slate-400"
+          >
+            <option value="">All</option>
+            <option v-for="opt in typeOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+          </select>
+        </label>
       </div>
 
-      <div ref="wrapEl" class="relative">
+      <div ref="wrapEl" class="relative min-h-0 flex-1">
         <div
           v-if="hover"
-          class="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-md border border-slate-700 bg-slate-950/95 px-2 py-1 text-xs font-semibold text-slate-100 shadow-lg shadow-black/30"
+          class="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-hr-navy shadow-lg shadow-slate-900/10"
           :style="{ left: `${tooltipLeft}px`, top: `${tooltipTop}px` }"
         >
           {{ hover.label }}: {{ hover.value }}
         </div>
 
-        <svg viewBox="0 0 640 240" class="h-40 w-full">
+        <svg
+          viewBox="0 0 640 240"
+          class="absolute inset-0 h-full w-full"
+          preserveAspectRatio="xMidYMid meet"
+        >
           <rect x="0" y="0" width="640" height="240" fill="transparent" />
 
           <g :transform="`translate(${padL},${padT})`">
             <path
               :d="areaPath"
-              fill="rgb(56 189 248 / 0.10)"
+              fill="rgb(220 38 38 / 0.12)"
               stroke="none"
             />
             <path
               :d="linePath"
               fill="none"
-              stroke="rgb(56 189 248)"
+              stroke="rgb(220 38 38)"
               stroke-width="3"
               stroke-linejoin="round"
               stroke-linecap="round"
@@ -65,7 +58,7 @@
                 @pointermove="onPointMove($event)"
                 @pointerleave="onPointLeave"
               />
-              <circle :cx="p.x" :cy="p.y" r="4" fill="rgb(56 189 248)" />
+              <circle :cx="p.x" :cy="p.y" r="4" fill="rgb(220 38 38)" />
             </template>
 
             <template v-if="overlayPoints.length > 0">
@@ -91,29 +84,31 @@
               </template>
             </template>
 
-            <line :x1="0" :y1="innerH" :x2="innerW" :y2="innerH" stroke="rgb(30 41 59)" stroke-width="2" />
-            <line x1="0" y1="0" x2="0" :y2="innerH" stroke="rgb(30 41 59)" stroke-width="2" />
+            <line :x1="0" :y1="innerH" :x2="innerW" :y2="innerH" stroke="rgb(71 85 105)" stroke-width="2" />
+            <line x1="0" y1="0" x2="0" :y2="innerH" stroke="rgb(71 85 105)" stroke-width="2" />
 
             <template v-for="t in xTicks" :key="t.year">
               <text
                 :x="t.x"
-                :y="innerH + 18"
+                :y="innerH + 22"
                 text-anchor="middle"
-                font-size="12"
-                fill="rgb(148 163 184)"
+                font-size="15"
+                font-weight="500"
+                fill="rgb(51 65 85)"
               >
                 {{ t.year }}
               </text>
             </template>
 
             <template v-for="t in yTicks" :key="t.value">
-              <line :x1="0" :y1="t.y" :x2="innerW" :y2="t.y" stroke="rgb(30 41 59)" stroke-width="1" />
+              <line :x1="0" :y1="t.y" :x2="innerW" :y2="t.y" stroke="rgb(203 213 225)" stroke-width="1" />
               <text
-                :x="-10"
-                :y="t.y + 4"
+                :x="-6"
+                :y="t.y + 5"
                 text-anchor="end"
-                font-size="12"
-                fill="rgb(148 163 184)"
+                font-size="15"
+                font-weight="500"
+                fill="rgb(51 65 85)"
               >
                 {{ t.value }}
               </text>
@@ -129,10 +124,14 @@
 type YearPoint = { year: number; count: number }
 type SeparationType = 'resigned' | 'retired' | 'fired' | 'separated'
 
-const props = defineProps<{
-  items: YearPoint[]
-  byType?: Partial<Record<SeparationType, YearPoint[]>> | null
-}>()
+const props = withDefaults(
+  defineProps<{
+    items: YearPoint[]
+    byType?: Partial<Record<SeparationType, YearPoint[]>> | null
+    heading?: string
+  }>(),
+  { heading: 'Employee Separations Over Time' }
+)
 
 const items = computed(() =>
   (props.items ?? [])
@@ -140,8 +139,6 @@ const items = computed(() =>
     .map((i) => ({ year: Math.floor(i.year), count: Math.max(0, Math.floor(i.count)) }))
     .sort((a, b) => a.year - b.year)
 )
-
-const total = computed(() => items.value.reduce((acc, i) => acc + i.count, 0))
 
 const typeOptions: Array<{ value: SeparationType; label: string }> = [
   { value: 'resigned', label: 'Resigned' },
@@ -169,10 +166,10 @@ const overlaySeriesMap = computed(() => {
 
 const W = 640
 const H = 240
-const padL = 44
+const padL = 54
 const padR = 18
-const padT = 12
-const padB = 34
+const padT = 16
+const padB = 42
 const innerW = W - padL - padR
 const innerH = H - padT - padB
 
@@ -298,10 +295,4 @@ const overlayStroke = computed(() => {
   if (t === 'separated') return 'rgb(148 163 184)'
   return 'rgb(251 191 36)'
 })
-
-const overlayTotal = computed(() => {
-  if (!selectedType.value || !hasTypeSeries.value) return null
-  return overlayPoints.value.reduce((acc, p) => acc + p.count, 0)
-})
 </script>
-

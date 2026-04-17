@@ -2,7 +2,7 @@
   <section class="min-w-0 space-y-3">
     <div class="flex min-w-0 flex-wrap items-start justify-between gap-4">
       <div class="space-y-1">
-        <h2 class="text-base font-semibold text-slate-200">Medical Enrollments</h2>
+        <h2 class="text-base font-semibold text-hr-navy">Medical Enrollments</h2>
         <p class="text-xs text-slate-400">Read-only: sourced from Odoo (employee profile → Medical Information).</p>
       </div>
       <div class="flex flex-wrap items-center gap-3">
@@ -11,33 +11,33 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-2">
-      <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+      <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
         <span class="whitespace-nowrap">Stage</span>
         <select
           v-model="filters.stage"
-          class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+          class="h-8 rounded-md border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-slate-400"
         >
           <option value="">All</option>
           <option v-for="s in stageFilterOptions" :key="s" :value="s">{{ s }}</option>
         </select>
       </label>
 
-      <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+      <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
         <span class="whitespace-nowrap">Country</span>
         <select
           v-model="filters.country"
-          class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+          class="h-8 rounded-md border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-slate-400"
         >
           <option value="">All</option>
           <option v-for="c in countries" :key="c" :value="c">{{ c }}</option>
         </select>
       </label>
 
-      <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+      <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
         <span class="whitespace-nowrap">Vendor</span>
         <select
           v-model="filters.vendor"
-          class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+          class="h-8 rounded-md border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-slate-400"
         >
           <option value="">All</option>
           <option v-for="v in vendorFilterOptions" :key="v" :value="v">{{ v }}</option>
@@ -47,20 +47,20 @@
       <button
         v-if="hasActiveFilters"
         type="button"
-        class="h-8 rounded-md border border-slate-800 bg-slate-950 px-3 text-sm text-slate-200 hover:bg-slate-800/40"
+        class="h-8 rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-800 hover:bg-slate-100"
         @click="clearFilters"
       >
         Clear
       </button>
     </div>
 
-    <div v-if="pending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
+    <div v-if="pending" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">Loading…</div>
     <div v-else-if="error" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
       Failed to load medical enrollments.
       <div v-if="errorMessage" class="mt-2 text-xs text-red-200/80">{{ errorMessage }}</div>
     </div>
 
-    <div v-else class="rounded-md border border-slate-800 bg-slate-900">
+    <div v-else class="rounded-md border border-slate-200 bg-white shadow-card">
       <table class="w-full table-fixed border-collapse text-left text-sm">
         <colgroup>
           <col style="width: 11%" />
@@ -73,7 +73,7 @@
           <col style="width: 8%" />
           <col style="width: 9%" />
         </colgroup>
-        <thead class="bg-slate-950 text-slate-300">
+        <thead class="bg-slate-100 text-slate-600">
           <tr>
             <th class="px-3 py-3 align-bottom font-medium">Name</th>
             <th class="px-3 py-3 align-bottom font-medium">Country</th>
@@ -87,9 +87,9 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in filteredItems" :key="row.id" class="border-t border-slate-800 align-top">
-            <td class="min-w-0 break-words px-3 py-3 align-top font-medium text-slate-50">{{ row.employeeName }}</td>
-            <td class="min-w-0 px-3 py-3 align-top text-slate-200">{{ row.country || '—' }}</td>
+          <tr v-for="row in filteredItems" :key="row.id" class="border-t border-hr-navy/25 align-top">
+            <td class="min-w-0 break-words px-3 py-3 align-top font-medium text-slate-900">{{ row.employeeName }}</td>
+            <td class="min-w-0 px-3 py-3 align-top text-slate-800">{{ row.country || '—' }}</td>
             <td class="min-w-0 px-3 py-3 align-top">
               <span
                 v-if="row.enrollmentType"
@@ -99,15 +99,15 @@
               </span>
               <span v-else class="text-slate-400">—</span>
             </td>
-            <td class="min-w-0 px-3 py-3 align-top text-slate-200">{{ row.vendor || '—' }}</td>
+            <td class="min-w-0 px-3 py-3 align-top text-slate-800">{{ row.vendor || '—' }}</td>
             <td class="min-w-0 px-3 py-3 align-top">
               <span :class="[tableDataBadgeClass, stageBadgeClass(row.stage)]">
                 {{ displayStage(row.stage) }}
               </span>
             </td>
-            <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top tabular-nums text-slate-200">{{ row.dateInitiated || '—' }}</td>
-            <td class="min-w-0 break-words px-3 py-3 align-top text-slate-200">{{ row.nextAction || '—' }}</td>
-            <td class="min-w-0 px-3 py-3 align-top text-slate-200">
+            <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top tabular-nums text-slate-800">{{ row.dateInitiated || '—' }}</td>
+            <td class="min-w-0 break-words px-3 py-3 align-top text-slate-800">{{ row.nextAction || '—' }}</td>
+            <td class="min-w-0 px-3 py-3 align-top text-slate-800">
               <a
                 v-if="row.attachmentsUrl"
                 :href="row.attachmentsUrl"
@@ -119,14 +119,14 @@
               </a>
               <span v-else class="text-slate-400">—</span>
             </td>
-            <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top text-slate-200">{{ formatDate(row.updatedAt) }}</td>
+            <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top text-slate-800">{{ formatDate(row.updatedAt) }}</td>
           </tr>
 
-          <tr v-if="items.length === 0" class="border-t border-slate-800">
-            <td colspan="9" class="px-3 py-6 text-center text-slate-300">No enrollments found.</td>
+          <tr v-if="items.length === 0" class="border-t border-hr-navy/25">
+            <td colspan="9" class="px-3 py-6 text-center text-slate-600">No enrollments found.</td>
           </tr>
-          <tr v-else-if="filteredItems.length === 0" class="border-t border-slate-800">
-            <td colspan="9" class="px-3 py-6 text-center text-slate-300">No enrollments match the filters.</td>
+          <tr v-else-if="filteredItems.length === 0" class="border-t border-hr-navy/25">
+            <td colspan="9" class="px-3 py-6 text-center text-slate-600">No enrollments match the filters.</td>
           </tr>
         </tbody>
       </table>
@@ -188,20 +188,20 @@ function normalizeForMatch(value: string) {
 
 function stageBadgeClass(stage: string) {
   const v = normalizeForMatch(normalizeStage(stage))
-  if (v.includes('tentative')) return 'border-slate-700 bg-slate-900 text-slate-200'
-  if (v.includes('in progress')) return 'border-sky-900/60 bg-sky-950/30 text-sky-200'
-  if (v.includes('completed')) return 'border-violet-900/60 bg-violet-950/30 text-violet-200'
-  if (v.includes('approved')) return 'border-emerald-900/60 bg-emerald-950/30 text-emerald-200'
-  if (v.includes('submitted') || v.includes('pending')) return 'border-amber-900/60 bg-amber-950/30 text-amber-200'
-  return 'border-sky-900/60 bg-sky-950/30 text-sky-200'
+  if (v.includes('tentative')) return 'border-slate-300 bg-white text-slate-800'
+  if (v.includes('in progress')) return 'border-sky-200 bg-sky-50 text-sky-900'
+  if (v.includes('completed')) return 'border-violet-200 bg-violet-50 text-violet-900'
+  if (v.includes('approved')) return 'border-emerald-200 bg-emerald-50 text-emerald-900'
+  if (v.includes('submitted') || v.includes('pending')) return 'border-amber-200 bg-amber-50 text-amber-900'
+  return 'border-sky-200 bg-sky-50 text-sky-900'
 }
 
 function enrollmentTypeBadgeClass(value: string) {
   const v = normalizeForMatch(value)
-  if (v === 'new enrollment' || v === 'new enrolment' || v === 'new') return 'border-cyan-900/60 bg-cyan-950/30 text-cyan-200'
-  if (v === 'change' || v === 'updated' || v === 'update') return 'border-fuchsia-900/60 bg-fuchsia-950/30 text-fuchsia-200'
-  if (v === 'termination' || v === 'terminated' || v === 'cancelled' || v === 'canceled') return 'border-rose-900/60 bg-rose-950/30 text-rose-200'
-  return 'border-lime-900/60 bg-lime-950/30 text-lime-200'
+  if (v === 'new enrollment' || v === 'new enrolment' || v === 'new') return 'border-cyan-200 bg-cyan-50 text-cyan-900'
+  if (v === 'change' || v === 'updated' || v === 'update') return 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-900'
+  if (v === 'termination' || v === 'terminated' || v === 'cancelled' || v === 'canceled') return 'border-rose-200 bg-rose-50 text-rose-900'
+  return 'border-lime-200 bg-lime-50 text-lime-900'
 }
 
 function normalizeEnrollmentType(value: string) {

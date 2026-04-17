@@ -2,10 +2,10 @@
   <div class="space-y-6" :data-report-ready="reportReady ? '1' : undefined">
     <div class="space-y-1">
       <h1 class="text-3xl font-semibold">Separations</h1>
-      <p class="text-base text-slate-300">Employees who left during the active month, grouped by country.</p>
+      <p class="text-base text-slate-600">Employees who left during the active month, grouped by country.</p>
     </div>
 
-    <hr class="border-slate-800" />
+    <hr />
 
     <section class="space-y-4">
       <ReportKpiTile
@@ -19,7 +19,7 @@
       <section class="rounded-lg border border-slate-200 bg-white p-4">
         <div class="flex items-end justify-between gap-3">
           <div class="space-y-1">
-            <h2 class="text-base font-semibold text-slate-900">Separated employees</h2>
+            <h2 class="text-base font-semibold text-hr-navy">Separated employees</h2>
             <p class="text-sm text-slate-600">Ordered by country; includes separation type.</p>
           </div>
         </div>
@@ -29,7 +29,7 @@
 
           <section v-for="[country, rows] in itemsByCountryEntries" :key="country" class="rounded-md border border-slate-200 bg-white p-3">
             <div class="flex items-baseline justify-between gap-3">
-              <div class="text-sm font-semibold text-slate-900">{{ country }}</div>
+              <div class="text-sm font-semibold text-hr-navy">{{ country }}</div>
               <div class="text-xs font-semibold tabular-nums text-slate-600">{{ rows.length }}</div>
             </div>
 
@@ -43,7 +43,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="r in rows" :key="r.employeeKey" class="border-t border-slate-200">
+                  <tr v-for="r in rows" :key="r.employeeKey" class="border-t border-hr-navy/25">
                     <td class="px-3 py-2 text-slate-900">{{ r.name }}</td>
                     <td class="px-3 py-2 text-slate-700">{{ r.position || '—' }}</td>
                     <td class="min-w-0 px-3 py-2">

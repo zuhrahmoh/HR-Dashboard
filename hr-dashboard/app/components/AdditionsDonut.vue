@@ -4,7 +4,7 @@
       <div class="flex justify-center sm:justify-start">
         <div class="relative h-36 w-36">
           <svg class="h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
-            <circle cx="50" cy="50" r="42" fill="none" stroke="rgb(30 41 59)" stroke-width="10" />
+            <circle cx="50" cy="50" r="42" fill="none" stroke="rgb(13 27 62)" stroke-width="10" />
             <circle
               cx="50"
               cy="50"
@@ -19,7 +19,7 @@
           </svg>
 
           <div class="absolute inset-0 grid place-items-center text-center">
-            <div class="text-sm text-slate-300">Additions</div>
+            <div class="text-sm text-slate-600">Additions</div>
             <div class="text-3xl font-semibold tabular-nums">{{ selectedHires }}</div>
             <div class="text-sm text-slate-400 tabular-nums">{{ selectedMonthLabel }}</div>
           </div>
@@ -27,19 +27,19 @@
       </div>
 
       <div class="min-w-0 space-y-2 text-base">
-        <label class="flex items-center gap-2 text-sm font-medium text-slate-300">
+        <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
           <span class="whitespace-nowrap">Month</span>
           <select
             v-model="selectedMonth"
-            class="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+            class="h-8 rounded-md border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-slate-400"
           >
             <option v-for="m in months" :key="m" :value="m">{{ formatMonthLabel(m) }}</option>
           </select>
         </label>
 
         <div class="flex items-center justify-between gap-6">
-          <div class="text-slate-300">Additions</div>
-          <div class="tabular-nums text-slate-50">{{ selectedHires }}</div>
+          <div class="text-slate-600">Additions</div>
+          <div class="tabular-nums text-slate-900">{{ selectedHires }}</div>
         </div>
       </div>
     </div>
@@ -47,7 +47,7 @@
     <div v-if="showRecruitmentDetailsLink" class="mt-3 flex justify-end">
       <button
         type="button"
-        class="rounded-md border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs font-semibold text-slate-200 hover:bg-slate-800/70"
+        class="rounded-md border border-slate-300 bg-white shadow-sm px-2.5 py-1 text-xs font-semibold text-hr-navy hover:bg-slate-100"
         @click="openRecruitmentNewHiresDetails"
       >
         See details

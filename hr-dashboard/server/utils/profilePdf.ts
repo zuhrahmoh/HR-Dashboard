@@ -426,7 +426,9 @@ export type ProfileCardInput = {
   employment: {
     startDate: string
     tenure: string
-    contractOrProbationEnd: string
+    probationEnd: string
+    contractStart: string
+    contractEnd: string
     gender: string
     employeeKey: string
   }
@@ -445,7 +447,7 @@ export function buildProfilePdfCardLayout(input: ProfileCardInput): Buffer {
   const gap = 20
   const row1H = 190
   const row2H = 140
-  const row3H = 170
+  const row3H = 200
   const row4H = 96
   const fullW = pageW - margin * 2
 
@@ -598,7 +600,9 @@ export function buildProfilePdfCardLayout(input: ProfileCardInput): Buffer {
   const exValue = empBoxX + 180
   y = row('F1', 'Start Date', input.employment.startDate, exLabel, exValue, y, rowGap, 52, 1)
   y = row('F1', 'Tenure', input.employment.tenure, exLabel, exValue, y, rowGap, 52, 2)
-  y = row('F1', 'Contract/Probation End', input.employment.contractOrProbationEnd, exLabel, exValue, y, rowGap, 52, 1)
+  y = row('F1', 'Probation End', input.employment.probationEnd, exLabel, exValue, y, rowGap, 52, 1)
+  y = row('F1', 'Contract Start', input.employment.contractStart, exLabel, exValue, y, rowGap, 52, 1)
+  y = row('F1', 'Contract End', input.employment.contractEnd, exLabel, exValue, y, rowGap, 52, 1)
   y = row('F1', 'Gender', input.employment.gender, exLabel, exValue, y, rowGap, 52, 1)
   row('F1', 'Employee Key', input.employment.employeeKey, exLabel, exValue, y, rowGap, 52, 1)
 

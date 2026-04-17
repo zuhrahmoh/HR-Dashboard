@@ -1,41 +1,45 @@
 <template>
-  <div class="space-y-3">
-    <div v-if="points.length === 0" class="text-sm" :class="isLight ? 'text-slate-600' : 'text-slate-300'">
+  <div :class="fillHeight ? 'flex h-full min-h-0 flex-col' : 'space-y-3'">
+    <div v-if="points.length === 0" class="text-sm" :class="isLight ? 'text-slate-600' : 'text-slate-600'">
       No headcount history found.
     </div>
 
-    <div v-else class="space-y-3">
+    <div v-else :class="fillHeight ? 'flex min-h-0 flex-1 flex-col' : 'space-y-3'">
       <div v-if="showHeader" class="flex flex-wrap items-center justify-between gap-3 text-sm">
-        <div :class="isLight ? 'text-slate-700' : 'text-slate-300'">{{ title }}</div>
-        <div class="flex items-center gap-2 tabular-nums" :class="isLight ? 'text-slate-900' : 'text-slate-50'">
+        <div :class="isLight ? 'text-slate-700' : 'text-slate-600'">{{ title }}</div>
+        <div class="flex items-center gap-2 tabular-nums text-slate-900">
           <span>Latest</span>
           <span class="font-semibold">{{ latestLabel }}</span>
         </div>
       </div>
 
-      <div ref="wrapEl" class="relative">
+      <div ref="wrapEl" :class="fillHeight ? 'relative min-h-0 flex-1' : 'relative'">
         <div
           v-if="hover"
           class="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-md border px-2 py-1 text-xs font-semibold shadow-lg"
           :class="
             isLight
               ? 'border-slate-200 bg-white text-slate-900 shadow-slate-300/40'
-              : 'border-slate-700 bg-slate-950/95 text-slate-100 shadow-black/30'
+              : 'border-slate-200 bg-white text-slate-900 shadow-lg shadow-slate-900/10'
           "
           :style="{ left: `${tooltipLeft}px`, top: `${tooltipTop}px` }"
         >
           {{ hover.label }}: {{ hover.value }}
         </div>
 
-        <svg :viewBox="`0 0 ${W} ${H}`" class="h-44 w-full">
+        <svg
+          :viewBox="`0 0 ${W} ${H}`"
+          :class="fillHeight ? 'absolute inset-0 h-full w-full' : 'h-44 w-full'"
+          preserveAspectRatio="xMidYMid meet"
+        >
           <rect x="0" y="0" :width="W" :height="H" fill="transparent" />
 
           <g :transform="`translate(${padL},${padT})`">
-            <path :d="areaPath" fill="rgb(244 63 94 / 0.10)" stroke="none" />
+            <path :d="areaPath" fill="rgb(96 165 250 / 0.18)" stroke="none" />
             <path
               :d="linePath"
               fill="none"
-              stroke="rgb(244 63 94)"
+              stroke="rgb(96 165 250)"
               stroke-width="3"
               stroke-linejoin="round"
               stroke-linecap="round"
@@ -51,11 +55,11 @@
                 @pointermove="onPointMove($event)"
                 @pointerleave="onPointLeave"
               />
-              <circle :cx="p.x" :cy="p.y" r="3.5" fill="rgb(244 63 94)" />
+              <circle :cx="p.x" :cy="p.y" r="3.5" fill="rgb(59 130 246)" />
             </template>
 
-            <line :x1="0" :y1="innerH" :x2="innerW" :y2="innerH" stroke="rgb(30 41 59)" stroke-width="2" />
-            <line x1="0" y1="0" x2="0" :y2="innerH" stroke="rgb(30 41 59)" stroke-width="2" />
+            <line :x1="0" :y1="innerH" :x2="innerW" :y2="innerH" stroke="rgb(71 85 105)" stroke-width="2" />
+            <line x1="0" y1="0" x2="0" :y2="innerH" stroke="rgb(71 85 105)" stroke-width="2" />
 
             <template v-for="t in xYearTicks" :key="t.label">
               <text
@@ -63,20 +67,20 @@
                 :y="innerH + 18"
                 text-anchor="middle"
                 font-size="12"
-                fill="rgb(148 163 184)"
+                fill="rgb(100 116 139)"
               >
                 {{ t.label }}
               </text>
             </template>
 
             <template v-for="t in yTicks" :key="t.value">
-              <line :x1="0" :y1="t.y" :x2="innerW" :y2="t.y" stroke="rgb(30 41 59)" stroke-width="1" />
+              <line :x1="0" :y1="t.y" :x2="innerW" :y2="t.y" stroke="rgb(203 213 225)" stroke-width="1" />
               <text
                 :x="-10"
                 :y="t.y + 4"
                 text-anchor="end"
                 font-size="12"
-                fill="rgb(148 163 184)"
+                fill="rgb(100 116 139)"
               >
                 {{ t.value }}
               </text>
@@ -96,7 +100,10 @@ const props = defineProps<{
   title?: string
   variant?: 'dark' | 'light'
   showHeader?: boolean
+  fillHeight?: boolean
 }>()
+
+const fillHeight = computed(() => props.fillHeight === true)
 
 const title = computed(() => (props.title ?? 'Headcount trend (monthly)').trim() || 'Headcount trend (monthly)')
 const isLight = computed(() => props.variant === 'light')

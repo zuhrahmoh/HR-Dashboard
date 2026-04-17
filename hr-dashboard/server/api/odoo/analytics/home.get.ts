@@ -4,6 +4,8 @@ import { BRANCH_COUNTRIES } from '../../../utils/branchClassification'
 
 type HomeAnalytics = {
   headcountByCountry: Array<{ country: string; headcount: number }>
+  /** Active employees with Odoo `employment_type` consultant / independent contractor (from Laser field mapping). */
+  headcountEmploymentSubtotals: { consultants: number; independentContractors: number }
   employmentTypeBreakdown: {
     overall: { permanent: number; contracted: number; total: number }
     byCountry: Array<{ country: string; permanent: number; contracted: number; total: number }>
@@ -116,6 +118,21 @@ function normalizeEmploymentType(raw: string | undefined): 'permanent' | 'contra
   if (v.includes('casual')) return 'contracted'
   if (v.includes('permanent') || v.includes('perm')) return 'permanent'
   return 'permanent'
+}
+
+/** Uses `Employee.employeeType` (Odoo `employment_type` / mapped field) — distinct from permanent/contract pie logic. */
+function classifyEmploymentTypeKpi(raw: string | undefined): 'consultant' | 'independent_contractor' | null {
+  const v = (raw ?? '').trim().toLowerCase()
+  if (!v) return null
+  if (v === 'consultant' || v.includes('consultant')) return 'consultant'
+  if (
+    v === 'independent_contractor' ||
+    v.includes('independent contractor') ||
+    (v.includes('independent') && v.includes('contract'))
+  ) {
+    return 'independent_contractor'
+  }
+  return null
 }
 
 function parseYmdToUtcMs(ymd: string): number | null {
@@ -383,10 +400,16 @@ export default defineEventHandler(async (event): Promise<HomeAnalytics> => {
   let femaleOverall = 0
   let permanentOverall = 0
   let contractedOverall = 0
+  let consultantsActive = 0
+  let independentContractorsActive = 0
   const todayUtcMs = utcTodayMs()
 
   for (const e of employees) {
     if (!isActiveStatus(e.employeeStatus)) continue
+    const kpiCat = classifyEmploymentTypeKpi(e.employeeType)
+    if (kpiCat === 'consultant') consultantsActive += 1
+    else if (kpiCat === 'independent_contractor') independentContractorsActive += 1
+
     const country = (e.countryAssigned ?? '').trim()
     headcountMap.set(country, (headcountMap.get(country) ?? 0) + 1)
 
@@ -592,6 +615,10 @@ export default defineEventHandler(async (event): Promise<HomeAnalytics> => {
 
   return {
     headcountByCountry: headcountByCountryOrdered,
+    headcountEmploymentSubtotals: {
+      consultants: consultantsActive,
+      independentContractors: independentContractorsActive
+    },
     employmentTypeBreakdown: {
       overall: { permanent: permanentOverall, contracted: contractedOverall, total: permanentOverall + contractedOverall },
       byCountry: employmentTypeByCountryOrdered

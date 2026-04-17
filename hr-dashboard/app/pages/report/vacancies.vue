@@ -2,10 +2,10 @@
   <div class="space-y-6" :data-report-ready="reportReady ? '1' : undefined">
     <div class="space-y-1">
       <h1 class="text-3xl font-semibold">Critical vacancies</h1>
-      <p class="text-base text-slate-300">Current critical vacancies snapshot and distribution by country.</p>
+      <p class="text-base text-slate-600">Current critical vacancies snapshot and distribution by country.</p>
     </div>
 
-    <hr class="border-slate-800" />
+    <hr />
 
     <section class="space-y-4">
       <ReportKpiTile
@@ -18,7 +18,7 @@
 
       <section class="rounded-lg border border-slate-200 bg-white p-4">
         <div class="space-y-1">
-          <h2 class="text-base font-semibold text-slate-900">Vacancies by country</h2>
+          <h2 class="text-base font-semibold text-hr-navy">Vacancies by country</h2>
           <p class="text-sm text-slate-600">Count of vacancies per country.</p>
         </div>
 
@@ -43,7 +43,7 @@
 
       <section class="rounded-lg border border-slate-200 bg-white p-4">
         <div class="space-y-1">
-          <h2 class="text-base font-semibold text-slate-900">Critical Vacancy listing</h2>
+          <h2 class="text-base font-semibold text-hr-navy">Critical Vacancy listing</h2>
         </div>
 
         <div class="mt-4 space-y-2">
@@ -56,7 +56,7 @@
           >
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
-                <div class="truncate text-sm font-semibold text-slate-900">{{ v.positionTitle || '—' }}</div>
+                <div class="truncate text-sm font-semibold text-hr-navy">{{ v.positionTitle || '—' }}</div>
                 <div class="mt-0.5 text-xs text-slate-600">{{ (v.department || '—') + ' · ' + (v.country || '—') }}</div>
               </div>
               <div class="shrink-0">
@@ -109,10 +109,10 @@ function formatPriority(value: string) {
 }
 function priorityBadgeClass(value: string) {
   const v = normalizePriority(value)
-  if (v === 'high') return 'border-red-200 bg-red-50 text-red-800'
-  if (v === 'medium') return 'border-amber-200 bg-amber-50 text-amber-800'
-  if (v === 'low') return 'border-emerald-200 bg-emerald-50 text-emerald-800'
-  return 'border-slate-200 bg-slate-50 text-slate-700'
+  if (v === 'high') return 'border-[#F5B5C4] bg-[#FDF2F4] text-[#6B1C2E]'
+  if (v === 'medium') return 'border-[#FFD591] bg-[#FFF7E6] text-[#874D00]'
+  if (v === 'low') return 'border-[#C2EEE5] bg-[#E9F7F4] text-[#00667E]'
+  return 'border-slate-300 bg-white text-slate-800'
 }
 
 const REPORT_TOP_VACANCIES = 12

@@ -2,10 +2,10 @@
   <div class="space-y-6" :data-report-ready="reportReady ? '1' : undefined">
     <div class="space-y-1">
       <h1 class="text-3xl font-semibold">Recruitment</h1>
-      <p class="text-base text-slate-300">New hires and active recruitment pipeline snapshot.</p>
+      <p class="text-base text-slate-600">New hires and active recruitment pipeline snapshot.</p>
     </div>
 
-    <hr class="border-slate-800" />
+    <hr />
 
     <section class="space-y-4">
       <ReportKpiTile
@@ -18,7 +18,7 @@
 
       <section class="rounded-lg border border-slate-200 bg-white p-4">
         <div class="space-y-1">
-          <h2 class="text-base font-semibold text-slate-900">New hires</h2>
+          <h2 class="text-base font-semibold text-hr-navy">New hires</h2>
           <p class="text-sm text-slate-600">New hires recorded for the active month, grouped by country.</p>
         </div>
 
@@ -31,7 +31,7 @@
             class="rounded-md border border-slate-200 bg-white p-3"
           >
             <div class="flex items-baseline justify-between gap-3">
-              <div class="text-sm font-semibold text-slate-900">{{ country }}</div>
+              <div class="text-sm font-semibold text-hr-navy">{{ country }}</div>
               <div class="text-xs font-semibold tabular-nums text-slate-600">{{ rows.length }}</div>
             </div>
 
@@ -45,7 +45,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="r in rows" :key="r.employeeKey" class="border-t border-slate-200">
+                  <tr v-for="r in rows" :key="r.employeeKey" class="border-t border-hr-navy/25">
                     <td class="px-3 py-2 text-slate-900">{{ r.name }}</td>
                     <td class="px-3 py-2 text-slate-700">{{ r.position || '—' }}</td>
                     <td class="px-3 py-2 text-slate-700">{{ formatYmdDateOrDash(r.startDate) }}</td>
@@ -61,7 +61,7 @@
     <section class="space-y-4">
       <section class="rounded-lg border border-slate-200 bg-white p-4">
         <div class="space-y-1">
-          <h2 class="text-base font-semibold text-slate-900">Recruitment &amp; onboarding</h2>
+          <h2 class="text-base font-semibold text-hr-navy">Recruitment &amp; onboarding</h2>
           <p class="text-sm text-slate-600">Candidates in the offer and pre-onboarding stages.</p>
         </div>
 
@@ -76,7 +76,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="c in candidatesForDisplay" :key="c.id" class="border-t border-slate-200 align-top">
+              <tr v-for="c in candidatesForDisplay" :key="c.id" class="border-t border-hr-navy/25 align-top">
                 <td class="px-3 py-2 text-slate-900">{{ c.candidateName || '—' }}</td>
                 <td class="px-3 py-2 text-slate-700">{{ c.position || '—' }}</td>
                 <td class="px-3 py-2 text-slate-700">{{ c.country || '—' }}</td>
@@ -86,7 +86,7 @@
                   </span>
                 </td>
               </tr>
-              <tr v-if="candidatesForDisplay.length === 0" class="border-t border-slate-200">
+              <tr v-if="candidatesForDisplay.length === 0" class="border-t border-hr-navy/25">
                 <td colspan="4" class="px-3 py-6 text-center text-slate-600">No candidates found.</td>
               </tr>
             </tbody>

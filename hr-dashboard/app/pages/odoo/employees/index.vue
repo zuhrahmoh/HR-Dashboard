@@ -2,15 +2,15 @@
   <div class="space-y-6">
     <div class="flex flex-wrap items-end justify-between gap-4">
       <div class="space-y-1">
-        <h1 class="text-2xl font-semibold">Employees (Odoo)</h1>
+        <h1 class="text-2xl font-semibold">Employees</h1>
       </div>
     </div>
 
-    <hr class="border-slate-800" />
+    <hr />
 
     <div class="space-y-3">
       <label class="block">
-        <div class="mb-1 text-sm text-slate-300">Search</div>
+        <div class="mb-1 text-sm text-slate-600">Search</div>
         <div class="relative">
           <svg
             viewBox="0 0 24 24"
@@ -24,7 +24,7 @@
           <input
             v-model="search"
             type="text"
-            class="w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 pl-9 text-sm text-slate-50 placeholder:text-slate-500"
+            class="w-full rounded-md border border-slate-200 bg-white shadow-card px-3 py-2 pl-9 text-sm text-slate-900 placeholder:text-slate-500"
             placeholder="Type a name or Odoo ID…"
           />
         </div>
@@ -46,26 +46,26 @@
 
         <div class="flex flex-col gap-3 md:flex-row md:items-end md:gap-2">
           <label class="block md:flex-1">
-            <div class="mb-1 text-sm text-slate-300">Country</div>
-            <select v-model="country" class="w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-slate-50">
+            <div class="mb-1 text-sm text-slate-600">Country</div>
+            <select v-model="country" class="w-full rounded-md border border-slate-200 bg-white shadow-card px-3 py-2 text-sm text-slate-900">
               <option value="">All</option>
               <option v-for="c in countries" :key="c" :value="c">{{ c }}</option>
             </select>
           </label>
 
           <label class="block md:flex-1">
-            <div class="mb-1 text-sm text-slate-300">Department</div>
-            <select v-model="department" class="w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-slate-50">
+            <div class="mb-1 text-sm text-slate-600">Department</div>
+            <select v-model="department" class="w-full rounded-md border border-slate-200 bg-white shadow-card px-3 py-2 text-sm text-slate-900">
               <option value="">All</option>
               <option v-for="d in departments" :key="d" :value="d">{{ d }}</option>
             </select>
           </label>
 
           <label class="block md:flex-1">
-            <div class="mb-1 text-sm text-slate-300">Employment Type</div>
+            <div class="mb-1 text-sm text-slate-600">Employment Type</div>
             <select
               v-model="employmentType"
-              class="w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-slate-50"
+              class="w-full rounded-md border border-slate-200 bg-white shadow-card px-3 py-2 text-sm text-slate-900"
             >
               <option value="">All</option>
               <option v-for="t in employmentTypes" :key="t" :value="t">{{ toTitleCase(t) }}</option>
@@ -73,8 +73,8 @@
           </label>
 
           <label class="block md:flex-1">
-            <div class="mb-1 text-sm text-slate-300">Status</div>
-            <select v-model="status" class="w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-slate-50">
+            <div class="mb-1 text-sm text-slate-600">Status</div>
+            <select v-model="status" class="w-full rounded-md border border-slate-200 bg-white shadow-card px-3 py-2 text-sm text-slate-900">
               <option value="">All</option>
               <option v-for="s in statuses" :key="s" :value="s">{{ s }}</option>
             </select>
@@ -83,7 +83,7 @@
       </div>
     </div>
 
-    <div v-if="pending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">
+    <div v-if="pending" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">
       Loading employees…
     </div>
     <div v-else-if="error" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
@@ -94,13 +94,13 @@
     </div>
 
     <template v-else>
-      <hr class="border-slate-800" />
+      <hr />
 
       <div :class="employeesTableContainerClass">
-        <div class="flex items-center justify-between border-b border-slate-800 px-4 py-2 text-sm text-slate-300">
+        <div class="flex items-center justify-between border-b border-hr-navy/25 px-4 py-2 text-sm text-slate-600">
           <div>{{ filteredEmployees.length }} employee(s)</div>
           <button
-            class="rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-900"
+            class="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-800 hover:bg-slate-100"
             type="button"
             @click="resetFilters"
           >
@@ -110,7 +110,7 @@
 
         <div class="overflow-x-auto">
           <table class="min-w-full text-left text-sm">
-            <thead class="bg-slate-950 text-slate-300">
+            <thead class="bg-slate-100 text-slate-600">
               <tr>
                 <th class="px-4 py-3 font-medium">Name</th>
                 <th class="px-4 py-3 font-medium">Department</th>
@@ -128,20 +128,20 @@
                 :class="employeesTableRowClass"
                 @click="goToEmployee(e.employeeKey)"
               >
-                <td class="px-4 py-4 text-slate-50">{{ e.name }}</td>
-                <td class="px-4 py-4 text-slate-200">{{ e.department }}</td>
-                <td class="px-4 py-4 text-slate-200">{{ e.position }}</td>
-                <td class="px-4 py-4 text-slate-200">{{ e.countryAssigned }}</td>
-                <td class="px-4 py-4 text-slate-200">{{ e.employeeType ? toTitleCase(e.employeeType) : '—' }}</td>
+                <td class="px-4 py-4 text-slate-900">{{ e.name }}</td>
+                <td class="px-4 py-4 text-slate-800">{{ e.department }}</td>
+                <td class="px-4 py-4 text-slate-800">{{ e.position }}</td>
+                <td class="px-4 py-4 text-slate-800">{{ e.countryAssigned }}</td>
+                <td class="px-4 py-4 text-slate-800">{{ e.employeeType ? toTitleCase(e.employeeType) : '—' }}</td>
                 <td class="min-w-0 px-4 py-4">
                   <span :class="[tableDataBadgeClass, employeeStatusBadgeClass(e.employeeStatus)]">
                     {{ e.employeeStatus }}
                   </span>
                 </td>
-                <td class="px-4 py-4 text-slate-200">{{ formatYmdDateOrDash(e.startDate) }}</td>
+                <td class="px-4 py-4 text-slate-800">{{ formatYmdDateOrDash(e.startDate) }}</td>
               </tr>
-              <tr v-if="filteredEmployees.length === 0" class="border-t border-slate-800">
-                <td colspan="7" class="px-4 py-6 text-center text-slate-300">No matching employees.</td>
+              <tr v-if="filteredEmployees.length === 0" class="border-t border-hr-navy/25">
+                <td colspan="7" class="px-4 py-6 text-center text-slate-600">No matching employees.</td>
               </tr>
             </tbody>
           </table>
@@ -176,8 +176,8 @@ const status = ref('')
 
 const employees = computed(() => data.value ?? [])
 
-const employeesTableContainerClass = 'overflow-hidden rounded-md bg-slate-950'
-const employeesTableRowClass = 'cursor-pointer border-t border-slate-800 bg-slate-950 hover:bg-slate-900/40'
+const employeesTableContainerClass = 'overflow-hidden rounded-md bg-white'
+const employeesTableRowClass = 'cursor-pointer border-t border-hr-navy/25 bg-white hover:bg-slate-50'
 
 function toTitleCase(input: string) {
   return input
@@ -243,9 +243,9 @@ function goToEmployee(employeeKey: string) {
 
 function employeeStatusBadgeClass(statusLabel: string) {
   const s = statusLabel.trim().toLowerCase()
-  if (s === 'active') return 'border-emerald-500/30 bg-emerald-500/15 text-emerald-300'
-  if (s === 'offboarding') return 'border-amber-500/35 bg-amber-500/10 text-amber-200'
-  return 'border-slate-700 bg-slate-800 text-slate-200'
+  if (s === 'active') return 'border-emerald-200 bg-emerald-50 text-emerald-800'
+  if (s === 'offboarding') return 'border-amber-200 bg-amber-50 text-amber-800'
+  return 'border-slate-300 bg-slate-100 text-slate-800'
 }
 
 function resetFilters() {

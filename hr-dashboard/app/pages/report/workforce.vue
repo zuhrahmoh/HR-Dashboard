@@ -2,10 +2,10 @@
   <div class="space-y-6" :data-report-ready="reportReady ? '1' : undefined">
     <div class="space-y-1">
       <h1 class="text-3xl font-semibold">Workforce overview</h1>
-      <p class="text-base text-slate-300">Headcount distribution and key demographic snapshots.</p>
+      <p class="text-base text-slate-600">Headcount distribution and key demographic snapshots.</p>
     </div>
 
-    <hr class="border-slate-800" />
+    <hr />
 
     <section class="space-y-4">
       <ReportKpiTile
@@ -19,7 +19,7 @@
       <section class="rounded-lg border border-slate-200 bg-white p-4">
         <div class="mb-3 flex items-end justify-between gap-3">
           <div class="space-y-1">
-            <h2 class="text-base font-semibold text-slate-900">Geographical headcount</h2>
+            <h2 class="text-base font-semibold text-hr-navy">Geographical headcount</h2>
             <p class="text-sm text-slate-600">Excludes resigned employees.</p>
           </div>
         </div>
@@ -36,7 +36,7 @@
     <section class="report-page space-y-4">
       <section class="rounded-lg border border-slate-200 bg-white p-4 report-keep">
         <div class="mb-2 space-y-1">
-          <h2 class="text-base font-semibold text-slate-900">Permanent vs contracted</h2>
+          <h2 class="text-base font-semibold text-hr-navy">Permanent vs contracted</h2>
           <p class="text-sm text-slate-600">Contracted includes interns.</p>
         </div>
         <div class="report-scale-92">
@@ -50,7 +50,7 @@
       </section>
 
       <section class="rounded-lg border border-slate-200 bg-white p-4 report-keep">
-        <h2 class="text-base font-semibold text-slate-900">Gender breakdown</h2>
+        <h2 class="text-base font-semibold text-hr-navy">Gender breakdown</h2>
         <p class="mt-1 text-sm text-slate-600">Overall and by country.</p>
         <div class="mt-4 report-scale-92">
           <GenderBreakdownPie

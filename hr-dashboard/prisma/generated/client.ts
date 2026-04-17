@@ -84,3 +84,23 @@ export type CPlayerNote = Prisma.CPlayerNoteModel
  * 
  */
 export type HeadcountSnapshot = Prisma.HeadcountSnapshotModel
+/**
+ * Model UpcomingContractExpiryStatus
+ * 
+ */
+export type UpcomingContractExpiryStatus = Prisma.UpcomingContractExpiryStatusModel
+/**
+ * Model RecruitmentOnboardingChecklist
+ * 
+ */
+export type RecruitmentOnboardingChecklist = Prisma.RecruitmentOnboardingChecklistModel
+/**
+ * Model RecruitmentExitChecklist
+ * 
+ */
+export type RecruitmentExitChecklist = Prisma.RecruitmentExitChecklistModel
+/**
+ * Model NewHireCheckinStatus
+ * 
+ */
+export type NewHireCheckinStatus = Prisma.NewHireCheckinStatusModel

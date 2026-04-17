@@ -6,7 +6,7 @@
 
 @layer base {
   html {
-    @apply bg-slate-950 text-slate-100 antialiased;
+    @apply bg-hr-page text-slate-800 antialiased;
     font-family: theme('fontFamily.sans');
   }
 
@@ -14,10 +14,14 @@
     @apply text-[15px] leading-6;
   }
 
+  th {
+    @apply text-hr-navy;
+  }
+
   h1,
   h2,
   h3 {
-    @apply tracking-tight text-slate-50;
+    @apply tracking-tight text-hr-navy;
   }
 
   h1 {
@@ -33,7 +37,10 @@
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-sky-400/60 ring-offset-2 ring-offset-slate-950;
+    @apply outline-none ring-2 ring-sky-500/50 ring-offset-2 ring-offset-hr-page;
+  }
+
+  hr {
+    @apply border-hr-navy/25;
   }
 }
-

@@ -1,69 +1,68 @@
 <template>
   <div class="space-y-3">
-    <div class="flex flex-wrap items-start justify-between gap-4">
-      <div class="space-y-0.5">
-        <h3 class="text-base font-semibold text-slate-200">Average age by country (grouped bars)</h3>
-        <p class="text-sm text-slate-400">Male and Female average age side-by-side per country (all countries from the data source).</p>
-      </div>
-
-      <div class="text-right">
-        <div class="text-sm font-medium text-slate-400">Company-wide average age</div>
-        <div class="text-lg font-semibold tabular-nums text-slate-50">{{ overallAvgLabel }}</div>
-        <div class="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5 text-sm text-slate-300">
-          <div class="flex items-center justify-end gap-2">
-            <span class="h-2 w-2 rounded-sm bg-sky-400" />
-            <span>Male</span>
-          </div>
-          <div class="tabular-nums text-slate-100">{{ maleAvgLabel }}</div>
-          <div class="flex items-center justify-end gap-2">
-            <span class="h-2 w-2 rounded-sm bg-pink-400" />
-            <span>Female</span>
-          </div>
-          <div class="tabular-nums text-slate-100">{{ femaleAvgLabel }}</div>
-        </div>
-      </div>
+    <div class="space-y-0.5">
+      <h3 class="text-base font-semibold text-hr-navy">Average age by country (grouped bars)</h3>
+      <p class="text-sm text-slate-500">Male and Female average age side-by-side per country (all countries from the data source).</p>
     </div>
 
-    <div v-if="columns.length === 0" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-sm text-slate-200">
+    <div v-if="columns.length === 0" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-sm text-slate-800">
       No age data available.
     </div>
 
-    <div v-else class="rounded-md border border-slate-800 bg-slate-900 p-4">
+    <div v-else class="rounded-md border border-slate-200 bg-white shadow-card p-4">
       <div class="mt-3">
         <!-- Plot area (gridlines + axis apply ONLY here) -->
-        <div class="relative">
-          <!-- shared gridlines across axis + plot -->
-          <div class="pointer-events-none absolute inset-x-0 top-0 border-t border-slate-800" />
-          <div class="pointer-events-none absolute inset-x-0 top-1/2 border-t border-slate-800" />
-          <div class="pointer-events-none absolute inset-x-0 bottom-0 border-t border-slate-800" />
+        <div class="relative pt-6">
+          <div class="relative h-56">
+            <!-- shared gridlines across axis + plot -->
+            <div class="pointer-events-none absolute inset-x-0 top-0 border-t border-hr-navy/25" />
+            <div class="pointer-events-none absolute inset-x-0 top-1/2 border-t border-hr-navy/25" />
+            <div class="pointer-events-none absolute inset-x-0 bottom-0 border-t border-hr-navy/25" />
 
-          <div class="grid grid-cols-[3.25rem_1fr] items-end gap-2">
-            <!-- Y axis -->
-            <div class="relative h-56">
-              <div class="absolute left-0 top-0 -translate-y-1/2 text-xs font-semibold tabular-nums text-slate-200">{{ maxLabel }}</div>
-              <div class="absolute left-0 top-1/2 -translate-y-1/2 text-xs font-semibold tabular-nums text-slate-200">{{ midLabel }}</div>
-              <div class="absolute left-0 bottom-0 translate-y-1/2 text-xs font-semibold tabular-nums text-slate-200">0</div>
-              <div class="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 -rotate-90 origin-left text-xs font-semibold text-slate-400">
-                Avg age (years)
+            <div class="grid grid-cols-[3.25rem_1fr] items-end gap-2">
+              <!-- Y axis -->
+              <div class="relative h-56">
+                <div class="absolute left-0 top-0 -translate-y-1/2 text-xs font-semibold tabular-nums text-slate-800">{{ maxLabel }}</div>
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 text-xs font-semibold tabular-nums text-slate-800">{{ midLabel }}</div>
+                <div class="absolute left-0 bottom-0 translate-y-1/2 text-xs font-semibold tabular-nums text-slate-800">0</div>
+                <div class="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 -rotate-90 origin-left text-xs font-semibold text-slate-500">
+                  Avg age (years)
+                </div>
               </div>
-            </div>
 
-            <!-- Plot -->
-            <div class="min-w-0">
-              <div class="grid h-56 gap-1" :style="countriesGridStyle">
-                <div v-for="c in columns" :key="c.key" class="min-w-0">
-                  <div class="flex h-56 items-end justify-center gap-0.5">
-                    <div class="flex h-full w-8 flex-col items-center justify-end">
-                      <div class="mb-1 text-xs font-semibold tabular-nums text-slate-200" :title="`Avg: ${c.maleAvgLabel}`">
-                        {{ c.maleAvgLabel }}
+              <!-- Plot: labels sit above bars (absolute), bars use full h-56 -->
+              <div class="min-w-0">
+                <div class="grid h-56 gap-1" :style="countriesGridStyle">
+                  <div v-for="c in columns" :key="c.key" class="min-w-0">
+                    <div class="flex h-56 items-end justify-center gap-0.5">
+                      <div class="relative h-56 w-8 shrink-0">
+                        <div
+                          class="pointer-events-none absolute left-1/2 z-10 -translate-x-1/2 text-xs font-semibold tabular-nums text-slate-800"
+                          :title="`Avg: ${c.maleAvgLabel}`"
+                          :style="{ bottom: `calc(${c.maleHeightPct} + 0.25rem)` }"
+                        >
+                          {{ c.maleAvgLabel }}
+                        </div>
+                        <div
+                          class="absolute bottom-0 left-1/2 w-[10px] -translate-x-1/2 rounded-sm bg-sky-300"
+                          :style="{ height: c.maleHeightPct }"
+                          :title="c.maleTitle"
+                        />
                       </div>
-                      <div class="w-[10px] rounded-sm bg-sky-400" :style="{ height: c.maleHeightPct }" :title="c.maleTitle" />
-                    </div>
-                    <div class="flex h-full w-8 flex-col items-center justify-end">
-                      <div class="mb-1 text-xs font-semibold tabular-nums text-slate-200" :title="`Avg: ${c.femaleAvgLabel}`">
-                        {{ c.femaleAvgLabel }}
+                      <div class="relative h-56 w-8 shrink-0">
+                        <div
+                          class="pointer-events-none absolute left-1/2 z-10 -translate-x-1/2 text-xs font-semibold tabular-nums text-slate-800"
+                          :title="`Avg: ${c.femaleAvgLabel}`"
+                          :style="{ bottom: `calc(${c.femaleHeightPct} + 0.25rem)` }"
+                        >
+                          {{ c.femaleAvgLabel }}
+                        </div>
+                        <div
+                          class="absolute bottom-0 left-1/2 w-[10px] -translate-x-1/2 rounded-sm bg-pink-300"
+                          :style="{ height: c.femaleHeightPct }"
+                          :title="c.femaleTitle"
+                        />
                       </div>
-                      <div class="w-[10px] rounded-sm bg-pink-400" :style="{ height: c.femaleHeightPct }" :title="c.femaleTitle" />
                     </div>
                   </div>
                 </div>
@@ -80,7 +79,7 @@
               <div
                 v-for="c in columns"
                 :key="`label__${c.key}`"
-                class="min-w-0 truncate text-center text-xs font-semibold text-slate-200"
+                class="min-w-0 truncate text-center text-xs font-semibold text-hr-navy"
                 :title="c.countryLabel"
               >
                 {{ c.countryShortLabel }}
@@ -126,55 +125,6 @@ function safeCount(value: unknown) {
   const n = typeof value === 'number' ? value : Number(value)
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0
 }
-
-const maleAvg = computed(() => {
-  let sum = 0
-  let count = 0
-  for (const i of props.items ?? []) {
-    const c = safeCount(i.maleCount)
-    if (i.maleAvgAge != null && Number.isFinite(i.maleAvgAge) && c > 0) {
-      sum += i.maleAvgAge * c
-      count += c
-    }
-  }
-  return count > 0 ? sum / count : null
-})
-
-const femaleAvg = computed(() => {
-  let sum = 0
-  let count = 0
-  for (const i of props.items ?? []) {
-    const c = safeCount(i.femaleCount)
-    if (i.femaleAvgAge != null && Number.isFinite(i.femaleAvgAge) && c > 0) {
-      sum += i.femaleAvgAge * c
-      count += c
-    }
-  }
-  return count > 0 ? sum / count : null
-})
-
-const overallAvg = computed(() => {
-  if (maleAvg.value == null && femaleAvg.value == null) return null
-  let sum = 0
-  let count = 0
-  for (const i of props.items ?? []) {
-    const mc = safeCount(i.maleCount)
-    if (i.maleAvgAge != null && Number.isFinite(i.maleAvgAge) && mc > 0) {
-      sum += i.maleAvgAge * mc
-      count += mc
-    }
-    const fc = safeCount(i.femaleCount)
-    if (i.femaleAvgAge != null && Number.isFinite(i.femaleAvgAge) && fc > 0) {
-      sum += i.femaleAvgAge * fc
-      count += fc
-    }
-  }
-  return count > 0 ? sum / count : null
-})
-
-const overallAvgLabel = computed(() => (overallAvg.value != null && Number.isFinite(overallAvg.value) ? overallAvg.value.toFixed(1) : '—'))
-const maleAvgLabel = computed(() => (maleAvg.value != null && Number.isFinite(maleAvg.value) ? maleAvg.value.toFixed(1) : '—'))
-const femaleAvgLabel = computed(() => (femaleAvg.value != null && Number.isFinite(femaleAvg.value) ? femaleAvg.value.toFixed(1) : '—'))
 
 const maxAvg = computed(() => {
   let m = 0

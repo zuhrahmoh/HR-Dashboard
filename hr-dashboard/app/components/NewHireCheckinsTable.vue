@@ -1,10 +1,10 @@
 <template>
   <div class="min-w-0 space-y-3">
-    <div v-if="rows.length === 0" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-sm text-slate-200">
+    <div v-if="rows.length === 0" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-sm text-slate-800">
       No check-ins approaching.
     </div>
 
-    <div v-else class="rounded-md border border-slate-800 bg-slate-900">
+    <div v-else class="rounded-md border border-slate-200 bg-white shadow-card">
       <table class="w-full table-fixed border-collapse text-left text-sm">
         <colgroup>
           <col style="width: 17%" />
@@ -16,7 +16,7 @@
           <col style="width: 6%" />
           <col style="width: 11%" />
         </colgroup>
-        <thead class="bg-slate-950 text-slate-300">
+        <thead class="bg-slate-100 text-slate-600">
           <tr>
             <th class="px-3 py-3 align-bottom font-medium">Name</th>
             <th class="px-3 py-3 align-bottom font-medium">Position</th>
@@ -29,20 +29,20 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="r in rows" :key="r.key" class="border-t border-slate-800">
-            <td class="min-w-0 px-3 py-3 align-top font-medium break-words text-slate-50">{{ r.name }}</td>
-            <td class="min-w-0 px-3 py-3 align-top break-words text-slate-200">{{ r.position }}</td>
-            <td class="min-w-0 px-3 py-3 align-top break-words text-slate-200">{{ r.countryAssigned }}</td>
-            <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top text-slate-200">{{ formatYmdDateOrDash(r.startDate) }}</td>
-            <td class="min-w-0 px-3 py-3 align-top tabular-nums text-slate-200">{{ formatTenureReadable(r.tenure) }}</td>
+          <tr v-for="r in rows" :key="r.key" class="border-t border-hr-navy/25">
+            <td class="min-w-0 px-3 py-3 align-top font-medium break-words text-slate-900">{{ r.name }}</td>
+            <td class="min-w-0 px-3 py-3 align-top break-words text-slate-800">{{ r.position }}</td>
+            <td class="min-w-0 px-3 py-3 align-top break-words text-slate-800">{{ r.countryAssigned }}</td>
+            <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top text-slate-800">{{ formatYmdDateOrDash(r.startDate) }}</td>
+            <td class="min-w-0 px-3 py-3 align-top tabular-nums text-slate-800">{{ formatTenureReadable(r.tenure) }}</td>
             <td class="min-w-0 px-3 py-3 align-top">
               <span :class="[tableDataBadgeClass, checkinBadgeClass(r.months)]">
                 {{ checkinLabel(r.months) }}
               </span>
             </td>
-            <td class="whitespace-nowrap px-3 py-3 text-right align-top font-bold tabular-nums text-slate-100">{{ r.daysUntil }}</td>
+            <td class="whitespace-nowrap px-3 py-3 text-right align-top font-bold tabular-nums text-hr-navy">{{ r.daysUntil }}</td>
             <td class="min-w-0 px-3 py-3 align-top">
-              <CheckinStatusSelect :model-value="getStatusForRow(r)" @update:model-value="(v) => setStatusForRow(r, v)" />
+              <CheckinStatusSelect :model-value="getStatusForRow(r)" @update:model-value="(v) => void setStatusForRow(r, v)" />
             </td>
           </tr>
         </tbody>
@@ -77,6 +77,31 @@ const props = defineProps<{
 const STORAGE_KEY = 'hr-dashboard:new-hire-checkins-status:v1'
 const statusByRowKey = ref<Record<string, StatusKey>>({})
 
+const { data: checkinStatusesPayload, refresh: refreshCheckinStatuses } = useFetch<{ statuses: Record<string, string> }>(
+  '/api/new-hire-checkin-statuses'
+)
+
+function normalizeStatusValue(raw: unknown): StatusKey | null {
+  if (raw === 'no_action' || raw === 'in_progress' || raw === 'completed') return raw
+  if (raw === 'pending') return 'no_action'
+  return null
+}
+
+watch(
+  checkinStatusesPayload,
+  (p) => {
+    if (!p?.statuses) return
+    const next: Record<string, StatusKey> = {}
+    for (const [k, raw] of Object.entries(p.statuses)) {
+      if (typeof k !== 'string') continue
+      const v = normalizeStatusValue(raw)
+      if (v && v !== 'no_action') next[k] = v
+    }
+    statusByRowKey.value = next
+  },
+  { immediate: true }
+)
+
 function safeParseObject(input: string | null) {
   if (!input) return null
   try {
@@ -88,26 +113,24 @@ function safeParseObject(input: string | null) {
   }
 }
 
-onMounted(() => {
-  const obj = safeParseObject(window.localStorage.getItem(STORAGE_KEY))
+onMounted(async () => {
+  if (typeof window === 'undefined') return
+  const raw = window.localStorage.getItem(STORAGE_KEY)
+  if (!raw) return
+  const obj = safeParseObject(raw)
   if (!obj) return
-  const next: Record<string, StatusKey> = {}
-  for (const [k, v] of Object.entries(obj)) {
-    if (typeof k !== 'string') continue
-    if (v === 'no_action' || v === 'in_progress' || v === 'completed') next[k] = v
-    else if (v === 'pending') next[k] = 'no_action'
+  try {
+    for (const [k, rawVal] of Object.entries(obj)) {
+      if (typeof k !== 'string') continue
+      const status = normalizeStatusValue(rawVal) ?? 'no_action'
+      await $fetch('/api/new-hire-checkin-statuses', { method: 'PUT', body: { rowKey: k, status } })
+    }
+    window.localStorage.removeItem(STORAGE_KEY)
+    await refreshCheckinStatuses()
+  } catch {
+    // Leave localStorage if migration fails (e.g. offline).
   }
-  statusByRowKey.value = next
 })
-
-watch(
-  statusByRowKey,
-  (v) => {
-    if (typeof window === 'undefined') return
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(v))
-  },
-  { deep: true }
-)
 
 function parseYmdUtcMs(ymd: string) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd.trim())
@@ -175,9 +198,19 @@ function getStatusForRow(row: Row): StatusKey {
   return statusByRowKey.value[storageKeyForRow(row)] ?? 'no_action'
 }
 
-function setStatusForRow(row: Row, status: StatusKey) {
+async function setStatusForRow(row: Row, status: StatusKey) {
   const k = storageKeyForRow(row)
-  statusByRowKey.value = { ...statusByRowKey.value, [k]: status }
+  const prev = { ...statusByRowKey.value }
+  const next = { ...statusByRowKey.value }
+  if (status === 'no_action') delete next[k]
+  else next[k] = status
+  statusByRowKey.value = next
+  try {
+    await $fetch('/api/new-hire-checkin-statuses', { method: 'PUT', body: { rowKey: k, status } })
+    await refreshCheckinStatuses()
+  } catch {
+    statusByRowKey.value = prev
+  }
 }
 
 function checkinLabel(months: number) {
@@ -185,12 +218,12 @@ function checkinLabel(months: number) {
 }
 
 function checkinBadgeClass(months: number) {
-  if (months === 1) return 'border-sky-400/30 bg-sky-500/10 text-sky-200'
-  if (months === 2) return 'border-amber-400/30 bg-amber-500/10 text-amber-200'
-  if (months === 3) return 'border-violet-400/30 bg-violet-500/10 text-violet-200'
-  if (months === 4) return 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200'
-  if (months === 5) return 'border-fuchsia-400/30 bg-fuchsia-500/10 text-fuchsia-200'
-  return 'border-rose-400/30 bg-rose-500/10 text-rose-200'
+  if (months === 1) return 'border-sky-400/30 bg-sky-500/10 text-sky-950'
+  if (months === 2) return 'border-amber-400/30 bg-amber-500/10 text-amber-950'
+  if (months === 3) return 'border-violet-400/30 bg-violet-500/10 text-violet-900'
+  if (months === 4) return 'border-emerald-400/30 bg-emerald-500/10 text-emerald-900'
+  if (months === 5) return 'border-fuchsia-400/30 bg-fuchsia-500/10 text-fuchsia-900'
+  return 'border-rose-400/30 bg-rose-500/10 text-rose-900'
 }
 
 const rows = computed<Row[]>(() => {

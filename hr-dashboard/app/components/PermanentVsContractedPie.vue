@@ -4,7 +4,7 @@
       <select
         v-model="selectedCountry"
         aria-label="Country"
-        class="h-7 w-[8rem] rounded-md border border-slate-800 bg-slate-950 px-2 text-xs text-slate-200 outline-none focus:border-slate-600"
+        class="h-7 w-[8rem] rounded-md border border-slate-200 bg-slate-50 px-2 text-xs text-slate-800 outline-none focus:border-slate-400"
       >
         <option value="">All</option>
         <option v-for="c in countries" :key="c.value" :value="c.value">{{ c.label }}</option>
@@ -16,8 +16,8 @@
       <select
         v-model="selectedCountry"
         :class="[
-          'rounded-md border border-slate-800 bg-slate-950 px-2 outline-none focus:border-slate-600',
-          isCompact ? 'h-7 w-[8rem] text-xs text-slate-200' : 'h-8 w-[10rem] text-sm text-slate-200'
+          'rounded-md border border-slate-200 bg-slate-50 px-2 outline-none focus:border-slate-400',
+          isCompact ? 'h-7 w-[8rem] text-xs text-slate-800' : 'h-8 w-[10rem] text-sm text-slate-800'
         ]"
       >
         <option value="">All</option>
@@ -36,11 +36,11 @@
         <div ref="rootEl" class="relative" :class="compactDonutSizeClass">
           <div
             v-if="hovered"
-            class="pointer-events-none absolute z-20 rounded-md border border-slate-700 bg-slate-950/95 px-2.5 py-1.5 text-xs text-slate-100 shadow-lg shadow-black/30"
+            class="pointer-events-none absolute z-20 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-lg shadow-slate-900/10"
             :style="{ left: `${hovered.x}px`, top: `${hovered.y}px`, transform: 'translate(-50%, -110%)' }"
           >
             <div class="font-semibold">{{ hovered.label }}</div>
-            <div class="tabular-nums text-slate-200">{{ hovered.value }}</div>
+            <div class="tabular-nums text-slate-800">{{ hovered.value }}</div>
           </div>
 
           <svg class="h-full w-full" viewBox="0 0 100 100" aria-hidden="true">
@@ -91,7 +91,7 @@
               />
             </template>
 
-            <circle cx="50" cy="50" r="20" fill="rgb(15 23 42)" stroke="rgb(30 41 59)" stroke-width="1.5" />
+            <circle cx="50" cy="50" r="20" fill="white" stroke="rgb(226 232 240)" stroke-width="1.5" />
 
             <template v-for="lbl in segmentLabels" :key="lbl.key">
               <text
@@ -100,7 +100,7 @@
                 :y="lbl.y"
                 text-anchor="middle"
                 dominant-baseline="middle"
-                fill="rgb(30 58 138)"
+                :fill="lbl.key === 'contracted' ? COLORS.permanent : 'rgb(30 58 138)'"
                 font-size="6.2"
                 font-weight="700"
               >
@@ -110,9 +110,9 @@
           </svg>
 
           <div class="pointer-events-none absolute inset-0 grid place-items-center text-center">
-            <div class="text-[11px] font-medium text-slate-200">Headcount</div>
-            <div class="text-2xl font-semibold tabular-nums text-slate-50">{{ total }}</div>
-            <div class="text-[11px] font-medium text-slate-300">{{ subtitle }}</div>
+            <div class="text-[11px] font-medium text-slate-800">Headcount</div>
+            <div class="text-2xl font-semibold tabular-nums text-hr-navy">{{ total }}</div>
+            <div class="text-[11px] font-medium text-slate-600">{{ subtitle }}</div>
           </div>
         </div>
       </div>
@@ -123,29 +123,29 @@
         </div>
 
         <div class="space-y-1.5">
-          <div class="flex items-center justify-between gap-3 rounded-md border border-slate-800 bg-slate-950/30 px-2 py-1">
-            <div class="flex min-w-0 items-center gap-2 text-slate-200">
+          <div class="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50/30 px-2 py-1">
+            <div class="flex min-w-0 items-center gap-2 text-slate-800">
               <span class="h-2.5 w-2.5 rounded-sm" :style="{ backgroundColor: COLORS.permanent }" />
               <span class="truncate">Permanent</span>
             </div>
-            <div class="shrink-0 tabular-nums text-slate-50">
+            <div class="shrink-0 tabular-nums text-slate-900">
               {{ permanent }} <span class="text-slate-400">({{ permanentPct }}%)</span>
             </div>
           </div>
 
-          <div class="flex items-center justify-between gap-3 rounded-md border border-slate-800 bg-slate-950/30 px-2 py-1">
-            <div class="flex min-w-0 items-center gap-2 text-slate-200">
+          <div class="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50/30 px-2 py-1">
+            <div class="flex min-w-0 items-center gap-2 text-slate-800">
               <span class="h-2.5 w-2.5 rounded-sm" :style="{ backgroundColor: COLORS.contracted }" />
               <span class="truncate">Contracted</span>
             </div>
-            <div class="shrink-0 tabular-nums text-slate-50">
+            <div class="shrink-0 tabular-nums text-slate-900">
               {{ contracted }} <span class="text-slate-400">({{ contractedPct }}%)</span>
             </div>
           </div>
         </div>
 
         <div class="text-[11px] text-slate-400">Contracted includes interns.</div>
-        <div v-if="total <= 0" class="text-[11px] text-slate-300">No contract type data.</div>
+        <div v-if="total <= 0" class="text-[11px] text-slate-600">No contract type data.</div>
       </div>
     </div>
 
@@ -167,7 +167,7 @@
               <path v-if="contractedSlice.d" :d="contractedSlice.d" :fill="contractedSlice.fill" />
             </template>
 
-            <circle cx="50" cy="50" r="20" fill="rgb(15 23 42)" stroke="rgb(30 41 59)" stroke-width="1.5" />
+            <circle cx="50" cy="50" r="20" fill="white" stroke="rgb(226 232 240)" stroke-width="1.5" />
 
             <template v-for="lbl in segmentLabels" :key="lbl.key">
               <text
@@ -176,7 +176,7 @@
                 :y="lbl.y"
                 text-anchor="middle"
                 dominant-baseline="middle"
-                fill="rgb(226 232 240)"
+                :fill="lbl.key === 'contracted' ? COLORS.permanent : 'rgb(30 58 138)'"
                 font-size="6.5"
                 font-weight="700"
               >
@@ -187,9 +187,9 @@
           </svg>
 
           <div class="absolute inset-0 grid place-items-center text-center">
-            <div class="text-xs font-medium text-slate-200">Headcount</div>
-            <div class="text-3xl font-semibold tabular-nums text-slate-50">{{ total }}</div>
-            <div class="text-xs font-medium text-slate-300">{{ subtitle }}</div>
+            <div class="text-xs font-medium text-slate-800">Headcount</div>
+            <div class="text-3xl font-semibold tabular-nums text-hr-navy">{{ total }}</div>
+            <div class="text-xs font-medium text-slate-600">{{ subtitle }}</div>
           </div>
         </div>
       </div>
@@ -201,28 +201,28 @@
         </div>
 
         <div class="grid grid-cols-2 gap-2 text-xs">
-          <div class="flex items-center justify-between gap-2 rounded-md border border-slate-800 bg-slate-950/30 px-2 py-1">
-            <div class="flex min-w-0 items-center gap-2 text-slate-200">
+          <div class="flex items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50/30 px-2 py-1">
+            <div class="flex min-w-0 items-center gap-2 text-slate-800">
               <span class="h-2.5 w-2.5 rounded-sm" :style="{ backgroundColor: COLORS.permanent }" />
               <span class="truncate">Permanent</span>
             </div>
-            <div class="shrink-0 tabular-nums text-slate-50">
+            <div class="shrink-0 tabular-nums text-slate-900">
               {{ permanent }} <span class="text-slate-400">({{ permanentPct }}%)</span>
             </div>
           </div>
 
-          <div class="flex items-center justify-between gap-2 rounded-md border border-slate-800 bg-slate-950/30 px-2 py-1">
-            <div class="flex min-w-0 items-center gap-2 text-slate-200">
+          <div class="flex items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50/30 px-2 py-1">
+            <div class="flex min-w-0 items-center gap-2 text-slate-800">
               <span class="h-2.5 w-2.5 rounded-sm" :style="{ backgroundColor: COLORS.contracted }" />
               <span class="truncate">Contracted</span>
             </div>
-            <div class="shrink-0 tabular-nums text-slate-50">
+            <div class="shrink-0 tabular-nums text-slate-900">
               {{ contracted }} <span class="text-slate-400">({{ contractedPct }}%)</span>
             </div>
           </div>
         </div>
 
-        <div v-if="total <= 0" class="text-xs text-slate-300">No contract type data.</div>
+        <div v-if="total <= 0" class="text-xs text-slate-600">No contract type data.</div>
       </div>
     </template>
   </div>
@@ -242,8 +242,8 @@ const props = defineProps<{
 }>()
 
 const COLORS = {
-  permanent: 'rgb(167 139 250)', // violet-300
-  contracted: 'rgb(251 146 60)' // orange-400
+  permanent: 'rgb(89 213 154)', // #59D59A
+  contracted: 'rgb(43 69 145)' // #2B4591
 } as const
 
 const isCompact = computed(() => props.compact === true)
@@ -382,14 +382,16 @@ const segmentLabels = computed(() => {
 
   return [
     {
-      key: 'permanent',
+      key: 'permanent' as const,
+      label: 'Permanent',
       x: pMid.x,
       y: pMid.y,
       pct: permanentPct.value,
       show: permanent.value > 0 && pMid.delta >= MIN_ARC_DEG
     },
     {
-      key: 'contracted',
+      key: 'contracted' as const,
+      label: 'Contracted',
       x: cMid.x,
       y: cMid.y,
       pct: contractedPct.value,

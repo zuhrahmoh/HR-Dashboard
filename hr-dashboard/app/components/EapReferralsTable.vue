@@ -2,7 +2,7 @@
   <section class="min-w-0 space-y-3">
     <div class="flex min-w-0 flex-wrap items-start justify-between gap-4">
       <div class="space-y-1">
-        <h2 class="text-base font-semibold text-slate-200">Employee Assistance Program Referrals</h2>
+        <h2 class="text-base font-semibold text-hr-navy">Employee Assistance Program Referrals</h2>
         <p class="text-xs text-slate-400">Read-only: sourced from Odoo (employee profile → Benefits).</p>
       </div>
       <div class="flex flex-wrap items-center gap-3">
@@ -10,13 +10,13 @@
       </div>
     </div>
 
-    <div v-if="pending" class="rounded-md border border-slate-800 bg-slate-900 p-4 text-slate-200">Loading…</div>
+    <div v-if="pending" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">Loading…</div>
     <div v-else-if="error" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
       Failed to load EAP referrals.
       <div v-if="errorMessage" class="mt-2 text-xs text-red-200/80">{{ errorMessage }}</div>
     </div>
 
-    <div v-else class="rounded-md border border-slate-800 bg-slate-900">
+    <div v-else class="rounded-md border border-slate-200 bg-white shadow-card">
       <table class="w-full table-fixed border-collapse text-left text-sm">
         <colgroup>
           <col style="width: 10%" />
@@ -30,7 +30,7 @@
           <col style="width: 8%" />
           <col style="width: 7%" />
         </colgroup>
-        <thead class="bg-slate-950 text-slate-300">
+        <thead class="bg-slate-100 text-slate-600">
           <tr>
             <th class="px-3 py-3 align-bottom font-medium">Employee</th>
             <th class="px-3 py-3 align-bottom font-medium">Country</th>
@@ -45,11 +45,11 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in items" :key="row.id" class="border-t border-slate-800 align-top">
-            <td class="min-w-0 break-words px-3 py-3 align-top font-medium text-slate-50">{{ row.employeeName }}</td>
-            <td class="min-w-0 break-words px-3 py-3 align-top text-slate-200">{{ row.country || '—' }}</td>
-            <td class="min-w-0 break-words px-3 py-3 align-top text-slate-200">{{ row.referralSource || '—' }}</td>
-            <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top tabular-nums text-slate-200">{{ row.referralDate || '—' }}</td>
+          <tr v-for="row in items" :key="row.id" class="border-t border-hr-navy/25 align-top">
+            <td class="min-w-0 break-words px-3 py-3 align-top font-medium text-slate-900">{{ row.employeeName }}</td>
+            <td class="min-w-0 break-words px-3 py-3 align-top text-slate-800">{{ row.country || '—' }}</td>
+            <td class="min-w-0 break-words px-3 py-3 align-top text-slate-800">{{ row.referralSource || '—' }}</td>
+            <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top tabular-nums text-slate-800">{{ row.referralDate || '—' }}</td>
             <td class="min-w-0 px-3 py-3 align-top">
               <span
                 v-if="normalizeReasonCategory(row.reasonCategory)"
@@ -59,7 +59,7 @@
               </span>
               <span v-else class="text-slate-400">—</span>
             </td>
-            <td class="min-w-0 break-words px-3 py-3 align-top text-slate-200">
+            <td class="min-w-0 break-words px-3 py-3 align-top text-slate-800">
               <div class="whitespace-pre-wrap break-words">{{ row.reasonDetails || '—' }}</div>
             </td>
             <td class="min-w-0 px-3 py-3 align-top">
@@ -67,15 +67,15 @@
                 {{ row.programStatus || '—' }}
               </span>
             </td>
-            <td class="min-w-0 break-words px-3 py-3 align-top text-slate-200">
+            <td class="min-w-0 break-words px-3 py-3 align-top text-slate-800">
               <div class="whitespace-pre-wrap break-words">{{ row.outcomeNotes || '—' }}</div>
             </td>
-            <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top tabular-nums text-slate-200">{{ row.closeDate || '—' }}</td>
-            <td class="min-w-0 break-words px-3 py-3 align-top text-slate-200">{{ row.closedReason || '—' }}</td>
+            <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top tabular-nums text-slate-800">{{ row.closeDate || '—' }}</td>
+            <td class="min-w-0 break-words px-3 py-3 align-top text-slate-800">{{ row.closedReason || '—' }}</td>
           </tr>
 
-          <tr v-if="items.length === 0" class="border-t border-slate-800">
-            <td colspan="10" class="px-3 py-6 text-center text-slate-300">No referrals yet.</td>
+          <tr v-if="items.length === 0" class="border-t border-hr-navy/25">
+            <td colspan="10" class="px-3 py-6 text-center text-slate-600">No referrals yet.</td>
           </tr>
         </tbody>
       </table>
@@ -113,12 +113,12 @@ function normalizeReasonCategory(value: string) {
 
 function reasonCategoryBadgeClass(value: string) {
   const v = normalizeForMatch(normalizeReasonCategory(value))
-  if (v === 'stress management' || v === 'stress') return 'border-teal-900/60 bg-teal-950/30 text-teal-200'
+  if (v === 'stress management' || v === 'stress') return 'border-teal-200 bg-teal-50 text-teal-900'
   if (v === 'underperformance' || v === 'under performance' || v === 'performance' || v === 'drop in performance' || v === 'drop-in performance')
-    return 'border-pink-900/60 bg-pink-950/30 text-pink-200'
-  if (v === 'leadership issues' || v === 'leadership issue' || v === 'leadership') return 'border-indigo-900/60 bg-indigo-950/30 text-indigo-200'
-  if (v === 'personal struggles' || v === 'personal struggle' || v === 'personal') return 'border-orange-900/60 bg-orange-950/30 text-orange-200'
-  return 'border-lime-900/60 bg-lime-950/30 text-lime-200'
+    return 'border-pink-200 bg-pink-50 text-pink-900'
+  if (v === 'leadership issues' || v === 'leadership issue' || v === 'leadership') return 'border-indigo-200 bg-indigo-50 text-indigo-900'
+  if (v === 'personal struggles' || v === 'personal struggle' || v === 'personal') return 'border-orange-200 bg-orange-50 text-orange-900'
+  return 'border-lime-200 bg-lime-50 text-lime-900'
 }
 
 function normalizeForMatch(value: string) {
@@ -127,11 +127,11 @@ function normalizeForMatch(value: string) {
 
 function programStatusBadgeClass(value: string) {
   const v = normalizeForMatch(value)
-  if (v === 'active') return 'border-emerald-900/60 bg-emerald-950/30 text-emerald-200'
-  if (v === 'completed' || v === 'exited') return 'border-violet-900/60 bg-violet-950/30 text-violet-200'
-  if (v === 'on hold') return 'border-slate-700 bg-slate-900 text-slate-200'
-  if (v === 'contacted') return 'border-sky-900/60 bg-sky-950/30 text-sky-200'
-  return 'border-amber-900/60 bg-amber-950/30 text-amber-200'
+  if (v === 'active') return 'border-emerald-200 bg-emerald-50 text-emerald-900'
+  if (v === 'completed' || v === 'exited') return 'border-violet-200 bg-violet-50 text-violet-900'
+  if (v === 'on hold') return 'border-slate-300 bg-white text-slate-800'
+  if (v === 'contacted') return 'border-sky-200 bg-sky-50 text-sky-900'
+  return 'border-amber-200 bg-amber-50 text-amber-900'
 }
 
 function getErrorMessage(error: unknown) {

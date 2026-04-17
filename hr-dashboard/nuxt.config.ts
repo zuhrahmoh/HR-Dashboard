@@ -3,6 +3,11 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devServer: { host: 'localhost', port: 3000 },
   devtools: { enabled: true },
+  typescript: {
+    tsConfig: {
+      include: ['../tailwind.config.ts']
+    }
+  },
   modules: ['@nuxtjs/tailwindcss'],
   css: ['~/assets/css/tailwind.css'],
   routeRules: {

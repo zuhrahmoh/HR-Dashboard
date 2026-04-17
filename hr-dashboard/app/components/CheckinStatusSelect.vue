@@ -2,7 +2,7 @@
   <div ref="rootEl" class="relative block w-full min-w-0">
     <button
       type="button"
-      class="flex w-full min-w-0 max-w-full items-start gap-1.5 rounded-lg border px-2 py-1.5 text-left text-xs font-semibold outline-none ring-0 transition focus-visible:ring-2 focus-visible:ring-sky-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+      class="flex w-full min-w-0 max-w-full items-start gap-1.5 rounded-lg border px-2 py-1.5 text-left text-xs font-semibold outline-none ring-0 transition focus-visible:ring-2 focus-visible:ring-sky-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
       :class="badgeClass"
       @click="toggle"
       @keydown.escape.prevent="close"
@@ -19,7 +19,7 @@
 
     <div
       v-if="open"
-      class="absolute left-0 top-full z-50 mt-1 w-40 overflow-hidden rounded-md border border-slate-700 bg-slate-950 shadow-xl shadow-black/30"
+      class="absolute left-0 top-full z-50 mt-1 w-40 overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg shadow-slate-900/15"
       role="listbox"
       aria-label="Status"
     >
@@ -27,11 +27,11 @@
         v-for="opt in options"
         :key="opt.value"
         type="button"
-        class="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-slate-100 hover:bg-slate-800 focus:bg-slate-800 focus:outline-none"
+        class="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-slate-800 hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
         @click="select(opt.value)"
       >
         <span>{{ opt.label }}</span>
-        <span v-if="opt.value === modelValue" class="text-slate-300">✓</span>
+        <span v-if="opt.value === modelValue" class="text-slate-600">✓</span>
       </button>
     </div>
   </div>
@@ -64,9 +64,9 @@ function labelFor(v: StatusKey) {
 
 const badgeClass = computed(() => {
   const v = props.modelValue
-  if (v === 'no_action') return 'border-red-400/30 bg-red-500/10 text-red-200'
-  if (v === 'in_progress') return 'border-amber-400/30 bg-amber-500/10 text-amber-200'
-  return 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200'
+  if (v === 'no_action') return 'border-red-400/30 bg-red-500/10 text-red-900'
+  if (v === 'in_progress') return 'border-amber-400/30 bg-amber-500/10 text-amber-950'
+  return 'border-emerald-400/30 bg-emerald-500/10 text-emerald-900'
 })
 
 function close() {
