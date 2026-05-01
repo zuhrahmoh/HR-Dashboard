@@ -4,13 +4,13 @@
       <div class="flex justify-center sm:justify-start">
         <div class="relative h-36 w-36">
           <svg class="h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
-            <circle cx="50" cy="50" r="42" fill="none" stroke="rgb(13 27 62)" stroke-width="10" />
+            <circle cx="50" cy="50" r="42" fill="none" stroke="rgb(243 232 255)" stroke-width="10" />
             <circle
               cx="50"
               cy="50"
               r="42"
               fill="none"
-              stroke="rgb(16 185 129)"
+              stroke="rgb(20 184 166)"
               stroke-width="10"
               stroke-linecap="round"
               :stroke-dasharray="dashArray"

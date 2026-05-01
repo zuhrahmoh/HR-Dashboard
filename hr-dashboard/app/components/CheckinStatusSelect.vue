@@ -1,13 +1,14 @@
 <template>
   <div ref="rootEl" class="relative block w-full min-w-0">
     <button
+      ref="buttonEl"
       type="button"
-      class="flex w-full min-w-0 max-w-full items-start gap-1.5 rounded-lg border px-2 py-1.5 text-left text-xs font-semibold outline-none ring-0 transition focus-visible:ring-2 focus-visible:ring-sky-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+      class="flex w-full min-w-0 max-w-full items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-center text-xs font-semibold outline-none ring-0 transition focus-visible:ring-2 focus-visible:ring-sky-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
       :class="badgeClass"
       @click="toggle"
       @keydown.escape.prevent="close"
     >
-      <span class="min-w-0 flex-1 break-words whitespace-normal">{{ labelFor(modelValue) }}</span>
+      <span class="min-w-0 break-words whitespace-normal">{{ labelFor(modelValue) }}</span>
       <svg class="mt-0.5 h-4 w-4 shrink-0 opacity-80" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
         <path
           fill-rule="evenodd"
@@ -17,23 +18,27 @@
       </svg>
     </button>
 
-    <div
-      v-if="open"
-      class="absolute left-0 top-full z-50 mt-1 w-40 overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg shadow-slate-900/15"
-      role="listbox"
-      aria-label="Status"
-    >
-      <button
-        v-for="opt in options"
-        :key="opt.value"
-        type="button"
-        class="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-slate-800 hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
-        @click="select(opt.value)"
+    <Teleport to="body">
+      <div
+        v-if="open"
+        ref="menuEl"
+        class="fixed z-[300] w-40 overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg shadow-slate-900/15"
+        :style="{ left: `${menuPos.left}px`, top: `${menuPos.top}px` }"
+        role="listbox"
+        aria-label="Status"
       >
-        <span>{{ opt.label }}</span>
-        <span v-if="opt.value === modelValue" class="text-slate-600">✓</span>
-      </button>
-    </div>
+        <button
+          v-for="opt in options"
+          :key="opt.value"
+          type="button"
+          class="relative flex w-full items-center justify-center gap-2 px-3 py-2 text-center text-sm text-slate-800 hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
+          @click="select(opt.value)"
+        >
+          <span>{{ opt.label }}</span>
+          <span v-if="opt.value === modelValue" class="absolute right-3 text-slate-600">✓</span>
+        </button>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -56,6 +61,13 @@ const options = [
 
 const open = ref(false)
 const rootEl = ref<HTMLElement | null>(null)
+const buttonEl = ref<HTMLButtonElement | null>(null)
+const menuEl = ref<HTMLElement | null>(null)
+const menuPos = ref({ left: 0, top: 0 })
+
+const MENU_WIDTH = 160
+const MENU_HEIGHT_ESTIMATE = 130
+const MENU_GAP = 4
 
 function labelFor(v: StatusKey) {
   const m = options.find((o) => o.value === v)
@@ -64,9 +76,9 @@ function labelFor(v: StatusKey) {
 
 const badgeClass = computed(() => {
   const v = props.modelValue
-  if (v === 'no_action') return 'border-red-400/30 bg-red-500/10 text-red-900'
-  if (v === 'in_progress') return 'border-amber-400/30 bg-amber-500/10 text-amber-950'
-  return 'border-emerald-400/30 bg-emerald-500/10 text-emerald-900'
+  if (v === 'no_action') return 'border-pink-200 bg-pink-50 text-pink-800'
+  if (v === 'in_progress') return 'border-blue-200 bg-blue-50 text-blue-900'
+  return 'border-teal-200 bg-teal-50 text-teal-800'
 })
 
 function close() {
@@ -82,20 +94,48 @@ function select(v: StatusKey) {
   close()
 }
 
+function updateMenuPosition() {
+  const btn = buttonEl.value
+  if (!btn) return
+  const rect = btn.getBoundingClientRect()
+  const viewportH = window.innerHeight
+  const viewportW = window.innerWidth
+  let top = rect.bottom + MENU_GAP
+  if (top + MENU_HEIGHT_ESTIMATE > viewportH) {
+    top = Math.max(MENU_GAP, rect.top - MENU_HEIGHT_ESTIMATE - MENU_GAP)
+  }
+  let left = rect.left
+  if (left + MENU_WIDTH > viewportW) {
+    left = Math.max(MENU_GAP, rect.right - MENU_WIDTH)
+  }
+  menuPos.value = { left, top }
+}
+
 function onDocumentPointerDown(e: MouseEvent | PointerEvent) {
-  const root = rootEl.value
-  if (!root) return
   const target = e.target as Node | null
-  if (target && root.contains(target)) return
+  if (!target) return
+  const root = rootEl.value
+  const menu = menuEl.value
+  if (root && root.contains(target)) return
+  if (menu && menu.contains(target)) return
   close()
 }
 
 watch(
   open,
-  (isOpen) => {
+  async (isOpen) => {
     if (typeof document === 'undefined') return
-    if (isOpen) document.addEventListener('pointerdown', onDocumentPointerDown, true)
-    else document.removeEventListener('pointerdown', onDocumentPointerDown, true)
+    if (isOpen) {
+      document.addEventListener('pointerdown', onDocumentPointerDown, true)
+      window.addEventListener('scroll', close, true)
+      window.addEventListener('resize', close)
+      await nextTick()
+      updateMenuPosition()
+    } else {
+      document.removeEventListener('pointerdown', onDocumentPointerDown, true)
+      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('resize', close)
+    }
   },
   { immediate: true }
 )
@@ -103,6 +143,8 @@ watch(
 onBeforeUnmount(() => {
   if (typeof document === 'undefined') return
   document.removeEventListener('pointerdown', onDocumentPointerDown, true)
+  window.removeEventListener('scroll', close, true)
+  window.removeEventListener('resize', close)
 })
 </script>
 

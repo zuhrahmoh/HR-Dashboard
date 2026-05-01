@@ -1,6 +1,7 @@
 <template>
   <div ref="rootEl" class="relative inline-block w-[14.5rem] max-w-full min-w-0 align-top">
     <button
+      ref="buttonEl"
       type="button"
       :title="labelFor(modelValue)"
       class="inline-flex h-8 w-full min-w-0 items-center justify-between gap-1.5 rounded-lg border px-2 py-0 text-left text-xs font-semibold leading-none outline-none ring-0 transition focus-visible:ring-2 focus-visible:ring-sky-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
@@ -18,23 +19,27 @@
       </svg>
     </button>
 
-    <div
-      v-if="open"
-      class="absolute left-0 top-full z-50 mt-1 w-64 overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg shadow-slate-900/15"
-      role="listbox"
-      aria-label="Status"
-    >
-      <button
-        v-for="opt in options"
-        :key="opt.value"
-        type="button"
-        class="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-slate-800 hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
-        @click="select(opt.value)"
+    <Teleport to="body">
+      <div
+        v-if="open"
+        ref="menuEl"
+        class="fixed z-[300] w-64 overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg shadow-slate-900/15"
+        :style="{ left: `${menuPos.left}px`, top: `${menuPos.top}px` }"
+        role="listbox"
+        aria-label="Status"
       >
-        <span class="whitespace-normal">{{ opt.label }}</span>
-        <span v-if="opt.value === modelValue" class="text-slate-600">✓</span>
-      </button>
-    </div>
+        <button
+          v-for="opt in options"
+          :key="opt.value"
+          type="button"
+          class="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-slate-800 hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
+          @click="select(opt.value)"
+        >
+          <span class="whitespace-normal">{{ opt.label }}</span>
+          <span v-if="opt.value === modelValue" class="text-slate-600">✓</span>
+        </button>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -64,6 +69,13 @@ const options = [
 
 const open = ref(false)
 const rootEl = ref<HTMLElement | null>(null)
+const buttonEl = ref<HTMLButtonElement | null>(null)
+const menuEl = ref<HTMLElement | null>(null)
+const menuPos = ref({ left: 0, top: 0 })
+
+const MENU_WIDTH = 256
+const MENU_HEIGHT_ESTIMATE = 220
+const MENU_GAP = 4
 
 function labelFor(v: StatusKey) {
   const m = options.find((o) => o.value === v)
@@ -92,20 +104,48 @@ function select(v: StatusKey) {
   close()
 }
 
+function updateMenuPosition() {
+  const btn = buttonEl.value
+  if (!btn) return
+  const rect = btn.getBoundingClientRect()
+  const viewportH = window.innerHeight
+  const viewportW = window.innerWidth
+  let top = rect.bottom + MENU_GAP
+  if (top + MENU_HEIGHT_ESTIMATE > viewportH) {
+    top = Math.max(MENU_GAP, rect.top - MENU_HEIGHT_ESTIMATE - MENU_GAP)
+  }
+  let left = rect.left
+  if (left + MENU_WIDTH > viewportW) {
+    left = Math.max(MENU_GAP, rect.right - MENU_WIDTH)
+  }
+  menuPos.value = { left, top }
+}
+
 function onDocumentPointerDown(e: MouseEvent | PointerEvent) {
-  const root = rootEl.value
-  if (!root) return
   const target = e.target as Node | null
-  if (target && root.contains(target)) return
+  if (!target) return
+  const root = rootEl.value
+  const menu = menuEl.value
+  if (root && root.contains(target)) return
+  if (menu && menu.contains(target)) return
   close()
 }
 
 watch(
   open,
-  (isOpen) => {
+  async (isOpen) => {
     if (typeof document === 'undefined') return
-    if (isOpen) document.addEventListener('pointerdown', onDocumentPointerDown, true)
-    else document.removeEventListener('pointerdown', onDocumentPointerDown, true)
+    if (isOpen) {
+      document.addEventListener('pointerdown', onDocumentPointerDown, true)
+      window.addEventListener('scroll', close, true)
+      window.addEventListener('resize', close)
+      await nextTick()
+      updateMenuPosition()
+    } else {
+      document.removeEventListener('pointerdown', onDocumentPointerDown, true)
+      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('resize', close)
+    }
   },
   { immediate: true }
 )
@@ -113,6 +153,7 @@ watch(
 onBeforeUnmount(() => {
   if (typeof document === 'undefined') return
   document.removeEventListener('pointerdown', onDocumentPointerDown, true)
+  window.removeEventListener('scroll', close, true)
+  window.removeEventListener('resize', close)
 })
 </script>
-

@@ -1,9 +1,12 @@
 <template>
-  <section class="min-w-0 space-y-3">
+  <section id="medical-enrollments" class="surface-tint-hero scroll-mt-32 min-w-0 space-y-4 rounded-2xl p-4 shadow-card sm:p-5">
     <div class="flex min-w-0 flex-wrap items-start justify-between gap-4">
-      <div class="space-y-1">
-        <h2 class="text-base font-semibold text-hr-navy">Medical Enrollments</h2>
-        <p class="text-xs text-slate-400">Read-only: sourced from Odoo (employee profile → Medical Information).</p>
+      <div class="flex min-w-0 items-start gap-3">
+        <span class="mt-1 h-6 w-1 shrink-0 rounded-full bg-brand-blue" aria-hidden="true" />
+        <div class="min-w-0 space-y-0.5">
+          <h2 class="text-gradient-brand text-xl font-bold tracking-tight">Medical Enrollments</h2>
+          <p class="text-xs text-slate-500">Read-only: sourced from Odoo (employee profile → Medical Information).</p>
+        </div>
       </div>
       <div class="flex flex-wrap items-center gap-3">
         <div class="shrink-0 text-xs text-slate-400">Count: {{ filteredItems.length }}</div>
@@ -55,9 +58,9 @@
     </div>
 
     <div v-if="pending" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">Loading…</div>
-    <div v-else-if="error" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
+    <div v-else-if="error" class="rounded-md border border-pink-200 bg-pink-50 p-4 text-pink-800">
       Failed to load medical enrollments.
-      <div v-if="errorMessage" class="mt-2 text-xs text-red-200/80">{{ errorMessage }}</div>
+      <div v-if="errorMessage" class="mt-2 text-xs text-pink-700/80">{{ errorMessage }}</div>
     </div>
 
     <div v-else class="rounded-md border border-slate-200 bg-white shadow-card">
@@ -113,7 +116,7 @@
                 :href="row.attachmentsUrl"
                 target="_blank"
                 rel="noreferrer"
-                class="text-sky-200 hover:text-sky-100"
+                class="text-brand-purple underline decoration-brand-purple/40 underline-offset-2 hover:text-brand-purple/80"
               >
                 Open
               </a>
@@ -189,19 +192,19 @@ function normalizeForMatch(value: string) {
 function stageBadgeClass(stage: string) {
   const v = normalizeForMatch(normalizeStage(stage))
   if (v.includes('tentative')) return 'border-slate-300 bg-white text-slate-800'
-  if (v.includes('in progress')) return 'border-sky-200 bg-sky-50 text-sky-900'
-  if (v.includes('completed')) return 'border-violet-200 bg-violet-50 text-violet-900'
-  if (v.includes('approved')) return 'border-emerald-200 bg-emerald-50 text-emerald-900'
-  if (v.includes('submitted') || v.includes('pending')) return 'border-amber-200 bg-amber-50 text-amber-900'
-  return 'border-sky-200 bg-sky-50 text-sky-900'
+  if (v.includes('in progress')) return 'border-blue-200 bg-blue-50 text-blue-900'
+  if (v.includes('completed')) return 'border-purple-200 bg-purple-50 text-purple-800'
+  if (v.includes('approved')) return 'border-teal-200 bg-teal-50 text-teal-800'
+  if (v.includes('submitted') || v.includes('pending')) return 'border-pink-200 bg-pink-50 text-pink-800'
+  return 'border-blue-200 bg-blue-50 text-blue-900'
 }
 
 function enrollmentTypeBadgeClass(value: string) {
   const v = normalizeForMatch(value)
-  if (v === 'new enrollment' || v === 'new enrolment' || v === 'new') return 'border-cyan-200 bg-cyan-50 text-cyan-900'
-  if (v === 'change' || v === 'updated' || v === 'update') return 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-900'
-  if (v === 'termination' || v === 'terminated' || v === 'cancelled' || v === 'canceled') return 'border-rose-200 bg-rose-50 text-rose-900'
-  return 'border-lime-200 bg-lime-50 text-lime-900'
+  if (v === 'new enrollment' || v === 'new enrolment' || v === 'new') return 'border-teal-200 bg-teal-50 text-teal-800'
+  if (v === 'change' || v === 'updated' || v === 'update') return 'border-purple-200 bg-purple-50 text-brand-purple'
+  if (v === 'termination' || v === 'terminated' || v === 'cancelled' || v === 'canceled') return 'border-pink-200 bg-pink-50 text-pink-800'
+  return 'border-blue-200 bg-blue-50 text-blue-900'
 }
 
 function normalizeEnrollmentType(value: string) {

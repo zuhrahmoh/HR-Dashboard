@@ -66,11 +66,21 @@
 import ReportKpiTile from '~/components/ReportKpiTile.vue'
 import { tableDataBadgeClass } from '~/utils/tableBadge'
 
+type SeparationType =
+  | 'resigned'
+  | 'retired'
+  | 'fired'
+  | 'vsep'
+  | 'end_of_contract'
+  | 'probation_failure'
+  | 'retrenchment'
+  | 'separated'
+
 type HomeAnalytics = {
   separations: {
     currentMonth: string
     months: string[]
-    byMonth: Record<string, { resigned: number; retired: number; fired: number; headcountAfter: number }>
+    byMonth: Record<string, Record<SeparationType, number> & { headcountAfter: number }>
   }
 }
 
@@ -79,7 +89,7 @@ type SeparationRow = {
   name: string
   position: string
   countryAssigned: string
-  separationType: 'resigned' | 'retired' | 'fired' | 'separated'
+  separationType: SeparationType
 }
 
 type SeparationsResponse = {
@@ -89,7 +99,7 @@ type SeparationsResponse = {
 }
 
 const ACCENTS = {
-  attrition: '#b91c1c'
+  attrition: '#ec4899'
 } as const
 
 const route = useRoute()
@@ -122,18 +132,34 @@ const separationsInsight = computed(() => {
   return `${separationsCount.value} separations recorded for the month.`
 })
 
-function formatType(v: SeparationRow['separationType']) {
-  if (v === 'resigned') return 'Resigned'
-  if (v === 'retired') return 'Retired'
-  if (v === 'fired') return 'Fired'
-  return 'Separated'
+const TYPE_LABELS: Record<SeparationType, string> = {
+  resigned: 'Resigned',
+  retired: 'Retired',
+  fired: 'Fired',
+  vsep: 'VSEP',
+  end_of_contract: 'End of Contract',
+  probation_failure: 'Probation Failure',
+  retrenchment: 'Retrenchment',
+  separated: 'Separated'
 }
 
-function typeBadgeClass(v: SeparationRow['separationType']) {
-  if (v === 'resigned') return 'border-amber-200 bg-amber-50 text-amber-800'
-  if (v === 'retired') return 'border-violet-200 bg-violet-50 text-violet-800'
-  if (v === 'fired') return 'border-red-200 bg-red-50 text-red-800'
-  return 'border-slate-200 bg-slate-50 text-slate-700'
+const TYPE_BADGE_CLASSES: Record<SeparationType, string> = {
+  resigned: 'border-teal-200 bg-teal-50 text-teal-800',
+  retired: 'border-purple-200 bg-purple-50 text-purple-800',
+  fired: 'border-pink-200 bg-pink-50 text-pink-800',
+  vsep: 'border-blue-200 bg-blue-50 text-blue-800',
+  end_of_contract: 'border-indigo-200 bg-indigo-50 text-indigo-800',
+  probation_failure: 'border-rose-200 bg-rose-50 text-rose-800',
+  retrenchment: 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-800',
+  separated: 'border-slate-200 bg-slate-50 text-slate-700'
+}
+
+function formatType(v: SeparationType) {
+  return TYPE_LABELS[v] ?? 'Separated'
+}
+
+function typeBadgeClass(v: SeparationType) {
+  return TYPE_BADGE_CLASSES[v] ?? TYPE_BADGE_CLASSES.separated
 }
 
 const itemsByCountry = computed(() => {

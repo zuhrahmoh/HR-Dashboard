@@ -5,7 +5,7 @@
     </div>
 
     <div v-else class="rounded-md border border-slate-200 bg-white shadow-card">
-      <table class="w-full table-fixed border-collapse text-left text-sm">
+      <table class="w-full table-fixed border-collapse text-center text-sm">
         <colgroup>
           <col style="width: 17%" />
           <col style="width: 21%" />
@@ -24,7 +24,7 @@
             <th class="px-3 py-3 align-bottom font-medium">Start</th>
             <th class="px-3 py-3 align-bottom font-medium">Tenure</th>
             <th class="px-3 py-3 align-bottom font-medium">Milestone</th>
-            <th class="px-3 py-3 text-right align-bottom font-medium">Days</th>
+            <th class="px-3 py-3 align-bottom font-medium">Days</th>
             <th class="px-3 py-3 align-bottom font-medium">Status</th>
           </tr>
         </thead>
@@ -40,7 +40,7 @@
                 {{ checkinLabel(r.months) }}
               </span>
             </td>
-            <td class="whitespace-nowrap px-3 py-3 text-right align-top font-bold tabular-nums text-hr-navy">{{ r.daysUntil }}</td>
+            <td class="whitespace-nowrap px-3 py-3 align-top font-bold tabular-nums text-hr-navy">{{ r.daysUntil }}</td>
             <td class="min-w-0 px-3 py-3 align-top">
               <CheckinStatusSelect :model-value="getStatusForRow(r)" @update:model-value="(v) => void setStatusForRow(r, v)" />
             </td>
@@ -48,6 +48,94 @@
         </tbody>
       </table>
     </div>
+
+    <Teleport to="body">
+      <div
+        v-if="historyOpen"
+        class="fixed inset-0 z-[200] flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="completed-checkins-dialog-title"
+      >
+        <button
+          type="button"
+          class="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px]"
+          aria-label="Dismiss"
+          @click="historyOpen = false"
+        />
+        <div
+          class="relative z-10 flex max-h-[92vh] w-full max-w-7xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card"
+          @click.stop
+        >
+          <div class="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4">
+            <div class="min-w-0">
+              <h2 id="completed-checkins-dialog-title" class="text-base font-semibold text-slate-900">Completed check-ins</h2>
+              <p class="mt-0.5 text-xs text-slate-500">History of onboarding check-ins marked as completed.</p>
+            </div>
+            <button
+              type="button"
+              class="-mr-1 -mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+              aria-label="Close"
+              @click="historyOpen = false"
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M4.21 4.21a.75.75 0 0 1 1.06 0L10 8.94l4.73-4.73a.75.75 0 1 1 1.06 1.06L11.06 10l4.73 4.73a.75.75 0 1 1-1.06 1.06L10 11.06l-4.73 4.73a.75.75 0 1 1-1.06-1.06L8.94 10 4.21 5.27a.75.75 0 0 1 0-1.06Z" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="min-w-0 overflow-auto px-5 py-4">
+            <div v-if="completedRows.length === 0" class="rounded-md border border-slate-200 bg-white p-4 text-sm text-slate-800">
+              No completed check-ins yet.
+            </div>
+            <div v-else class="rounded-md border border-slate-200 bg-white">
+              <table class="w-full table-fixed border-collapse text-center text-sm">
+                <colgroup>
+                  <col style="width: 16%" />
+                  <col style="width: 18%" />
+                  <col style="width: 12%" />
+                  <col style="width: 10%" />
+                  <col style="width: 9%" />
+                  <col style="width: 10%" />
+                  <col style="width: 7%" />
+                  <col style="width: 18%" />
+                </colgroup>
+                <thead class="bg-slate-100 text-slate-600">
+                  <tr>
+                    <th class="px-3 py-3 align-bottom font-medium">Name</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Position</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Country</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Start</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Tenure</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Milestone</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Days</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="r in completedRows" :key="r.key" class="border-t border-hr-navy/25">
+                    <td class="min-w-0 px-3 py-3 align-top font-medium break-words text-slate-900">{{ r.name }}</td>
+                    <td class="min-w-0 px-3 py-3 align-top break-words text-slate-800">{{ r.position }}</td>
+                    <td class="min-w-0 px-3 py-3 align-top break-words text-slate-800">{{ r.countryAssigned }}</td>
+                    <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top text-slate-800">{{ formatYmdDateOrDash(r.startDate) }}</td>
+                    <td class="min-w-0 px-3 py-3 align-top tabular-nums text-slate-800">{{ formatTenureReadable(r.tenure) }}</td>
+                    <td class="min-w-0 px-3 py-3 align-top">
+                      <span :class="[tableDataBadgeClass, checkinBadgeClass(r.months)]">
+                        {{ checkinLabel(r.months) }}
+                      </span>
+                    </td>
+                    <td class="whitespace-nowrap px-3 py-3 align-top font-bold tabular-nums text-hr-navy">{{ r.daysUntil }}</td>
+                    <td class="min-w-0 px-3 py-3 align-top">
+                      <CheckinStatusSelect :model-value="getStatusForRow(r)" @update:model-value="(v) => void setStatusForRow(r, v)" />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -74,7 +162,12 @@ const props = defineProps<{
   checkinFilter?: 'all' | '1' | '2-3' | '4-6'
 }>()
 
-const STORAGE_KEY = 'hr-dashboard:new-hire-checkins-status:v1'
+const emit = defineEmits<{
+  (e: 'update:completedCount', value: number): void
+}>()
+
+const historyOpen = defineModel<boolean>('historyOpen', { default: false })
+
 const statusByRowKey = ref<Record<string, StatusKey>>({})
 
 const { data: checkinStatusesPayload, refresh: refreshCheckinStatuses } = useFetch<{ statuses: Record<string, string> }>(
@@ -101,36 +194,6 @@ watch(
   },
   { immediate: true }
 )
-
-function safeParseObject(input: string | null) {
-  if (!input) return null
-  try {
-    const v = JSON.parse(input) as unknown
-    if (!v || typeof v !== 'object' || Array.isArray(v)) return null
-    return v as Record<string, unknown>
-  } catch {
-    return null
-  }
-}
-
-onMounted(async () => {
-  if (typeof window === 'undefined') return
-  const raw = window.localStorage.getItem(STORAGE_KEY)
-  if (!raw) return
-  const obj = safeParseObject(raw)
-  if (!obj) return
-  try {
-    for (const [k, rawVal] of Object.entries(obj)) {
-      if (typeof k !== 'string') continue
-      const status = normalizeStatusValue(rawVal) ?? 'no_action'
-      await $fetch('/api/new-hire-checkin-statuses', { method: 'PUT', body: { rowKey: k, status } })
-    }
-    window.localStorage.removeItem(STORAGE_KEY)
-    await refreshCheckinStatuses()
-  } catch {
-    // Leave localStorage if migration fails (e.g. offline).
-  }
-})
 
 function parseYmdUtcMs(ymd: string) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd.trim())
@@ -218,12 +281,12 @@ function checkinLabel(months: number) {
 }
 
 function checkinBadgeClass(months: number) {
-  if (months === 1) return 'border-sky-400/30 bg-sky-500/10 text-sky-950'
-  if (months === 2) return 'border-amber-400/30 bg-amber-500/10 text-amber-950'
-  if (months === 3) return 'border-violet-400/30 bg-violet-500/10 text-violet-900'
-  if (months === 4) return 'border-emerald-400/30 bg-emerald-500/10 text-emerald-900'
-  if (months === 5) return 'border-fuchsia-400/30 bg-fuchsia-500/10 text-fuchsia-900'
-  return 'border-rose-400/30 bg-rose-500/10 text-rose-900'
+  if (months === 1) return 'border-blue-200 bg-blue-50 text-blue-900'
+  if (months === 2) return 'border-pink-200 bg-pink-50 text-pink-800'
+  if (months === 3) return 'border-purple-200 bg-purple-50 text-brand-purple'
+  if (months === 4) return 'border-teal-200 bg-teal-50 text-teal-800'
+  if (months === 5) return 'border-pink-200 bg-pink-50 text-pink-800'
+  return 'border-purple-200 bg-purple-50 text-brand-purple'
 }
 
 const rows = computed<Row[]>(() => {
@@ -242,8 +305,7 @@ const rows = computed<Row[]>(() => {
       const shouldShow = daysUntil >= 0 && daysUntil <= APPROACH_WINDOW_DAYS
       const key = `emp:${i.employeeKey}|start:${start}|checkin:${months}`
       const status = statusByRowKey.value[key] ?? 'no_action'
-      if (!shouldShow) continue
-      // if (!shouldShow || status === 'completed') continue
+      if (!shouldShow || status === 'completed') continue
       out.push({
         key,
         employeeKey: i.employeeKey,
@@ -259,5 +321,41 @@ const rows = computed<Row[]>(() => {
   }
   return out.sort((a, b) => a.daysUntil - b.daysUntil || a.name.localeCompare(b.name) || a.employeeKey.localeCompare(b.employeeKey))
 })
+
+const completedRows = computed<Row[]>(() => {
+  const today = utcTodayMs()
+  const out: Row[] = []
+  for (const i of props.items) {
+    const start = (i.startDate ?? '').trim()
+    const startMs = start ? parseYmdUtcMs(start) : null
+    if (!startMs) continue
+    for (const months of CHECKIN_MONTHS) {
+      if (!monthAllowed(months)) continue
+      const key = `emp:${i.employeeKey}|start:${start}|checkin:${months}`
+      const status = statusByRowKey.value[key] ?? 'no_action'
+      if (status !== 'completed') continue
+      const dueMs = addMonthsClampedUtcMs(startMs, months)
+      const daysUntil = Math.ceil((dueMs - today) / DAY_MS)
+      out.push({
+        key,
+        employeeKey: i.employeeKey,
+        name: i.name,
+        position: i.position,
+        countryAssigned: i.countryAssigned,
+        startDate: start,
+        tenure: i.tenure,
+        months,
+        daysUntil
+      })
+    }
+  }
+  return out.sort((a, b) => b.daysUntil - a.daysUntil || a.name.localeCompare(b.name) || a.employeeKey.localeCompare(b.employeeKey))
+})
+
+watch(
+  () => completedRows.value.length,
+  (n) => emit('update:completedCount', n),
+  { immediate: true }
+)
 </script>
 

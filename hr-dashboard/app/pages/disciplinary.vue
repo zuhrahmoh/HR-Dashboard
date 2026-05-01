@@ -1,17 +1,15 @@
 <template>
   <div class="space-y-6" :data-report-ready="reportReady ? '1' : undefined">
     <div class="space-y-1">
-      <h1 class="text-2xl font-semibold">Progressive Discipline</h1>
+      <h1 class="text-gradient-brand text-3xl font-extrabold tracking-tight">Progressive Discipline</h1>
       <p class="text-slate-600">
         Case rows from Odoo (employee profile → HR Settings). The Include in Report column is stored in the dashboard database for summaries only, not in Odoo.
       </p>
     </div>
 
-    <hr />
-
-    <div class="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-800">
-      <div class="flex items-center gap-2 font-semibold text-hr-navy">
-        <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 text-amber-300">
+    <div class="surface-tint-card rounded-md p-3 text-xs text-slate-800">
+      <div class="flex items-center gap-2 font-semibold text-brand-blue">
+        <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 text-brand-blue">
           <path
             fill-rule="evenodd"
             clip-rule="evenodd"
@@ -33,13 +31,16 @@
       </div>
     </div>
 
-    <section class="space-y-3">
-      <h2 class="text-base font-semibold text-hr-navy">Cases</h2>
+    <section class="surface-tint-hero space-y-4 rounded-2xl p-4 shadow-card sm:p-5">
+      <div class="flex min-w-0 items-start gap-3">
+        <span class="mt-1 h-6 w-1 shrink-0 rounded-full bg-brand-blue" aria-hidden="true" />
+        <h2 class="text-gradient-brand text-xl font-bold tracking-tight">Cases</h2>
+      </div>
 
       <div v-if="pending && cases.length === 0" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">Loading…</div>
-      <div v-else-if="error && cases.length === 0" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
+      <div v-else-if="error && cases.length === 0" class="rounded-md border border-pink-200 bg-pink-50 p-4 text-pink-800">
         Failed to load cases.
-        <div v-if="errorMessage" class="mt-2 text-xs text-red-200/80">{{ errorMessage }}</div>
+        <div v-if="errorMessage" class="mt-2 text-xs text-pink-700/80">{{ errorMessage }}</div>
       </div>
       <div v-else class="overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
         <div class="overflow-x-auto">
@@ -90,7 +91,7 @@
         Showing top {{ casesForDisplay.length }} cases. See the dashboard for the full list.
       </div>
 
-      <div v-if="!pending && !error && actionError" class="text-xs text-red-200">{{ actionError }}</div>
+      <div v-if="!pending && !error && actionError" class="text-xs text-pink-700">{{ actionError }}</div>
     </section>
   </div>
 </template>
@@ -203,11 +204,11 @@ function normalizeStatus(value: string) {
 
 function statusBadgeClass(value: string) {
   const v = normalizeStatus(value)
-  if (v === 'investigation') return 'border-sky-200 bg-sky-50 text-sky-800'
-  if (v === 'disciplinary meeting') return 'border-amber-200 bg-amber-50 text-amber-900'
-  if (v === 'conciliation') return 'border-blue-200 bg-blue-50 text-blue-800'
-  if (v === 'outcome to be communicated') return 'border-indigo-200 bg-indigo-50 text-indigo-800'
-  if (v === 'finalize outcome') return 'border-violet-200 bg-violet-50 text-violet-800'
+  if (v === 'investigation') return 'border-blue-200 bg-blue-50 text-blue-900'
+  if (v === 'disciplinary meeting') return 'border-pink-200 bg-pink-50 text-pink-800'
+  if (v === 'conciliation') return 'border-teal-200 bg-teal-50 text-teal-800'
+  if (v === 'outcome to be communicated') return 'border-purple-200 bg-purple-50 text-purple-800'
+  if (v === 'finalize outcome') return 'border-purple-200 bg-purple-50 text-brand-purple'
   return 'border-slate-200 bg-slate-50 text-slate-700'
 }
 

@@ -2,13 +2,11 @@
   <div class="space-y-6">
     <div class="flex flex-wrap items-end justify-between gap-4">
       <div class="space-y-1">
-        <h1 class="text-2xl font-semibold">Employees</h1>
+        <h1 class="text-gradient-brand text-3xl font-extrabold tracking-tight">Employees</h1>
       </div>
     </div>
 
-    <hr />
-
-    <div class="space-y-3">
+    <div class="surface-tint-hero space-y-3 rounded-2xl p-4 shadow-card sm:p-5">
       <label class="block">
         <div class="mb-1 text-sm text-slate-600">Search</div>
         <div class="relative">
@@ -86,16 +84,14 @@
     <div v-if="pending" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">
       Loading employees…
     </div>
-    <div v-else-if="error" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
+    <div v-else-if="error" class="rounded-md border border-pink-200 bg-pink-50 p-4 text-pink-800">
       Failed to load employees.
-      <div v-if="errorMessage" class="mt-2 text-xs text-red-200/80">
+      <div v-if="errorMessage" class="mt-2 text-xs text-pink-700/80">
         {{ errorMessage }}
       </div>
     </div>
 
     <template v-else>
-      <hr />
-
       <div :class="employeesTableContainerClass">
         <div class="flex items-center justify-between border-b border-hr-navy/25 px-4 py-2 text-sm text-slate-600">
           <div>{{ filteredEmployees.length }} employee(s)</div>
@@ -243,8 +239,8 @@ function goToEmployee(employeeKey: string) {
 
 function employeeStatusBadgeClass(statusLabel: string) {
   const s = statusLabel.trim().toLowerCase()
-  if (s === 'active') return 'border-emerald-200 bg-emerald-50 text-emerald-800'
-  if (s === 'offboarding') return 'border-amber-200 bg-amber-50 text-amber-800'
+  if (s === 'active') return 'border-teal-200 bg-teal-50 text-teal-800'
+  if (s === 'offboarding') return 'border-pink-200 bg-pink-50 text-pink-800'
   return 'border-slate-300 bg-slate-100 text-slate-800'
 }
 

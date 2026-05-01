@@ -9,6 +9,7 @@ export type SharePointExpenseRow = {
   vc: number
   nisCompany: number
   medicalPlanEmployer: number
+  other: number
   totalOutgoingExpenses: number
 }
 
@@ -124,11 +125,9 @@ function extractExpenseRow(fields: Record<string, unknown>): SharePointExpenseRo
     if (labelKey === monthKey && monthLabel.length > 7) monthLabel = monthKey
   }
 
-  // Prefer strict internal field names from the current SharePoint list (verified via Graph):
-  // - Salaries_x0028_inclusiveofPAYE_x (displayed as "Gross Salary")
-  // - NIS_x0028_Company_x0029_ (displayed as "NIS (Company)")
-  // - Total (displayed as "Total Outgoing Expenses")
-  // Fallbacks exist to reduce breakage if the list schema changes later.
+  // The SharePoint list column displayed as "Gross Salary" still has the legacy
+  // internal name `Salaries_x0028_inclusiveofPAYE_x` (internal names are immutable
+  // once a column is created). It holds plain gross salary figures.
   const grossSalary = parseAmount(
     (fields['Salaries_x0028_inclusiveofPAYE_x'] as unknown) ??
       getFieldValue(fields, ['Gross Salary', 'GrossSalary', 'grossSalary', 'GrossSalaryUSD'])
@@ -150,13 +149,14 @@ function extractExpenseRow(fields: Record<string, unknown>): SharePointExpenseRo
       'MedicalPlan_x0028_Employer_x0029_'
     ])
   )
+  const other = parseAmount(
+    (fields['Other'] as unknown) ?? getFieldValue(fields, ['Other', 'other', 'OtherExpenses', 'otherExpenses'])
+  )
 
-  const totalOutgoingExpensesDirect = parseAmount(
+  const totalOutgoingExpenses = parseAmount(
     (fields['Total'] as unknown) ??
       getFieldValue(fields, ['Total', 'Total Outgoing Expenses', 'TotalOutgoingExpenses', 'totalOutgoingExpenses', 'TotalOutgoingEx', 'totalOutgoingEx'])
   )
-
-  const totalOutgoingExpenses = totalOutgoingExpensesDirect
 
   return {
     country,
@@ -167,6 +167,7 @@ function extractExpenseRow(fields: Record<string, unknown>): SharePointExpenseRo
     vc,
     nisCompany,
     medicalPlanEmployer,
+    other,
     totalOutgoingExpenses
   }
 }

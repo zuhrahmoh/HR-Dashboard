@@ -1,6 +1,7 @@
 import { PDFDocument } from 'pdf-lib'
 import { chromium } from 'playwright-chromium'
 import { createError, getHeader, getQuery, setHeader, type H3Event } from 'h3'
+import { loadEmployeesFromOdoo } from '../../utils/odooEmployees'
 
 function firstHeaderValue(value: string | undefined) {
   if (!value) return ''
@@ -20,6 +21,12 @@ function isoNowForFooter() {
   return iso.replace('T', ' ').replace(/\.\d+Z$/, ' UTC')
 }
 
+type Section = {
+  title: string
+  path: string
+  noHeaderFooter?: boolean
+}
+
 export default defineEventHandler(async (event) => {
   const origin = requestOrigin(event)
   const generatedAt = isoNowForFooter()
@@ -33,14 +40,20 @@ export default defineEventHandler(async (event) => {
   `
 
   const monthQs = reportMonth ? `&reportMonth=${encodeURIComponent(reportMonth)}` : ''
-  const sections: Array<{ title: string; path: string }> = [
-    { title: 'Workforce overview', path: `/report/workforce?report=1${monthQs}` },
-    { title: 'Expenses', path: `/report/expenses?report=1${monthQs}` },
-    { title: 'Separations', path: `/report/separations?report=1${monthQs}` },
-    { title: 'Recruitment', path: `/report/recruitment?report=1${monthQs}` },
-    { title: 'Critical vacancies', path: `/report/vacancies?report=1${monthQs}` },
-    { title: 'Disciplinary', path: `/report/disciplinary?report=1${monthQs}` }
+
+  const sections: Section[] = [
+    { title: 'Cover', path: `/report/cover?report=1${monthQs}`, noHeaderFooter: true },
+    { title: 'Executive Summary', path: `/report/summary?report=1${monthQs}` },
+    { title: 'Workforce Snapshot', path: `/report/workforce?report=1${monthQs}` },
+    { title: 'Cost Overview', path: `/report/expenses?report=1${monthQs}` },
+    { title: 'Recruitment & Onboarding', path: `/report/recruitment?report=1${monthQs}` },
+    { title: 'Contract Management', path: `/report/contracts?report=1${monthQs}` },
+    { title: 'Progressive Discipline', path: `/report/disciplinary?report=1${monthQs}` }
   ]
+
+  // Warm the shared Odoo employees cache once so every report section that hits
+  // /api/odoo/* reuses the same in-memory snapshot during SSR.
+  await loadEmployeesFromOdoo({ includeInactive: true })
 
   const browser = await chromium.launch({
     headless: true,
@@ -60,10 +73,12 @@ export default defineEventHandler(async (event) => {
       const url = `${origin}${s.path}`
 
       await page.emulateMedia({ media: 'screen' })
-      await page.goto(url, { waitUntil: 'networkidle', timeout: 120_000 })
-      await page.waitForLoadState('domcontentloaded')
+      // `domcontentloaded` is enough — we still gate PDF generation on
+      // `[data-report-ready="1"]`, which only flips once SSR data resolves.
+      // `networkidle` would also wait on dev-only sockets (HMR) and noop pings.
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 90_000 })
       await page.addStyleTag({ content: overlayCss })
-      await page.waitForSelector('[data-report-ready="1"]', { timeout: 120_000 })
+      await page.waitForSelector('[data-report-ready="1"]', { timeout: 90_000 })
 
       try {
         await page.evaluate(async () => {
@@ -79,28 +94,34 @@ export default defineEventHandler(async (event) => {
         await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
       })
 
-      const headerTemplate = `
-        <div style="font-size:9px; padding:0 12px; width:100%; display:flex; align-items:center; justify-content:space-between; color:#0f172a;">
-          <div style="font-weight:600;">HR Dashboard — Complete Report</div>
-          <div style="font-weight:600;">${s.title}</div>
-        </div>
-      `
+      const headerTemplate = s.noHeaderFooter
+        ? '<span></span>'
+        : `
+          <div style="font-size:9px; padding:0 14px; width:100%; display:flex; align-items:center; justify-content:space-between; color:#0f172a;">
+            <div style="font-weight:600;">HR Workforce &amp; Operations Report</div>
+            <div style="font-weight:600; color:#475569;">${s.title}</div>
+          </div>
+        `
 
-      const footerTemplate = `
-        <div style="font-size:8px; padding:0 12px; width:100%; display:flex; align-items:center; justify-content:space-between; color:#334155;">
-          <div>Generated: ${generatedAt}</div>
-          <div>Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>
-        </div>
-      `
+      const footerTemplate = s.noHeaderFooter
+        ? '<span></span>'
+        : `
+          <div style="font-size:8px; padding:0 14px; width:100%; display:flex; align-items:center; justify-content:space-between; color:#475569;">
+            <div>Generated: ${generatedAt} &nbsp;|&nbsp; Confidential — Internal use only</div>
+            <div>Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>
+          </div>
+        `
 
       const pdf = await page.pdf({
         format: 'A4',
         landscape: false,
         printBackground: true,
-        displayHeaderFooter: true,
+        displayHeaderFooter: !s.noHeaderFooter,
         headerTemplate,
         footerTemplate,
-        margin: { top: '48px', right: '28px', bottom: '48px', left: '28px' }
+        margin: s.noHeaderFooter
+          ? { top: '12px', right: '12px', bottom: '12px', left: '12px' }
+          : { top: '48px', right: '28px', bottom: '48px', left: '28px' }
       })
 
       pdfParts.push(pdf)
@@ -118,7 +139,7 @@ export default defineEventHandler(async (event) => {
     const buf = Buffer.from(mergedBytes)
 
     setHeader(event, 'content-type', 'application/pdf')
-    setHeader(event, 'content-disposition', 'attachment; filename="hr-dashboard-complete-report.pdf"')
+    setHeader(event, 'content-disposition', 'attachment; filename="hr-workforce-operations-report.pdf"')
     setHeader(event, 'cache-control', 'no-store')
     return buf
   } catch (err) {
@@ -128,4 +149,3 @@ export default defineEventHandler(async (event) => {
     await browser.close()
   }
 })
-

@@ -1,27 +1,39 @@
 <template>
   <div
     :class="[
-      'flex h-full min-h-0 w-full min-w-0 flex-col rounded-md border shadow-md shadow-slate-900/[0.08]',
-      tone === 'red' && 'border-red-300 bg-red-50/75',
-      tone === 'green' && 'border-emerald-300 bg-emerald-50/75',
-      tone !== 'red' && tone !== 'green' && 'border-slate-300 bg-white',
-      compact ? 'p-2' : 'p-5'
+      'surface-tint-card relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-xl shadow-card',
+      dense ? 'p-2' : compact ? 'p-3' : 'p-5'
     ]"
   >
-    <div :class="['text-center font-semibold text-hr-navy', compact ? 'text-xs' : 'text-sm']">{{ title }}</div>
+    <span aria-hidden="true" :class="['absolute inset-x-0 top-0 h-[3px]', accentClass]" />
+    <div class="text-center text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+      {{ title }}
+    </div>
     <div
       :class="[
         'flex min-h-0 flex-1 items-center justify-center',
-        compact ? 'mt-2 gap-2' : 'mt-5 gap-6'
+        dense ? 'mt-0.5 gap-1.5' : compact ? 'mt-1.5 gap-2.5' : 'mt-4 gap-6'
       ]"
     >
-      <div :class="['shrink-0', iconToneClass]" aria-hidden="true">
+      <div
+        :class="[
+          'grid shrink-0 place-items-center rounded-full',
+          iconBadgeClass,
+          dense
+            ? 'h-8 w-8 [&_svg]:h-5 [&_svg]:w-5'
+            : compact
+              ? 'h-9 w-9 [&_svg]:h-[1.125rem] [&_svg]:w-[1.125rem]'
+              : 'h-12 w-12 [&_svg]:h-6 [&_svg]:w-6'
+        ]"
+        aria-hidden="true"
+      >
         <slot name="icon" />
       </div>
       <div
         :class="[
-          'font-bold tabular-nums tracking-tight text-hr-navy',
-          compact ? 'text-xl' : 'text-4xl'
+          'font-extrabold tabular-nums tracking-tight',
+          valueColorClass,
+          dense || compact ? 'text-2xl' : 'text-4xl'
         ]"
       >
         {{ displayCount }}
@@ -30,14 +42,20 @@
     <div
       :class="[
         'flex min-h-0 flex-wrap items-center justify-between gap-2',
-        compact ? 'mt-2' : 'mt-6'
+        dense ? 'mt-1' : compact ? 'mt-2' : 'mt-5'
       ]"
     >
       <select
         v-model="modelValue"
         :class="[
-          'shrink-0 rounded-md border border-slate-300 bg-white font-medium text-slate-800 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30',
-          compact ? 'h-6 min-w-[6rem] px-1 text-xs' : 'h-8 min-w-[8rem] px-1.5 text-xs'
+          'shrink-0 rounded-md border font-medium outline-none transition focus:ring-1',
+          tone === 'red' &&
+            'border-pink-200 bg-pink-50/80 text-pink-900 focus:border-pink-400 focus:ring-pink-400/30',
+          tone === 'green' &&
+            'border-teal-200 bg-teal-50/80 text-teal-900 focus:border-teal-400 focus:ring-teal-400/30',
+          tone !== 'red' && tone !== 'green' &&
+            'border-slate-200 bg-white text-slate-800 focus:border-slate-400 focus:ring-slate-400/30',
+          dense ? 'h-6 min-w-[6rem] px-1.5 text-[11px]' : compact ? 'h-6 min-w-[6rem] px-1.5 text-xs' : 'h-8 min-w-[8rem] px-2 text-xs'
         ]"
       >
         <option v-for="m in monthOptions" :key="m" :value="m">{{ formatMonth(m) }}</option>
@@ -61,14 +79,27 @@ const props = withDefaults(
     displayCount: number
     compact?: boolean
     tone?: 'neutral' | 'red' | 'green'
+    dense?: boolean
   }>(),
-  { compact: false, tone: 'neutral' }
+  { compact: false, tone: 'neutral', dense: false }
 )
 
-const iconToneClass = computed(() => {
-  if (props.tone === 'red') return 'text-red-700'
-  if (props.tone === 'green') return 'text-emerald-700'
-  return 'text-blue-800'
+const iconBadgeClass = computed(() => {
+  if (props.tone === 'red') return 'bg-pink-50 text-pink-600 ring-1 ring-inset ring-pink-100'
+  if (props.tone === 'green') return 'bg-teal-50 text-teal-600 ring-1 ring-inset ring-teal-100'
+  return 'bg-purple-50 text-brand-purple ring-1 ring-inset ring-purple-100'
+})
+
+const accentClass = computed(() => {
+  if (props.tone === 'red') return 'bg-pink-500'
+  if (props.tone === 'green') return 'bg-teal-500'
+  return 'bg-slate-300'
+})
+
+const valueColorClass = computed(() => {
+  if (props.tone === 'red') return 'text-pink-600'
+  if (props.tone === 'green') return 'text-teal-600'
+  return 'text-hr-navy'
 })
 
 function formatMonth(monthKey: string) {

@@ -10,6 +10,7 @@ export type ExpenseCountryBreakdown = {
   vc: number
   nisCompany: number
   medicalPlanEmployer: number
+  other: number
   totalOutgoingExpenses: number
   total: number
 }
@@ -52,16 +53,12 @@ function canonicalHeaderKey(rawHeader: string) {
   if (h === 'country') return 'country'
   if (h === 'month') return 'month'
   if (h === 'gross salary') return 'grossSalary'
-  if (h === 'paye') return ''
   if (h === 'overtime') return 'overtime'
   if (h === 'vc') return 'vc'
-  if (h === 'health surcharge') return ''
   if (h === 'nis (company)') return 'nisCompany'
   if (h === 'medical plan (employer)') return 'medicalPlanEmployer'
+  if (h === 'other') return 'other'
   if (h === 'total outgoing expenses') return 'totalOutgoingExpenses'
-  // Legacy CSV headers (pre-SharePoint)
-  if (h === 'salaries inclusive of paye') return 'grossSalary'
-  if (h === 'other allowances') return ''
   return h
 }
 
@@ -212,6 +209,7 @@ type NormalizedExpenseRow = {
   vc: number
   nisCompany: number
   medicalPlanEmployer: number
+  other: number
   totalOutgoingExpenses: number
 }
 
@@ -247,6 +245,7 @@ function aggregateSnapshot(rows: NormalizedExpenseRow[], selectedMonthKey: strin
       vc: 0,
       nisCompany: 0,
       medicalPlanEmployer: 0,
+      other: 0,
       totalOutgoingExpenses: 0
     }
 
@@ -255,6 +254,7 @@ function aggregateSnapshot(rows: NormalizedExpenseRow[], selectedMonthKey: strin
     prev.vc += r.vc
     prev.nisCompany += r.nisCompany
     prev.medicalPlanEmployer += r.medicalPlanEmployer
+    prev.other += r.other
     prev.totalOutgoingExpenses += r.totalOutgoingExpenses
 
     countryMap.set(country, prev)
@@ -263,7 +263,7 @@ function aggregateSnapshot(rows: NormalizedExpenseRow[], selectedMonthKey: strin
   const items: ExpenseCountryBreakdown[] = Array.from(countryMap.values())
     .map((i) => ({
       ...i,
-      total: i.totalOutgoingExpenses
+      total: i.grossSalary + i.overtime + i.vc + i.nisCompany + i.medicalPlanEmployer + i.other
     }))
     .sort((a, b) => b.total - a.total || a.country.localeCompare(b.country))
 
@@ -285,8 +285,9 @@ function computeDeltas(current: ExpenseCountryBreakdown[], baseline: ExpenseCoun
     const vc = (c?.vc ?? 0) - (b?.vc ?? 0)
     const nisCompany = (c?.nisCompany ?? 0) - (b?.nisCompany ?? 0)
     const medicalPlanEmployer = (c?.medicalPlanEmployer ?? 0) - (b?.medicalPlanEmployer ?? 0)
+    const other = (c?.other ?? 0) - (b?.other ?? 0)
     const totalOutgoingExpenses = (c?.totalOutgoingExpenses ?? 0) - (b?.totalOutgoingExpenses ?? 0)
-    const total = (c?.total ?? 0) - (b?.total ?? 0)
+    const total = grossSalary + overtime + vc + nisCompany + medicalPlanEmployer + other
 
     deltas.push({
       country,
@@ -295,6 +296,7 @@ function computeDeltas(current: ExpenseCountryBreakdown[], baseline: ExpenseCoun
       vc,
       nisCompany,
       medicalPlanEmployer,
+      other,
       totalOutgoingExpenses,
       total
     })
@@ -330,14 +332,16 @@ export async function loadExpensesFromCsv(): Promise<ExpensesSnapshot> {
       vc: 0,
       nisCompany: 0,
       medicalPlanEmployer: 0,
+      other: 0,
       totalOutgoingExpenses: 0
     }
 
-    prev.grossSalary += parseAmount((r.grossSalary ?? r.salariesInclusiveOfPaye ?? '') as string)
+    prev.grossSalary += parseAmount((r.grossSalary ?? '') as string)
     prev.overtime += parseAmount(r.overtime ?? '')
     prev.vc += parseAmount(r.vc ?? '')
     prev.nisCompany += parseAmount(r.nisCompany ?? '')
     prev.medicalPlanEmployer += parseAmount((r.medicalPlanEmployer ?? '') as string)
+    prev.other += parseAmount((r.other ?? '') as string)
     prev.totalOutgoingExpenses += parseAmount((r.totalOutgoingExpenses ?? '') as string)
 
     countryMap.set(country, prev)
@@ -346,7 +350,7 @@ export async function loadExpensesFromCsv(): Promise<ExpensesSnapshot> {
   const items: ExpenseCountryBreakdown[] = Array.from(countryMap.values())
     .map((i) => ({
       ...i,
-      total: i.totalOutgoingExpenses
+      total: i.grossSalary + i.overtime + i.vc + i.nisCompany + i.medicalPlanEmployer + i.other
     }))
     .sort((a, b) => b.total - a.total || a.country.localeCompare(b.country))
 
@@ -371,11 +375,12 @@ async function loadNormalizedRowsFromCsv() {
       country,
       monthKey,
       monthLabel: monthLabel || monthKey,
-      grossSalary: parseAmount((r.grossSalary ?? r.salariesInclusiveOfPaye ?? '') as string),
+      grossSalary: parseAmount((r.grossSalary ?? '') as string),
       overtime: parseAmount(r.overtime ?? ''),
       vc: parseAmount(r.vc ?? ''),
       nisCompany: parseAmount(r.nisCompany ?? ''),
       medicalPlanEmployer: parseAmount((r.medicalPlanEmployer ?? '') as string),
+      other: parseAmount((r.other ?? '') as string),
       totalOutgoingExpenses: parseAmount((r.totalOutgoingExpenses ?? '') as string)
     })
   }

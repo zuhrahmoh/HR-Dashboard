@@ -90,7 +90,7 @@ type Vacancy = {
 }
 
 const ACCENTS = {
-  recruitment: '#1d4ed8'
+  recruitment: '#a855f7'
 } as const
 
 const { data: vacanciesData, pending: vacanciesPending } = await useFetch<Vacancy[]>('/api/vacancies')

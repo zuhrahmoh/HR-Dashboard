@@ -2,8 +2,8 @@
   <div class="flex min-h-0 flex-1 flex-col">
     <div v-if="items.length === 0" class="text-sm text-slate-600">No additions data.</div>
 
-    <div v-else class="flex min-h-0 flex-1 flex-col gap-3">
-      <h3 class="shrink-0 text-lg font-semibold text-hr-navy">{{ heading }}</h3>
+    <div v-else class="flex min-h-0 flex-1 flex-col" :class="compact ? 'gap-1.5' : 'gap-3'">
+      <h3 class="shrink-0 font-semibold text-hr-navy" :class="compact ? 'text-sm' : 'text-lg'">{{ heading }}</h3>
 
       <div ref="wrapEl" class="relative min-h-0 flex-1">
         <div
@@ -15,61 +15,93 @@
         </div>
 
         <svg
-          viewBox="0 0 640 240"
+          :viewBox="`0 0 ${dims.W} ${dims.H}`"
           class="absolute inset-0 h-full w-full"
           preserveAspectRatio="xMidYMid meet"
         >
-          <rect x="0" y="0" width="640" height="240" fill="transparent" />
+          <defs>
+            <linearGradient id="additions-area" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="rgb(20 184 166)" stop-opacity="0.28" />
+              <stop offset="100%" stop-color="rgb(20 184 166)" stop-opacity="0" />
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" :width="dims.W" :height="dims.H" fill="transparent" />
 
-          <g :transform="`translate(${padL},${padT})`">
-            <path :d="areaPath" fill="rgb(74 222 128 / 0.15)" stroke="none" />
+          <g :transform="`translate(${dims.padL},${dims.padT})`">
+            <template v-for="t in yTicks" :key="`g-${t.value}`">
+              <line
+                :x1="0"
+                :y1="t.y"
+                :x2="innerW"
+                :y2="t.y"
+                stroke="rgb(226 232 240)"
+                stroke-width="1"
+                stroke-dasharray="3 3"
+              />
+            </template>
+
+            <line :x1="0" :y1="innerH" :x2="innerW" :y2="innerH" stroke="rgb(203 213 225)" stroke-width="1" />
+
+            <path :d="areaPath" fill="url(#additions-area)" stroke="none" />
             <path
               :d="linePath"
               fill="none"
-              stroke="rgb(21 128 61)"
-              stroke-width="3"
+              stroke="rgb(13 148 136)"
+              :stroke-width="compact ? 2.25 : 3"
               stroke-linejoin="round"
               stroke-linecap="round"
             />
 
-            <template v-for="p in points" :key="p.year">
+            <template v-for="(p, idx) in points" :key="p.year">
               <circle
                 :cx="p.x"
                 :cy="p.y"
-                r="6"
+                r="9"
                 fill="transparent"
                 @pointerenter="onPointEnter(p, $event)"
                 @pointermove="onPointMove($event)"
                 @pointerleave="onPointLeave"
               />
-              <circle :cx="p.x" :cy="p.y" r="4" fill="rgb(21 128 61)" />
+              <circle
+                v-if="idx === points.length - 1"
+                :cx="p.x"
+                :cy="p.y"
+                :r="compact ? 6 : 8"
+                fill="rgb(13 148 136)"
+                fill-opacity="0.18"
+              />
+              <circle
+                :cx="p.x"
+                :cy="p.y"
+                :r="compact ? 3 : 4"
+                fill="white"
+                stroke="rgb(13 148 136)"
+                :stroke-width="compact ? 1.75 : 2"
+              />
             </template>
-
-            <line :x1="0" :y1="innerH" :x2="innerW" :y2="innerH" stroke="rgb(13 27 62)" stroke-width="2" />
-            <line x1="0" y1="0" x2="0" :y2="innerH" stroke="rgb(13 27 62)" stroke-width="2" />
 
             <template v-for="t in xTicks" :key="t.year">
               <text
                 :x="t.x"
-                :y="innerH + 22"
+                :y="innerH + (compact ? 16 : 22)"
                 text-anchor="middle"
-                font-size="15"
+                :font-size="compact ? 11 : 15"
                 font-weight="500"
-                fill="rgb(51 65 85)"
+                fill="rgb(100 116 139)"
               >
                 {{ t.year }}
               </text>
             </template>
 
             <template v-for="t in yTicks" :key="t.value">
-              <line :x1="0" :y1="t.y" :x2="innerW" :y2="t.y" stroke="rgb(203 213 225)" stroke-width="1" />
               <text
-                :x="-6"
-                :y="t.y + 5"
+                :x="-8"
+                :y="t.y"
                 text-anchor="end"
-                font-size="15"
+                dominant-baseline="middle"
+                :font-size="compact ? 11 : 15"
                 font-weight="500"
-                fill="rgb(51 65 85)"
+                fill="rgb(100 116 139)"
               >
                 {{ t.value }}
               </text>
@@ -88,9 +120,21 @@ const props = withDefaults(
   defineProps<{
     items: YearPoint[]
     heading?: string
+    compact?: boolean
   }>(),
-  { heading: 'Employee Additions Over Time' }
+  { heading: 'Employee Additions Over Time', compact: false }
 )
+
+const compact = computed(() => props.compact === true)
+
+const dims = computed(() =>
+  compact.value
+    ? { W: 560, H: 148, padL: 42, padR: 12, padT: 10, padB: 26 }
+    : { W: 640, H: 240, padL: 54, padR: 18, padT: 16, padB: 42 }
+)
+
+const innerW = computed(() => dims.value.W - dims.value.padL - dims.value.padR)
+const innerH = computed(() => dims.value.H - dims.value.padT - dims.value.padB)
 
 const items = computed(() =>
   (props.items ?? [])
@@ -99,15 +143,6 @@ const items = computed(() =>
     .sort((a, b) => a.year - b.year)
 )
 
-const W = 640
-const H = 240
-const padL = 54
-const padR = 18
-const padT = 16
-const padB = 42
-const innerW = W - padL - padR
-const innerH = H - padT - padB
-
 const maxY = computed(() => {
   const m = Math.max(...items.value.map((i) => i.count), 0)
   return m <= 0 ? 1 : m
@@ -115,12 +150,12 @@ const maxY = computed(() => {
 
 function xScale(idx: number) {
   const n = Math.max(1, items.value.length - 1)
-  return (idx / n) * innerW
+  return (idx / n) * innerW.value
 }
 
 function yScale(v: number) {
   const m = maxY.value
-  return innerH - (v / m) * innerH
+  return innerH.value - (v / m) * innerH.value
 }
 
 const points = computed(() =>
@@ -173,20 +208,37 @@ function onPointLeave() {
   hover.value = null
 }
 
-function toPath(pts: Array<{ x: number; y: number }>) {
+function toSmoothPath(pts: Array<{ x: number; y: number }>) {
   if (pts.length === 0) return ''
-  const [first, ...rest] = pts
-  return ['M', first.x.toFixed(1), first.y.toFixed(1), ...rest.flatMap((p) => ['L', p.x.toFixed(1), p.y.toFixed(1)])].join(' ')
+  const first = pts[0]
+  if (!first) return ''
+  if (pts.length === 1) return `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`
+  let d = `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`
+  const tension = 0.35
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] ?? pts[i]!
+    const p1 = pts[i]!
+    const p2 = pts[i + 1]!
+    const p3 = pts[i + 2] ?? p2
+    const cp1x = p1.x + (p2.x - p0.x) * tension
+    const cp1y = p1.y + (p2.y - p0.y) * tension
+    const cp2x = p2.x - (p3.x - p1.x) * tension
+    const cp2y = p2.y - (p3.y - p1.y) * tension
+    d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`
+  }
+  return d
 }
 
-const linePath = computed(() => toPath(points.value))
+const linePath = computed(() => toSmoothPath(points.value))
 
 const areaPath = computed(() => {
   const pts = points.value
   if (pts.length === 0) return ''
-  const d = toPath(pts)
+  const d = toSmoothPath(pts)
   const last = pts[pts.length - 1]
-  return `${d} L ${last.x.toFixed(1)} ${innerH.toFixed(1)} L 0 ${innerH.toFixed(1)} Z`
+  if (!last) return ''
+  const ih = innerH.value
+  return `${d} L ${last.x.toFixed(1)} ${ih.toFixed(1)} L 0 ${ih.toFixed(1)} Z`
 })
 
 const xTicks = computed(() => points.value.map((p) => ({ year: p.year, x: p.x })))

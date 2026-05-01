@@ -1,13 +1,13 @@
 <template>
-  <section class="rounded-md border border-slate-200 bg-white shadow-card p-4">
+  <section class="rounded-xl border border-slate-200/80 bg-white shadow-card p-4">
     <div class="flex items-start justify-between gap-4">
       <div class="min-w-0">
         <h3 class="truncate text-base font-semibold text-hr-navy" :title="country">{{ country || '—' }}</h3>
-        <p v-if="monthDisplay" class="mt-0.5 text-sm text-slate-400">{{ monthDisplay }}</p>
+        <p v-if="monthDisplay" class="mt-0.5 text-xs text-slate-500">{{ monthDisplay }}</p>
       </div>
       <div class="text-right">
-        <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Total Outgoing Expenses</div>
-        <div class="text-sm font-semibold tabular-nums text-emerald-700">
+        <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Total outgoing</div>
+        <div class="text-base font-semibold tabular-nums text-hr-navy">
           {{ formatCurrency(total) }}
         </div>
         <div v-if="showDeltas" class="mt-0.5 text-xs font-semibold tabular-nums" :class="deltaTextClass(deltaTotal)">
@@ -16,22 +16,65 @@
       </div>
     </div>
 
-    <dl
-      class="mt-4 grid grid-cols-[8.5rem_6.5rem_minmax(0,1fr)] items-center gap-x-1 gap-y-1.5 overflow-hidden rounded-md bg-slate-100 p-2.5 text-xs text-slate-800 shadow-md shadow-slate-900/10"
+    <div
+      class="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100"
+      role="img"
+      :aria-label="stackedAriaLabel"
     >
-      <div v-for="row in breakdownRows" :key="row.key" class="contents">
-        <dt class="min-w-0 truncate font-medium text-slate-800" :title="row.label">{{ row.label }}</dt>
-        <dd class="min-w-0">
-          <div class="h-1.5 w-full overflow-hidden rounded bg-slate-200">
-            <div class="h-full min-w-0 rounded bg-hr-navy" :style="{ width: row.widthPct }" />
-          </div>
-        </dd>
-        <dd class="min-w-0 justify-self-end break-words text-right tabular-nums text-xs font-semibold leading-tight text-slate-900">
-          <div class="flex flex-col items-end">
-            <div>{{ formatCurrency(row.value) }}</div>
-            <div v-if="showDeltas" class="text-[11px] font-semibold tabular-nums leading-tight" :class="deltaTextClass(row.delta)">
-              {{ formatDelta(row.delta) }}
-            </div>
+      <div v-if="total > 0" class="flex h-full w-full">
+        <div
+          v-for="row in visibleBreakdownRows"
+          :key="`seg-${row.key}`"
+          class="h-full shrink-0 cursor-crosshair transition-[filter] hover:brightness-110"
+          :style="{ width: row.widthPct, backgroundColor: row.color }"
+          @pointerenter="onSegEnter($event, row)"
+          @pointermove="onSegMove($event)"
+          @pointerleave="onSegLeave"
+        />
+      </div>
+    </div>
+
+    <Teleport to="body">
+      <div
+        v-if="tip"
+        class="pointer-events-none fixed z-[200] whitespace-nowrap rounded-md border border-slate-200 bg-white px-2 py-1.5 text-[11px] shadow-lg shadow-slate-900/15"
+        :style="{ left: `${tip.x}px`, top: `${tip.y}px`, transform: 'translate(-50%, calc(-100% - 8px))' }"
+      >
+        <div class="font-semibold leading-tight text-slate-800">{{ tip.country }}</div>
+        <div class="mt-0.5 text-slate-600">
+          {{ tip.label }}:
+          <span class="font-semibold tabular-nums text-slate-900">{{ tip.valueLabel }}</span>
+          <span class="ml-1 tabular-nums text-slate-400">({{ tip.pctLabel }})</span>
+        </div>
+        <div
+          v-if="tip.showDelta"
+          class="mt-0.5 text-[10px] font-semibold tabular-nums"
+          :class="deltaTextClass(tip.delta)"
+        >
+          {{ formatDelta(tip.delta) }}
+        </div>
+      </div>
+    </Teleport>
+
+    <dl class="mt-3 space-y-1.5 text-xs">
+      <div
+        v-for="row in visibleBreakdownRows"
+        :key="row.key"
+        class="flex items-center justify-between gap-3"
+      >
+        <dt class="flex min-w-0 items-center gap-2 text-slate-600">
+          <span class="h-2 w-2 shrink-0 rounded-full" :style="{ backgroundColor: row.color }" aria-hidden="true" />
+          <span class="truncate font-medium" :title="row.label">{{ row.label }}</span>
+          <span class="shrink-0 tabular-nums text-[10px] font-semibold text-slate-400">{{ row.pctLabel }}</span>
+        </dt>
+        <dd class="shrink-0 text-right tabular-nums font-semibold text-hr-navy">
+          <div>{{ formatCurrency(row.value) }}</div>
+          <div
+            v-if="showDeltas"
+            class="text-[11px] font-semibold tabular-nums leading-tight"
+            :class="deltaTextClass(row.delta)"
+          >
+            {{ formatDelta(row.delta) }}
           </div>
         </dd>
       </div>
@@ -51,6 +94,7 @@ const props = defineProps<{
   vc: number
   nisCompany: number
   medicalPlanEmployer: number
+  other: number
   total: number
   showDeltas?: boolean
   deltaGrossSalary?: number
@@ -58,6 +102,7 @@ const props = defineProps<{
   deltaVc?: number
   deltaNisCompany?: number
   deltaMedicalPlanEmployer?: number
+  deltaOther?: number
   deltaTotal?: number
 }>()
 
@@ -92,8 +137,8 @@ function formatDelta(v: number) {
 
 function deltaTextClass(v: number) {
   const n = Number.isFinite(v) ? v : 0
-  if (n > 0) return 'text-emerald-600'
-  if (n < 0) return 'text-rose-300'
+  if (n > 0) return 'text-teal-600'
+  if (n < 0) return 'text-pink-600'
   return 'text-slate-400'
 }
 
@@ -104,6 +149,7 @@ const overtime = computed(() => props.overtime)
 const vc = computed(() => props.vc)
 const nisCompany = computed(() => props.nisCompany)
 const medicalPlanEmployer = computed(() => props.medicalPlanEmployer)
+const other = computed(() => props.other)
 const total = computed(() => props.total)
 const showDeltas = computed(() => props.showDeltas === true)
 
@@ -114,32 +160,134 @@ const deltaNisCompany = computed(() => (Number.isFinite(props.deltaNisCompany) ?
 const deltaMedicalPlanEmployer = computed(() =>
   Number.isFinite(props.deltaMedicalPlanEmployer) ? (props.deltaMedicalPlanEmployer as number) : 0
 )
+const deltaOther = computed(() => (Number.isFinite(props.deltaOther) ? (props.deltaOther as number) : 0))
 const deltaTotal = computed(() => (Number.isFinite(props.deltaTotal) ? (props.deltaTotal as number) : 0))
 
-function widthPctForValue(value: number) {
+const CATEGORY_COLORS = {
+  grossSalary: 'rgb(30 58 138)',
+  overtime: 'rgb(20 184 166)',
+  vc: 'rgb(168 85 247)',
+  nisCompany: 'rgb(236 72 153)',
+  medicalPlanEmployer: 'rgb(192 132 252)',
+  other: 'rgb(148 163 184)'
+} as const
+
+function pctForValue(value: number) {
   const t = total.value
-  if (!Number.isFinite(value) || !Number.isFinite(t) || t <= 0) return '0%'
-  return `${Math.max(0, Math.min(100, (value / t) * 100))}%`
+  if (!Number.isFinite(value) || !Number.isFinite(t) || t <= 0) return 0
+  return Math.max(0, Math.min(100, (value / t) * 100))
+}
+
+function widthPctForValue(value: number) {
+  return `${pctForValue(value)}%`
+}
+
+function pctLabelForValue(value: number) {
+  const p = pctForValue(value)
+  if (p === 0) return '0%'
+  if (p < 1) return '<1%'
+  return `${Math.round(p)}%`
 }
 
 const breakdownRows = computed(() => [
   {
     key: 'grossSalary',
     label: 'Gross Salary',
+    color: CATEGORY_COLORS.grossSalary,
     value: grossSalary.value,
     delta: deltaGrossSalary.value,
-    widthPct: widthPctForValue(grossSalary.value)
+    widthPct: widthPctForValue(grossSalary.value),
+    pctLabel: pctLabelForValue(grossSalary.value)
   },
-  { key: 'overtime', label: 'Overtime', value: overtime.value, delta: deltaOvertime.value, widthPct: widthPctForValue(overtime.value) },
-  { key: 'vc', label: 'VC', value: vc.value, delta: deltaVc.value, widthPct: widthPctForValue(vc.value) },
-  { key: 'nisCompany', label: 'NIS (Company)', value: nisCompany.value, delta: deltaNisCompany.value, widthPct: widthPctForValue(nisCompany.value) },
+  {
+    key: 'overtime',
+    label: 'Overtime',
+    color: CATEGORY_COLORS.overtime,
+    value: overtime.value,
+    delta: deltaOvertime.value,
+    widthPct: widthPctForValue(overtime.value),
+    pctLabel: pctLabelForValue(overtime.value)
+  },
+  {
+    key: 'vc',
+    label: 'VC',
+    color: CATEGORY_COLORS.vc,
+    value: vc.value,
+    delta: deltaVc.value,
+    widthPct: widthPctForValue(vc.value),
+    pctLabel: pctLabelForValue(vc.value)
+  },
+  {
+    key: 'nisCompany',
+    label: 'NIS (Company)',
+    color: CATEGORY_COLORS.nisCompany,
+    value: nisCompany.value,
+    delta: deltaNisCompany.value,
+    widthPct: widthPctForValue(nisCompany.value),
+    pctLabel: pctLabelForValue(nisCompany.value)
+  },
   {
     key: 'medicalPlanEmployer',
     label: 'Medical Plan (Employer)',
+    color: CATEGORY_COLORS.medicalPlanEmployer,
     value: medicalPlanEmployer.value,
     delta: deltaMedicalPlanEmployer.value,
-    widthPct: widthPctForValue(medicalPlanEmployer.value)
+    widthPct: widthPctForValue(medicalPlanEmployer.value),
+    pctLabel: pctLabelForValue(medicalPlanEmployer.value)
+  },
+  {
+    key: 'other',
+    label: 'Other',
+    color: CATEGORY_COLORS.other,
+    value: other.value,
+    delta: deltaOther.value,
+    widthPct: widthPctForValue(other.value),
+    pctLabel: pctLabelForValue(other.value)
   }
 ])
+
+const visibleBreakdownRows = computed(() => breakdownRows.value.filter((r) => (Number.isFinite(r.value) ? r.value : 0) > 0))
+
+const stackedAriaLabel = computed(() =>
+  `Expense composition for ${country.value || 'country'}: ` +
+  visibleBreakdownRows.value.map((r) => `${r.label} ${r.pctLabel}`).join(', ')
+)
+
+type Tip = {
+  country: string
+  label: string
+  valueLabel: string
+  pctLabel: string
+  delta: number
+  showDelta: boolean
+  x: number
+  y: number
+}
+const tip = ref<Tip | null>(null)
+
+type SegRow = { label: string; value: number; delta: number; pctLabel: string }
+
+function onSegEnter(ev: PointerEvent, row: SegRow) {
+  tip.value = {
+    country: country.value || '—',
+    label: row.label,
+    valueLabel: formatCurrency(row.value),
+    pctLabel: row.pctLabel,
+    delta: row.delta,
+    showDelta: showDeltas.value,
+    x: ev.clientX,
+    y: ev.clientY
+  }
+}
+
+function onSegMove(ev: PointerEvent) {
+  const t = tip.value
+  if (!t) return
+  tip.value = { ...t, x: ev.clientX, y: ev.clientY }
+}
+
+function onSegLeave() {
+  tip.value = null
+}
 </script>
 

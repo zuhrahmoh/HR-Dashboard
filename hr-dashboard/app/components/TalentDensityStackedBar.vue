@@ -39,10 +39,10 @@ const props = defineProps<{
 
 function colorForBucket(bucket: string) {
   const b = bucket.trim().toUpperCase()
-  if (b === 'A') return 'bg-hr-chart-mint'
-  if (b === 'B+') return 'bg-hr-chart-blue'
-  if (b === 'B') return 'bg-hr-chart-amber'
-  if (b === 'B-') return 'bg-rose-600'
+  if (b === 'A') return 'bg-teal-500'
+  if (b === 'B+') return 'bg-brand-blue'
+  if (b === 'B') return 'bg-brand-purple'
+  if (b === 'B-') return 'bg-brand-pink'
   if (b === 'C') return 'bg-slate-600'
   return 'bg-slate-400'
 }

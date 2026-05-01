@@ -13,11 +13,11 @@
 
       <div class="flex items-center gap-3 text-sm text-slate-600">
         <div class="flex items-center gap-2">
-          <span class="h-2.5 w-2.5 rounded-sm bg-sky-300" />
+          <span class="h-2.5 w-2.5 rounded-sm bg-brand-blue" />
           <span>Male</span>
         </div>
         <div class="flex items-center gap-2">
-          <span class="h-2.5 w-2.5 rounded-sm bg-pink-300" />
+          <span class="h-2.5 w-2.5 rounded-sm bg-brand-pink" />
           <span>Female</span>
         </div>
       </div>
@@ -48,7 +48,7 @@
 
         <div class="min-w-0">
           <div class="relative h-2 w-full overflow-hidden rounded bg-slate-200">
-            <div class="absolute inset-y-0 right-0 rounded bg-sky-300" :style="{ width: row.maleWidthPct }" />
+            <div class="absolute inset-y-0 right-0 rounded bg-brand-blue" :style="{ width: row.maleWidthPct }" />
           </div>
         </div>
 
@@ -58,7 +58,7 @@
 
         <div class="min-w-0">
           <div class="relative h-2 w-full overflow-hidden rounded bg-slate-200">
-            <div class="absolute inset-y-0 left-0 rounded bg-pink-300" :style="{ width: row.femaleWidthPct }" />
+            <div class="absolute inset-y-0 left-0 rounded bg-brand-pink" :style="{ width: row.femaleWidthPct }" />
           </div>
         </div>
 

@@ -9,6 +9,7 @@
       :vc="item.vc"
       :nis-company="item.nisCompany"
       :medical-plan-employer="item.medicalPlanEmployer"
+      :other="item.other"
       :total="item.total"
       :show-deltas="false"
     />
@@ -37,6 +38,7 @@ type ExpenseItem = {
   vc: number
   nisCompany: number
   medicalPlanEmployer: number
+  other: number
   totalOutgoingExpenses: number
   total: number
 }
@@ -55,7 +57,8 @@ const isTotalOnly = computed(() => {
     i.overtime === 0 &&
     i.vc === 0 &&
     i.nisCompany === 0 &&
-    i.medicalPlanEmployer === 0
+    i.medicalPlanEmployer === 0 &&
+    i.other === 0
   )
 })
 </script>

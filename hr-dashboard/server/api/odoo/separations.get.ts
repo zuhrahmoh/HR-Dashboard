@@ -1,6 +1,16 @@
 import { getQuery } from 'h3'
 import { loadEmployeesFromOdoo } from '../../utils/odooEmployees'
 
+type SeparationType =
+  | 'resigned'
+  | 'retired'
+  | 'fired'
+  | 'vsep'
+  | 'end_of_contract'
+  | 'probation_failure'
+  | 'retrenchment'
+  | 'separated'
+
 type Row = {
   employeeKey: string
   name: string
@@ -9,7 +19,7 @@ type Row = {
   countryAssigned: string
   startDate: string | null
   separatedAt: string
-  separationType: 'resigned' | 'retired' | 'fired' | 'separated'
+  separationType: SeparationType
 }
 
 type Response = {
@@ -60,6 +70,10 @@ function normalizeSeparationType(status: string): Row['separationType'] {
   if (v === 'resigned') return 'resigned'
   if (v === 'retired') return 'retired'
   if (v === 'fired') return 'fired'
+  if (v === 'vsep') return 'vsep'
+  if (v === 'end of contract') return 'end_of_contract'
+  if (v === 'probation failure') return 'probation_failure'
+  if (v === 'retrenchment') return 'retrenchment'
   if (v === 'terminated' || v.includes('terminate') || v.includes('termination')) return 'fired'
   return 'separated'
 }

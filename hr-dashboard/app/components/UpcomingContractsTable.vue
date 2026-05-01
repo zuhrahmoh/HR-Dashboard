@@ -1,7 +1,12 @@
 <template>
   <div class="min-w-0 space-y-3">
     <div
-      v-if="upcomingContractGroups.length === 0 && upcomingProbationGroups.length === 0 && pendingExpiryGroups.length === 0"
+      v-if="
+        upcomingContractGroups.length === 0 &&
+          upcomingProbationGroups.length === 0 &&
+          completedContractRows.length === 0 &&
+          completedProbationRows.length === 0
+      "
       class="space-y-3"
     >
       <div class="flex justify-end">
@@ -13,15 +18,43 @@
     </div>
 
     <div v-else class="space-y-6">
-      <div v-if="upcomingContractGroups.length > 0" class="pt-8">
-        <h3 class="mb-0 flex items-center gap-2 text-lg font-semibold leading-none text-hr-navy">
-          <svg class="h-3.5 w-3.5 shrink-0 text-hr-navy" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
-            <path d="M2 1v10l8-5-8-5z" />
-          </svg>
-          Upcoming contract expiries
-        </h3>
+      <div
+        v-if="upcomingContractGroups.length > 0 || completedContractRows.length > 0"
+        id="upcoming-contract-expiries"
+        class="scroll-mt-32 pt-8"
+      >
+        <div class="flex flex-wrap items-baseline justify-between gap-3">
+          <h3 class="mb-0 flex items-center gap-2 text-lg font-semibold leading-none text-hr-navy">
+            <svg class="h-3.5 w-3.5 shrink-0 text-hr-navy" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+              <path d="M2 1v10l8-5-8-5z" />
+            </svg>
+            Contract Expiries
+          </h3>
+          <button
+            v-if="completedContractRows.length > 0"
+            type="button"
+            class="ml-auto inline-flex items-center gap-1.5 self-center rounded-md border border-teal-200 bg-teal-50 px-3 py-1.5 text-sm font-medium text-teal-800 hover:bg-teal-100"
+            @click="completedContractsHistoryOpen = true"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="h-4 w-4 shrink-0"
+              aria-hidden="true"
+            >
+              <path d="M3 12a9 9 0 1 0 3-6.7" />
+              <path d="M3 4v5h5" />
+              <path d="M12 7v5l3 2" />
+            </svg>
+            <span>Completed Reviews ({{ completedContractRows.length }})</span>
+          </button>
+        </div>
 
-        <div class="space-y-4">
+        <div v-if="upcomingContractGroups.length > 0" class="space-y-4">
           <section
             v-for="(group, idx) in upcomingContractGroups"
             :key="`upcoming_contract__${group.countryKey}`"
@@ -86,19 +119,58 @@
           </div>
           </section>
         </div>
+        <div
+          v-else
+          class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-sm text-slate-800"
+        >
+          No active contract expiries to review.
+        </div>
       </div>
 
-      <hr v-if="upcomingContractGroups.length > 0 && (upcomingProbationGroups.length > 0 || pendingExpiryGroups.length > 0)" />
+      <hr
+        v-if="
+          (upcomingContractGroups.length > 0 || completedContractRows.length > 0) &&
+            (upcomingProbationGroups.length > 0 || completedProbationRows.length > 0)
+        "
+      />
 
-      <div v-if="upcomingProbationGroups.length > 0">
-        <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold leading-none text-hr-navy">
-          <svg class="h-3.5 w-3.5 shrink-0 text-hr-navy" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
-            <path d="M2 1v10l8-5-8-5z" />
-          </svg>
-          Upcoming probations
-        </h3>
+      <div
+        v-if="upcomingProbationGroups.length > 0 || completedProbationRows.length > 0"
+        id="upcoming-probations"
+        class="scroll-mt-32"
+      >
+        <div class="mb-4 flex flex-wrap items-baseline justify-between gap-3">
+          <h3 class="mb-0 flex items-center gap-2 text-lg font-semibold leading-none text-hr-navy">
+            <svg class="h-3.5 w-3.5 shrink-0 text-hr-navy" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+              <path d="M2 1v10l8-5-8-5z" />
+            </svg>
+            Probation Reviews
+          </h3>
+          <button
+            v-if="completedProbationRows.length > 0"
+            type="button"
+            class="ml-auto inline-flex items-center gap-1.5 self-center rounded-md border border-teal-200 bg-teal-50 px-3 py-1.5 text-sm font-medium text-teal-800 hover:bg-teal-100"
+            @click="completedProbationsHistoryOpen = true"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="h-4 w-4 shrink-0"
+              aria-hidden="true"
+            >
+              <path d="M3 12a9 9 0 1 0 3-6.7" />
+              <path d="M3 4v5h5" />
+              <path d="M12 7v5l3 2" />
+            </svg>
+            <span>Completed Reviews ({{ completedProbationRows.length }})</span>
+          </button>
+        </div>
 
-        <div class="space-y-4">
+        <div v-if="upcomingProbationGroups.length > 0" class="space-y-4">
           <section
             v-for="(group, idx) in upcomingProbationGroups"
             :key="`upcoming_probation__${group.countryKey}`"
@@ -160,53 +232,79 @@
             </div>
           </section>
         </div>
+        <div
+          v-else
+          class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-sm text-slate-800"
+        >
+          No active probation reviews to review.
+        </div>
       </div>
 
-      <hr v-if="upcomingProbationGroups.length > 0 && pendingExpiryGroups.length > 0" />
+    </div>
 
-      <div v-if="pendingExpiryGroups.length > 0">
-        <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold leading-none text-hr-navy">
-          <svg class="h-3.5 w-3.5 shrink-0 text-hr-navy" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
-            <path d="M2 1v10l8-5-8-5z" />
-          </svg>
-          Pending Contract Expiries
-        </h3>
-
-        <div class="space-y-4">
-          <section v-for="(group, idx) in pendingExpiryGroups" :key="`pending__${group.countryKey}`" class="space-y-1">
-            <div
-              v-if="filtersAnchorSection === 'pending' && idx === 0"
-              class="flex min-w-0 flex-nowrap items-end justify-between gap-3"
-            >
-              <h4 class="min-w-0 shrink text-base font-semibold text-hr-navy">{{ group.countryLabel }}</h4>
-              <UpcomingContractsFilterBar v-model:window-days="windowDays" v-model:unit-mode="unitMode" />
+    <Teleport to="body">
+      <div
+        v-if="completedContractsHistoryOpen"
+        class="fixed inset-0 z-[200] flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="completed-contracts-dialog-title"
+      >
+        <button
+          type="button"
+          class="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px]"
+          aria-label="Dismiss"
+          @click="completedContractsHistoryOpen = false"
+        />
+        <div
+          class="relative z-10 flex max-h-[92vh] w-full max-w-7xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card"
+          @click.stop
+        >
+          <div class="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4">
+            <div class="min-w-0">
+              <h2 id="completed-contracts-dialog-title" class="text-base font-semibold text-slate-900">Completed Contract Reviews</h2>
+              <p class="mt-0.5 text-xs text-slate-500">Contract expiries marked as Confirmed for Permanency, Contracted Extension, or Unsuccessful Probation.</p>
             </div>
-            <h4 v-else class="text-base font-semibold text-hr-navy">{{ group.countryLabel }}</h4>
+            <button
+              type="button"
+              class="-mr-1 -mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+              aria-label="Close"
+              @click="completedContractsHistoryOpen = false"
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M4.21 4.21a.75.75 0 0 1 1.06 0L10 8.94l4.73-4.73a.75.75 0 1 1 1.06 1.06L11.06 10l4.73 4.73a.75.75 0 1 1-1.06 1.06L10 11.06l-4.73 4.73a.75.75 0 1 1-1.06-1.06L8.94 10 4.21 5.27a.75.75 0 0 1 0-1.06Z" />
+              </svg>
+            </button>
+          </div>
 
-            <div class="rounded-md border border-slate-200 bg-white shadow-card">
+          <div class="min-w-0 overflow-auto px-5 py-4">
+            <div v-if="completedContractRows.length === 0" class="rounded-md border border-slate-200 bg-white p-4 text-sm text-slate-800">
+              No completed reviews yet.
+            </div>
+            <div v-else class="rounded-md border border-slate-200 bg-white">
               <table class="w-full table-fixed border-collapse text-left text-sm">
                 <colgroup>
-                  <col style="width: 15%" />
-                  <col style="width: 15%" />
-                  <col style="width: 16%" />
-                  <col style="width: 16%" />
-                  <col style="width: 12%" />
                   <col style="width: 14%" />
+                  <col style="width: 13%" />
+                  <col style="width: 14%" />
+                  <col style="width: 14%" />
+                  <col style="width: 11%" />
+                  <col style="width: 22%" />
                   <col style="width: 12%" />
                 </colgroup>
-                <thead class="border-b border-hr-navy/25 text-xs text-slate-400">
+                <thead class="bg-slate-100 text-slate-600">
                   <tr>
-                    <th scope="col" class="px-3 py-3 align-bottom font-medium">Name</th>
-                    <th scope="col" class="px-3 py-3 align-bottom font-medium">Department</th>
-                    <th scope="col" class="px-3 py-3 align-bottom font-medium">Position</th>
-                    <th scope="col" class="px-3 py-3 align-bottom font-medium">Reporting To</th>
-                    <th scope="col" class="px-3 py-3 align-bottom font-medium">End date</th>
-                    <th scope="col" class="px-3 py-3 align-bottom font-medium">Status</th>
-                    <th scope="col" class="px-3 py-3 text-right align-bottom font-medium">Time left</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Name</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Department</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Position</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Reporting To</th>
+                    <th class="px-3 py-3 align-bottom font-medium">End date</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Status</th>
+                    <th class="px-3 py-3 text-right align-bottom font-medium">Time left</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-hr-navy/35">
-                  <tr v-for="row in group.rows" :key="row.key" class="text-slate-800">
+                <tbody>
+                  <tr v-for="row in completedContractRows" :key="row.key" class="border-t border-hr-navy/25 align-top">
                     <td class="min-w-0 px-3 py-3 align-top font-medium break-words text-slate-900">{{ row.name || '—' }}</td>
                     <td class="min-w-0 px-3 py-3 align-top break-words text-slate-600">{{ row.department || '—' }}</td>
                     <td class="min-w-0 px-3 py-3 align-top break-words text-slate-600">{{ row.position || '—' }}</td>
@@ -215,10 +313,7 @@
                       {{ formatYmdDate(row.contractOrProbationEndDate) }}
                     </td>
                     <td class="min-w-0 px-3 py-3 align-top">
-                      <StatusBadgeSelect
-                        :model-value="getStatusForRow(row)"
-                        @update:model-value="(v) => void setStatusForRow(row, v)"
-                      />
+                      <StatusBadgeSelect :model-value="getStatusForRow(row)" @update:model-value="(v) => void setStatusForRow(row, v)" />
                     </td>
                     <td class="min-w-0 whitespace-nowrap px-3 py-3 text-right align-top font-bold tabular-nums text-hr-navy">
                       {{ formatRemaining(row.daysRemaining) }}
@@ -227,10 +322,93 @@
                 </tbody>
               </table>
             </div>
-          </section>
+          </div>
         </div>
       </div>
-    </div>
+
+      <div
+        v-if="completedProbationsHistoryOpen"
+        class="fixed inset-0 z-[200] flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="completed-probations-dialog-title"
+      >
+        <button
+          type="button"
+          class="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px]"
+          aria-label="Dismiss"
+          @click="completedProbationsHistoryOpen = false"
+        />
+        <div
+          class="relative z-10 flex max-h-[92vh] w-full max-w-7xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card"
+          @click.stop
+        >
+          <div class="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4">
+            <div class="min-w-0">
+              <h2 id="completed-probations-dialog-title" class="text-base font-semibold text-slate-900">Completed Probation Reviews</h2>
+              <p class="mt-0.5 text-xs text-slate-500">Probation reviews marked as Confirmed for Permanency, Contracted Extension, or Unsuccessful Probation.</p>
+            </div>
+            <button
+              type="button"
+              class="-mr-1 -mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+              aria-label="Close"
+              @click="completedProbationsHistoryOpen = false"
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M4.21 4.21a.75.75 0 0 1 1.06 0L10 8.94l4.73-4.73a.75.75 0 1 1 1.06 1.06L11.06 10l4.73 4.73a.75.75 0 1 1-1.06 1.06L10 11.06l-4.73 4.73a.75.75 0 1 1-1.06-1.06L8.94 10 4.21 5.27a.75.75 0 0 1 0-1.06Z" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="min-w-0 overflow-auto px-5 py-4">
+            <div v-if="completedProbationRows.length === 0" class="rounded-md border border-slate-200 bg-white p-4 text-sm text-slate-800">
+              No completed reviews yet.
+            </div>
+            <div v-else class="rounded-md border border-slate-200 bg-white">
+              <table class="w-full table-fixed border-collapse text-left text-sm">
+                <colgroup>
+                  <col style="width: 14%" />
+                  <col style="width: 13%" />
+                  <col style="width: 14%" />
+                  <col style="width: 14%" />
+                  <col style="width: 11%" />
+                  <col style="width: 22%" />
+                  <col style="width: 12%" />
+                </colgroup>
+                <thead class="bg-slate-100 text-slate-600">
+                  <tr>
+                    <th class="px-3 py-3 align-bottom font-medium">Name</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Department</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Position</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Reporting To</th>
+                    <th class="px-3 py-3 align-bottom font-medium">End date</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Status</th>
+                    <th class="px-3 py-3 text-right align-bottom font-medium">Time left</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="row in completedProbationRows" :key="row.key" class="border-t border-hr-navy/25 align-top">
+                    <td class="min-w-0 px-3 py-3 align-top font-medium break-words text-slate-900">{{ row.name || '—' }}</td>
+                    <td class="min-w-0 px-3 py-3 align-top break-words text-slate-600">{{ row.department || '—' }}</td>
+                    <td class="min-w-0 px-3 py-3 align-top break-words text-slate-600">{{ row.position || '—' }}</td>
+                    <td class="min-w-0 px-3 py-3 align-top break-words text-slate-600">{{ row.reportingTo || '—' }}</td>
+                    <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top tabular-nums text-slate-800">
+                      {{ formatYmdDate(row.contractOrProbationEndDate) }}
+                    </td>
+                    <td class="min-w-0 px-3 py-3 align-top">
+                      <StatusBadgeSelect :model-value="getStatusForRow(row)" @update:model-value="(v) => void setStatusForRow(row, v)" />
+                    </td>
+                    <td class="min-w-0 whitespace-nowrap px-3 py-3 text-right align-top font-bold tabular-nums text-hr-navy">
+                      {{ formatRemaining(row.daysRemaining) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -252,7 +430,6 @@ type Item = {
 const props = defineProps<{
   upcomingContractItems: Item[]
   upcomingProbationItems: Item[]
-  expiredContractItems: Item[]
 }>()
 
 const windowDays = defineModel<'30' | '60' | '90'>('windowDays', { required: true })
@@ -264,7 +441,15 @@ type StatusKey =
   | 'contracted_extension'
   | 'unsuccessful_probation'
 
-const LEGACY_STORAGE_KEY = 'hr-dashboard:upcoming-contracts-status:v2'
+const COMPLETED_STATUSES: ReadonlySet<StatusKey> = new Set([
+  'confirmed_for_permanency',
+  'contracted_extension',
+  'unsuccessful_probation'
+])
+
+function isCompletedStatus(status: StatusKey) {
+  return COMPLETED_STATUSES.has(status)
+}
 
 const statusByRowKey = ref<Record<string, StatusKey>>({})
 
@@ -321,17 +506,6 @@ function stableText(v: string) {
   return (v ?? '').trim()
 }
 
-function safeParseObject(input: string | null) {
-  if (!input) return null
-  try {
-    const v = JSON.parse(input) as unknown
-    if (!v || typeof v !== 'object' || Array.isArray(v)) return null
-    return v as Record<string, unknown>
-  } catch {
-    return null
-  }
-}
-
 function storageKeyForFields(input: {
   employeeKey?: string
   name: string
@@ -350,25 +524,6 @@ function storageKeyForFields(input: {
   return `row:${name}|${country}|${pos}|end:${end}`
 }
 
-onMounted(async () => {
-  if (typeof window === 'undefined') return
-  const raw = window.localStorage.getItem(LEGACY_STORAGE_KEY)
-  if (!raw) return
-  const obj = safeParseObject(raw)
-  if (!obj) return
-  try {
-    for (const [k, rawVal] of Object.entries(obj)) {
-      if (typeof k !== 'string') continue
-      const status = normalizeLegacyStatusValue(rawVal)
-      await $fetch('/api/upcoming-contract-expiry-statuses', { method: 'PUT', body: { rowKey: k, status } })
-    }
-    window.localStorage.removeItem(LEGACY_STORAGE_KEY)
-    await refreshStatuses()
-  } catch {
-    // Leave legacy localStorage if migration fails (e.g. offline).
-  }
-})
-
 function normalizeCountry(country: string) {
   const trimmed = (country ?? '').trim()
   return trimmed || '—'
@@ -385,7 +540,6 @@ function toRow(i: Item) {
 
 const upcomingContractRows = computed(() => props.upcomingContractItems.map(toRow))
 const upcomingProbationRows = computed(() => props.upcomingProbationItems.map(toRow))
-const expiredRows = computed(() => props.expiredContractItems.map(toRow))
 
 type Row = ReturnType<typeof toRow>
 
@@ -452,16 +606,44 @@ function groupByCountry(inputRows: Row[]) {
 }
 
 const upcomingContractGroups = computed(() => {
-  return groupByCountry(upcomingContractRows.value)
+  const active = upcomingContractRows.value.filter((r) => !isCompletedStatus(getStatusForRow(r)))
+  return groupByCountry(active)
 })
 
 const upcomingProbationGroups = computed(() => {
-  return groupByCountry(upcomingProbationRows.value)
+  const active = upcomingProbationRows.value.filter((r) => !isCompletedStatus(getStatusForRow(r)))
+  return groupByCountry(active)
 })
 
-const SIX_WEEKS_DAYS = 42
+const completedContractRows = computed(() =>
+  upcomingContractRows.value
+    .filter((r) => isCompletedStatus(getStatusForRow(r)))
+    .slice()
+    .sort(
+      (a, b) =>
+        compareCountry(a.countryKey, b.countryKey) ||
+        a.contractOrProbationEndDate.localeCompare(b.contractOrProbationEndDate) ||
+        a.name.localeCompare(b.name)
+    )
+)
+
+const completedProbationRows = computed(() =>
+  upcomingProbationRows.value
+    .filter((r) => isCompletedStatus(getStatusForRow(r)))
+    .slice()
+    .sort(
+      (a, b) =>
+        compareCountry(a.countryKey, b.countryKey) ||
+        a.contractOrProbationEndDate.localeCompare(b.contractOrProbationEndDate) ||
+        a.name.localeCompare(b.name)
+    )
+)
+
+const completedContractsHistoryOpen = ref(false)
+const completedProbationsHistoryOpen = ref(false)
+
 function upcomingRowClass(row: Row, rowIdx: number, rowCount: number) {
-  const shouldHighlight = row.daysRemaining > 0 && row.daysRemaining <= SIX_WEEKS_DAYS
+  const shouldHighlight = row.daysRemaining < 0
   const bottomEdge =
     shouldHighlight && rowIdx === rowCount - 1 ? 'shadow-[inset_0_-1px_0_rgba(244,114,182,0.4)]' : ''
   return [
@@ -471,15 +653,9 @@ function upcomingRowClass(row: Row, rowIdx: number, rowCount: number) {
   ]
 }
 
-const pendingExpiryGroups = computed(() => {
-  return groupByCountry(expiredRows.value)
-})
-
 const filtersAnchorSection = computed(() => {
   if (upcomingContractGroups.value.length > 0) return 'contracts' as const
   if (upcomingProbationGroups.value.length > 0) return 'probations' as const
-  if (pendingExpiryGroups.value.length > 0) return 'pending' as const
   return null
 })
 </script>
-

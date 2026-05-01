@@ -18,7 +18,6 @@ const EXCLUDED_EXACT_NAMES = new Set(
     'Maria Covaleda',
     'Chayenne Fraser',
     'Aneesa Singh',
-    'Deron Seepaul',
     'Krishendath Maharaj',
     'Aki',
     'Akini',

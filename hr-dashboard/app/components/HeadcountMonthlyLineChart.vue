@@ -28,62 +28,96 @@
         </div>
 
         <svg
-          :viewBox="`0 0 ${W} ${H}`"
-          :class="fillHeight ? 'absolute inset-0 h-full w-full' : 'h-44 w-full'"
+          :viewBox="`0 0 ${dims.W} ${dims.H}`"
+          :class="fillHeight ? 'absolute inset-0 h-full w-full' : compact ? 'h-32 w-full' : 'h-44 w-full'"
           preserveAspectRatio="xMidYMid meet"
         >
-          <rect x="0" y="0" :width="W" :height="H" fill="transparent" />
+          <defs>
+            <linearGradient id="headcount-area" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="rgb(30 58 138)" stop-opacity="0.28" />
+              <stop offset="100%" stop-color="rgb(30 58 138)" stop-opacity="0" />
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" :width="dims.W" :height="dims.H" fill="transparent" />
 
-          <g :transform="`translate(${padL},${padT})`">
-            <path :d="areaPath" fill="rgb(96 165 250 / 0.18)" stroke="none" />
+          <g :transform="`translate(${dims.padL},${dims.padT})`">
+            <template v-for="t in yGridTicks" :key="`g-${t.value}`">
+              <line
+                :x1="0"
+                :y1="t.y"
+                :x2="innerW"
+                :y2="t.y"
+                stroke="rgb(226 232 240)"
+                stroke-width="1"
+                stroke-dasharray="3 3"
+              />
+            </template>
+
+            <line :x1="0" :y1="innerH" :x2="innerW" :y2="innerH" stroke="rgb(203 213 225)" stroke-width="1" />
+
+            <path :d="areaPath" fill="url(#headcount-area)" stroke="none" />
             <path
               :d="linePath"
               fill="none"
-              stroke="rgb(96 165 250)"
-              stroke-width="3"
+              :stroke="LINE_STROKE"
+              :stroke-width="compact ? 2.25 : 3"
               stroke-linejoin="round"
               stroke-linecap="round"
             />
 
-            <template v-for="p in points" :key="p.month">
-              <circle
-                :cx="p.x"
-                :cy="p.y"
-                r="6"
-                fill="transparent"
-                @pointerenter="onPointEnter(p, $event)"
-                @pointermove="onPointMove($event)"
-                @pointerleave="onPointLeave"
-              />
-              <circle :cx="p.x" :cy="p.y" r="3.5" fill="rgb(59 130 246)" />
+            <template v-for="t in yTicks" :key="`y-${t.value}`">
+              <text
+                :x="-10"
+                :y="t.y"
+                text-anchor="end"
+                dominant-baseline="middle"
+                :font-size="compact ? 10 : 12"
+                fill="rgb(100 116 139)"
+              >
+                {{ formatHeadcountTick(t.value) }}
+              </text>
             </template>
-
-            <line :x1="0" :y1="innerH" :x2="innerW" :y2="innerH" stroke="rgb(71 85 105)" stroke-width="2" />
-            <line x1="0" y1="0" x2="0" :y2="innerH" stroke="rgb(71 85 105)" stroke-width="2" />
 
             <template v-for="t in xYearTicks" :key="t.label">
               <text
                 :x="t.x"
-                :y="innerH + 18"
+                :y="innerH + (compact ? 14 : 18)"
                 text-anchor="middle"
-                font-size="12"
+                dominant-baseline="hanging"
+                :font-size="compact ? 10 : 12"
                 fill="rgb(100 116 139)"
               >
                 {{ t.label }}
               </text>
             </template>
 
-            <template v-for="t in yTicks" :key="t.value">
-              <line :x1="0" :y1="t.y" :x2="innerW" :y2="t.y" stroke="rgb(203 213 225)" stroke-width="1" />
-              <text
-                :x="-10"
-                :y="t.y + 4"
-                text-anchor="end"
-                font-size="12"
-                fill="rgb(100 116 139)"
-              >
-                {{ t.value }}
-              </text>
+            <template v-for="(p, idx) in points" :key="p.month">
+              <circle
+                :cx="p.x"
+                :cy="p.y"
+                r="7"
+                fill="transparent"
+                @pointerenter="onPointEnter(p, $event)"
+                @pointermove="onPointMove($event)"
+                @pointerleave="onPointLeave"
+              />
+              <circle
+                v-if="idx === points.length - 1"
+                :cx="p.x"
+                :cy="p.y"
+                :r="compact ? 5 : 6"
+                :fill="LINE_STROKE"
+                fill-opacity="0.18"
+              />
+              <circle
+                v-if="idx === points.length - 1"
+                :cx="p.x"
+                :cy="p.y"
+                :r="compact ? 2.75 : 3.5"
+                fill="white"
+                :stroke="LINE_STROKE"
+                :stroke-width="compact ? 1.75 : 2"
+              />
             </template>
           </g>
         </svg>
@@ -95,15 +129,38 @@
 <script setup lang="ts">
 type Item = { month: string; headcount: number }
 
-const props = defineProps<{
-  items: Item[]
-  title?: string
-  variant?: 'dark' | 'light'
-  showHeader?: boolean
-  fillHeight?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    items: Item[]
+    title?: string
+    variant?: 'dark' | 'light'
+    showHeader?: boolean
+    fillHeight?: boolean
+    trimYAxis?: boolean
+    compact?: boolean
+    yMin?: number
+  }>(),
+  { trimYAxis: false, compact: false }
+)
+
+/** Softer navy than sidebar — pairs with stacked-bar contracted blue (#2b4593). */
+const LINE_STROKE = 'rgb(30 58 138)'
+const AREA_FILL_COMPACT = 'rgb(30 58 138 / 0.13)'
+const AREA_FILL = 'rgb(30 58 138 / 0.21)'
 
 const fillHeight = computed(() => props.fillHeight === true)
+const trimYAxis = computed(() => props.trimYAxis === true)
+const compact = computed(() => props.compact === true)
+
+const dims = computed(() => {
+  if (compact.value) {
+    return { W: 720, H: 168, padL: 48, padR: 18, padT: 14, padB: 28 }
+  }
+  return { W: 720, H: 260, padL: 58, padR: 24, padT: 22, padB: 42 }
+})
+
+const innerW = computed(() => dims.value.W - dims.value.padL - dims.value.padR)
+const innerH = computed(() => dims.value.H - dims.value.padT - dims.value.padB)
 
 const title = computed(() => (props.title ?? 'Headcount trend (monthly)').trim() || 'Headcount trend (monthly)')
 const isLight = computed(() => props.variant === 'light')
@@ -112,6 +169,10 @@ const showHeader = computed(() => props.showHeader !== false)
 function safeInt(v: unknown) {
   const n = typeof v === 'number' ? v : Number(v)
   return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0
+}
+
+function formatHeadcountTick(v: number) {
+  return String(Math.round(v))
 }
 
 function isYyyyMm(v: string) {
@@ -131,33 +192,43 @@ const latestLabel = computed(() => {
   return `${last.month}: ${last.headcount}`
 })
 
-const W = 720
-const H = 260
-const padL = 50
-const padR = 18
-const padT = 14
-const padB = 34
-const innerW = W - padL - padR
-const innerH = H - padT - padB
-
-const minY = computed(() => 0)
+const minY = computed(() => {
+  if (Number.isFinite(props.yMin)) return Math.max(0, Math.floor(props.yMin as number))
+  if (!trimYAxis.value) return 0
+  const vals = items.value.map((i) => i.headcount)
+  if (vals.length === 0) return 0
+  const rawMin = Math.min(...vals)
+  const rawMax = Math.max(...vals)
+  const span = rawMax - rawMin
+  const pad = span === 0 ? Math.max(1, Math.abs(rawMax) * 0.06) : span * 0.06
+  return Math.max(0, Math.floor(rawMin - pad))
+})
 
 const maxY = computed(() => {
   const vals = items.value.map((i) => i.headcount)
-  const m = vals.length ? Math.max(...vals) : 0
-  return m <= 0 ? 1 : m
+  if (vals.length === 0) return 1
+  const rawMax = Math.max(...vals)
+  if (!trimYAxis.value) {
+    return rawMax <= 0 ? 1 : rawMax
+  }
+  const rawMin = Math.min(...vals)
+  const span = rawMax - rawMin
+  const pad = span === 0 ? Math.max(1, Math.abs(rawMax) * 0.06) : span * 0.06
+  const hi = rawMax + pad
+  const top = hi <= 0 ? 1 : hi
+  return Math.ceil(top)
 })
 
 function xScale(idx: number) {
   const n = Math.max(1, items.value.length - 1)
-  return (idx / n) * innerW
+  return (idx / n) * innerW.value
 }
 
 function yScale(v: number) {
   const lo = minY.value
   const hi = maxY.value
-  const span = Math.max(1, hi - lo)
-  return innerH - ((v - lo) / span) * innerH
+  const span = Math.max(1e-9, hi - lo)
+  return innerH.value - ((v - lo) / span) * innerH.value
 }
 
 const points = computed(() =>
@@ -212,7 +283,9 @@ function onPointLeave() {
 
 function toPath(pts: Array<{ x: number; y: number }>) {
   if (pts.length === 0) return ''
-  const [first, ...rest] = pts
+  const first = pts[0]
+  const rest = pts.slice(1)
+  if (!first) return ''
   return ['M', first.x.toFixed(1), first.y.toFixed(1), ...rest.flatMap((p) => ['L', p.x.toFixed(1), p.y.toFixed(1)])].join(' ')
 }
 
@@ -223,14 +296,19 @@ const areaPath = computed(() => {
   if (pts.length === 0) return ''
   const d = toPath(pts)
   const last = pts[pts.length - 1]
-  return `${d} L ${last.x.toFixed(1)} ${innerH.toFixed(1)} L 0 ${innerH.toFixed(1)} Z`
+  if (!last) return ''
+  const ih = innerH.value
+  return `${d} L ${last.x.toFixed(1)} ${ih.toFixed(1)} L 0 ${ih.toFixed(1)} Z`
 })
 
 const xYearTicks = computed(() => {
   const pts = points.value
   if (pts.length === 0) return []
 
-  const firstYear = pts[0].month.slice(0, 4)
+  const head = pts[0]
+  if (!head) return []
+
+  const firstYear = head.month.slice(0, 4)
   const out: Array<{ label: string; x: number }> = [{ label: firstYear, x: 0 }]
   const seen = new Set<string>([firstYear])
 
@@ -248,11 +326,14 @@ const xYearTicks = computed(() => {
 const yTicks = computed(() => {
   const lo = minY.value
   const hi = maxY.value
-  const span = Math.max(1, hi - lo)
-  const step = span <= 10 ? 2 : Math.ceil(span / 4)
+  const span = Math.max(1e-9, hi - lo)
+  let step = span <= 10 ? 2 : Math.ceil(span / 4)
+  step = Math.max(1, Math.round(step))
   const start = Math.floor(lo / step) * step
   const ticks: Array<{ value: number; y: number }> = []
-  for (let v = start; v <= hi; v += step) ticks.push({ value: v, y: yScale(v) })
+  for (let value = Math.round(start); value <= hi; value += step) {
+    ticks.push({ value, y: yScale(value) })
+  }
   if (ticks.length === 0) ticks.push({ value: hi, y: yScale(hi) })
 
   const last = ticks[ticks.length - 1]
@@ -264,6 +345,13 @@ const yTicks = computed(() => {
     seen.add(t.value)
     return true
   })
+})
+
+/** Horizontal guides only between axes so grid lines do not sit on the x-axis / top edge. */
+const yGridTicks = computed(() => {
+  const ih = innerH.value
+  const eps = 1.5
+  return yTicks.value.filter((t) => t.y > eps && t.y < ih - eps)
 })
 </script>
 

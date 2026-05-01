@@ -3,32 +3,57 @@
     <div v-if="pending" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">
       Loading employee…
     </div>
-    <div v-else-if="error" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
+    <div v-else-if="error" class="rounded-md border border-pink-200 bg-pink-50 p-4 text-pink-800">
       Employee not found.
     </div>
 
     <div v-else-if="employee" class="space-y-5">
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="space-y-1">
-          <NuxtLink to="/odoo/employees" class="text-sm text-slate-600 hover:text-slate-900">← Back to Employees</NuxtLink>
-          <h1 class="text-3xl font-semibold tracking-tight">Employee Profile</h1>
+          <NuxtLink to="/odoo/employees" class="text-sm text-brand-blue hover:text-brand-blue/80">← Back to Employees</NuxtLink>
+          <h1 class="text-gradient-brand text-3xl font-extrabold tracking-tight">Employee Profile</h1>
         </div>
 
         <div class="flex flex-col items-end gap-2">
           <a
             v-if="employeeKey"
             :href="`/api/odoo/employees/${employeeKey}/pdf`"
-            class="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 hover:bg-slate-100"
+            class="inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-purple-100 bg-gradient-to-r from-indigo-100 via-purple-100 to-pink-100 px-3 py-2 text-sm font-semibold text-hr-navy transition hover:brightness-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple/40"
           >
+            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
+              />
+            </svg>
             Download PDF
           </a>
 
           <button
             type="button"
-            class="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+            class="inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-purple-100 bg-gradient-to-r from-indigo-100 via-purple-100 to-pink-100 px-3 py-2 text-sm font-semibold text-hr-navy transition hover:brightness-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple/40"
             :disabled="!employeeKey || uploading"
             @click="openUploadPicker"
           >
+            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 15V9M9 12l3-3 3 3"
+              />
+              <path
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 17v3h14v-3"
+              />
+            </svg>
             {{ uploading ? 'Uploading…' : 'Upload Document' }}
           </button>
           <input ref="uploadInput" type="file" class="hidden" @change="onFilePicked" />
@@ -39,8 +64,8 @@
         <section class="flex flex-col rounded-xl border border-slate-200 bg-white shadow-card p-4 shadow-lg shadow-slate-900/10">
           <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div class="flex items-center gap-3">
-              <div class="h-14 w-14 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-50 ring-1 ring-slate-200/60">
-                <div class="grid h-full w-full place-items-center text-base font-semibold text-slate-600">{{ initials }}</div>
+              <div class="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 ring-1 ring-purple-100">
+                <div class="grid h-full w-full place-items-center text-base font-semibold text-hr-navy">{{ initials }}</div>
               </div>
               <div class="min-w-0">
                 <div class="truncate text-lg font-semibold text-hr-navy">{{ employee.name }}</div>
@@ -124,8 +149,8 @@
 
         <section class="flex flex-col rounded-xl border border-slate-200 bg-white shadow-card p-5 shadow-lg shadow-slate-900/10">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <h2 class="text-sm font-semibold text-hr-navy">Contact</h2>
-            <h2 class="text-sm font-semibold text-hr-navy">Employment</h2>
+            <h2 class="text-sm font-semibold text-brand-blue">Contact</h2>
+            <h2 class="text-sm font-semibold text-brand-blue">Employment</h2>
           </div>
 
           <div class="mt-4 flex-1 overflow-hidden rounded-lg bg-slate-50 ring-1 ring-slate-200/80">
@@ -182,7 +207,7 @@
 
       <div class="space-y-4">
         <section class="rounded-xl border border-slate-200 bg-white shadow-card p-5 shadow-lg shadow-slate-900/10">
-          <h2 class="text-sm font-semibold text-hr-navy">Compensation</h2>
+          <h2 class="text-sm font-semibold text-brand-blue">Compensation</h2>
           <div class="mt-4 rounded-lg bg-slate-50 p-4 ring-1 ring-slate-200/80">
             <dl class="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
               <div class="flex justify-between gap-4">
@@ -201,15 +226,23 @@
                 <dt class="text-slate-500">Gross Salary</dt>
                 <dd class="text-right text-slate-900">{{ formatMoney(compensation?.grossSalary, compensation?.currency) }}</dd>
               </div>
+              <div class="flex justify-between gap-4">
+                <dt class="text-slate-500">Date of Last salary change</dt>
+                <dd class="text-right text-slate-900">{{ formatYmdDateOrDash(employee?.dateLastSalaryChange) }}</dd>
+              </div>
+              <div class="flex justify-between gap-4">
+                <dt class="text-slate-500">Amount increased by</dt>
+                <dd class="text-right text-slate-900">{{ formatMoney(employee?.amountIncreasedBy, compensation?.currency) }}</dd>
+              </div>
             </dl>
           </div>
         </section>
 
         <section class="rounded-xl border border-slate-200 bg-white shadow-card p-5 shadow-lg shadow-slate-900/10">
-          <h2 class="text-sm font-semibold text-hr-navy">Disciplinary cases</h2>
+          <h2 class="text-sm font-semibold text-brand-blue">Disciplinary cases</h2>
           <div class="mt-4 rounded-lg bg-slate-50 p-4 ring-1 ring-slate-200/80">
             <div v-if="disciplinaryPending" class="text-sm text-slate-600">Loading disciplinary cases…</div>
-            <div v-else-if="disciplinaryError" class="text-sm text-red-800">Could not load disciplinary cases.</div>
+            <div v-else-if="disciplinaryError" class="text-sm text-pink-700">Could not load disciplinary cases.</div>
             <div v-else-if="!disciplinaryCases.length" class="text-sm text-slate-600">No disciplinary cases logged.</div>
             <div v-else class="overflow-x-auto rounded-md border border-slate-200">
               <table class="min-w-full text-left text-sm">
@@ -236,12 +269,12 @@
 
         <section class="rounded-xl border border-slate-200 bg-white shadow-card p-5 shadow-lg shadow-slate-900/10">
           <div class="flex items-center justify-between gap-3">
-            <h2 class="text-sm font-semibold text-hr-navy">Employee Documents</h2>
+            <h2 class="text-sm font-semibold text-brand-blue">Employee Documents</h2>
             <button
               type="button"
               class="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-hr-navy hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
               :disabled="attachmentsPending || uploading"
-              @click="refreshAttachments"
+              @click="() => refreshAttachments()"
             >
               Refresh
             </button>
@@ -249,7 +282,7 @@
 
           <div class="mt-4 rounded-lg bg-slate-50 p-4 ring-1 ring-slate-200/80">
             <div v-if="attachmentsPending" class="text-sm text-slate-600">Loading documents…</div>
-            <div v-else-if="attachmentsError" class="text-sm text-red-200">Could not load documents.</div>
+            <div v-else-if="attachmentsError" class="text-sm text-pink-700">Could not load documents.</div>
             <div v-else-if="!attachments.length" class="text-sm text-slate-600">No documents uploaded yet.</div>
             <ul v-else class="max-h-96 divide-y divide-hr-navy/25 overflow-auto pr-1">
               <li v-for="doc in attachments" :key="doc.id" class="flex items-center justify-between gap-3 py-2">
@@ -287,7 +320,7 @@
               </li>
             </ul>
 
-            <div v-if="uploadError" class="mt-3 rounded-md border border-red-900/60 bg-red-950/30 p-3 text-sm text-red-200">
+            <div v-if="uploadError" class="mt-3 rounded-md border border-pink-200 bg-pink-50 p-3 text-sm text-pink-800">
               {{ uploadError }}
             </div>
           </div>
@@ -304,7 +337,7 @@
         <section class="w-full max-w-md rounded-xl border border-slate-200 bg-white shadow-card p-4 shadow-xl shadow-slate-900/12">
           <div class="flex items-start justify-between gap-4">
             <div>
-              <h3 class="text-base font-semibold text-hr-navy">Delete document?</h3>
+              <h3 class="text-base font-semibold text-brand-blue">Delete document?</h3>
               <p class="mt-1 text-sm text-slate-600">
                 This will permanently delete
                 <span class="font-semibold text-hr-navy">{{ pendingDeleteDoc.name }}</span>.
@@ -339,7 +372,7 @@
             </button>
             <button
               type="button"
-              class="h-9 rounded-md border border-rose-900/60 bg-rose-950/30 px-3 text-sm font-semibold text-rose-200 hover:bg-rose-950/50 disabled:cursor-not-allowed disabled:opacity-60"
+              class="h-9 rounded-md border border-pink-200 bg-pink-50 px-3 text-sm font-semibold text-pink-800 hover:bg-pink-100 disabled:cursor-not-allowed disabled:opacity-60"
               :disabled="isDeletingModalDoc"
               @click="confirmDeleteDoc"
             >
@@ -385,6 +418,8 @@ type Employee = {
   probationEndDate?: string | null
   contractOrProbationEndDate?: string | null
   talentRating?: string
+  dateLastSalaryChange?: string | null
+  amountIncreasedBy?: number | null
 }
 
 const route = useRoute()
@@ -467,12 +502,12 @@ function formatDisciplinaryLoggedDate(iso: string) {
 
 function disciplinaryStatusClass(status: string) {
   const v = (status || '').trim().toLowerCase()
-  if (v === 'investigation') return 'border-sky-200 bg-sky-50 text-sky-800'
-  if (v === 'disciplinary meeting') return 'border-amber-200 bg-amber-50 text-amber-900'
-  if (v === 'conciliation') return 'border-blue-200 bg-blue-50 text-blue-800'
-  if (v === 'outcome to be communicated') return 'border-indigo-200 bg-indigo-50 text-indigo-800'
-  if (v === 'finalize outcome') return 'border-violet-200 bg-violet-50 text-violet-800'
-  if (v === 'closed' || v === 'resolved') return 'border-emerald-200 bg-emerald-50 text-emerald-900'
+  if (v === 'investigation') return 'border-blue-200 bg-blue-50 text-blue-900'
+  if (v === 'disciplinary meeting') return 'border-pink-200 bg-pink-50 text-pink-800'
+  if (v === 'conciliation') return 'border-teal-200 bg-teal-50 text-teal-800'
+  if (v === 'outcome to be communicated') return 'border-purple-200 bg-purple-50 text-purple-800'
+  if (v === 'finalize outcome') return 'border-blue-200 bg-blue-50 text-brand-blue'
+  if (v === 'closed' || v === 'resolved') return 'border-teal-200 bg-teal-50 text-teal-800'
   return 'border-slate-200 bg-slate-50 text-slate-800'
 }
 
@@ -514,17 +549,17 @@ function normalizeEmployeeType(value: string) {
 
 const statusPillClass = computed(() => {
   const s = normalizeStatus(employee.value?.employeeStatus ?? '')
-  if (s === 'active') return 'border-emerald-400/40 bg-emerald-500/10 text-emerald-800'
-  if (s === 'offboarding') return 'border-amber-400/40 bg-amber-500/10 text-amber-800'
+  if (s === 'active') return 'border-teal-200 bg-teal-50 text-teal-800'
+  if (s === 'offboarding') return 'border-pink-200 bg-pink-50 text-pink-800'
   if (s === 'resigned' || s === 'fired' || s === 'retired' || s === 'separated') return 'border-slate-300 bg-slate-100 text-slate-800'
   return 'border-slate-300 bg-slate-100 text-slate-800'
 })
 
 const employmentTypePillClass = computed(() => {
   const t = normalizeEmployeeType(employee.value?.employeeType ?? '')
-  if (t.includes('contract')) return 'border-violet-400/40 bg-violet-500/10 text-violet-800'
-  if (t.includes('permanent')) return 'border-pink-400/40 bg-pink-500/10 text-pink-800'
-  if (t.includes('intern')) return 'border-teal-400/40 bg-teal-500/10 text-teal-800'
+  if (t.includes('contract')) return 'border-blue-200 bg-blue-50 text-brand-blue'
+  if (t.includes('permanent')) return 'border-blue-200 bg-blue-50 text-blue-900'
+  if (t.includes('intern')) return 'border-pink-200 bg-pink-50 text-pink-800'
   return 'border-slate-300 bg-slate-100 text-slate-800'
 })
 

@@ -76,7 +76,8 @@ const SNAPSHOTS: SnapshotInput[] = [
 
   // 2026 (partial)
   { monthKey: '2026-01', headcount: 299 },
-  { monthKey: '2026-02', headcount: 302 }
+  { monthKey: '2026-02', headcount: 302 },
+  { monthKey: '2026-03', headcount: 298 }
 ]
 
 async function main() {

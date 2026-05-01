@@ -4,13 +4,13 @@
       <div class="flex justify-center sm:justify-start">
         <div class="relative h-36 w-36">
           <svg class="h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
-            <circle cx="50" cy="50" r="42" fill="none" stroke="rgb(13 27 62)" stroke-width="10" />
+            <circle cx="50" cy="50" r="42" fill="none" stroke="rgb(243 232 255)" stroke-width="10" />
             <circle
               cx="50"
               cy="50"
               r="42"
               fill="none"
-              stroke="rgb(244 63 94)"
+              stroke="rgb(236 72 153)"
               stroke-width="10"
               stroke-linecap="round"
               :stroke-dasharray="dashArray"
@@ -38,30 +38,16 @@
             </select>
           </label>
 
-          <div v-if="showBreakdown" class="flex flex-wrap gap-1.5 sm:flex-nowrap">
+          <div v-if="showBreakdown" class="flex flex-wrap gap-1.5">
             <button
+              v-for="reason in REASON_KEYS"
+              :key="reason"
               type="button"
               class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold tabular-nums"
-              :class="reasonPillClass('resigned', include.resigned)"
-              @click="include.resigned = !include.resigned"
+              :class="reasonPillClass(reason, include[reason])"
+              @click="include[reason] = !include[reason]"
             >
-              Resigned
-            </button>
-            <button
-              type="button"
-              class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold tabular-nums"
-              :class="reasonPillClass('retired', include.retired)"
-              @click="include.retired = !include.retired"
-            >
-              Retired
-            </button>
-            <button
-              type="button"
-              class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold tabular-nums"
-              :class="reasonPillClass('fired', include.fired)"
-              @click="include.fired = !include.fired"
-            >
-              Fired
+              {{ REASON_LABELS[reason] }}
             </button>
           </div>
         </div>
@@ -71,8 +57,8 @@
           <div class="tabular-nums text-slate-900">{{ selectedSeparations }}</div>
         </div>
 
-        <div v-if="showBreakdown" class="pt-1 text-sm text-slate-400">
-          Breakdown: Resigned {{ monthData.resigned }}, Retired {{ monthData.retired }}, Fired {{ monthData.fired }}
+        <div v-if="showBreakdown && breakdownText" class="pt-1 text-sm text-slate-400">
+          Breakdown: {{ breakdownText }}
         </div>
       </div>
     </div>
@@ -90,19 +76,45 @@
 </template>
 
 <script setup lang="ts">
+type ReasonKey =
+  | 'resigned'
+  | 'retired'
+  | 'fired'
+  | 'vsep'
+  | 'end_of_contract'
+  | 'probation_failure'
+  | 'retrenchment'
+  | 'separated'
+
+type MonthBreakdown = Record<ReasonKey, number> & { headcountAfter: number }
+
+const REASON_KEYS: ReasonKey[] = [
+  'resigned',
+  'retired',
+  'fired',
+  'vsep',
+  'end_of_contract',
+  'probation_failure',
+  'retrenchment',
+  'separated'
+]
+
+const REASON_LABELS: Record<ReasonKey, string> = {
+  resigned: 'Resigned',
+  retired: 'Retired',
+  fired: 'Fired',
+  vsep: 'VSEP',
+  end_of_contract: 'End of Contract',
+  probation_failure: 'Probation Failure',
+  retrenchment: 'Retrenchment',
+  separated: 'Separated'
+}
+
 const props = defineProps<{
   separations: {
     currentMonth: string
     months: string[]
-    byMonth: Record<
-      string,
-      {
-        resigned: number
-        retired: number
-        fired: number
-        headcountAfter: number
-      }
-    >
+    byMonth: Record<string, Partial<MonthBreakdown>>
   }
   showBreakdown?: boolean
   /** Shows a button linking to Recruitment → Recent separations for the selected month. */
@@ -128,7 +140,16 @@ watch(
   }
 )
 
-const include = reactive({ resigned: true, retired: true, fired: true })
+const include = reactive<Record<ReasonKey, boolean>>({
+  resigned: true,
+  retired: true,
+  fired: true,
+  vsep: true,
+  end_of_contract: true,
+  probation_failure: true,
+  retrenchment: true,
+  separated: true
+})
 
 function clamp01(v: number) {
   return Math.max(0, Math.min(1, v))
@@ -142,26 +163,22 @@ function safeInt(v: unknown) {
 const monthData = computed(() => {
   const key = selectedMonth.value
   const d = props.separations?.byMonth?.[key]
-  return {
-    resigned: safeInt(d?.resigned),
-    retired: safeInt(d?.retired),
-    fired: safeInt(d?.fired),
-    headcountAfter: safeInt(d?.headcountAfter)
-  }
+  const out = {} as MonthBreakdown
+  for (const k of REASON_KEYS) out[k] = safeInt(d?.[k])
+  out.headcountAfter = safeInt(d?.headcountAfter)
+  return out
 })
 
-const totalAllReasons = computed(() => monthData.value.resigned + monthData.value.retired + monthData.value.fired)
+const totalAllReasons = computed(() => REASON_KEYS.reduce((sum, k) => sum + monthData.value[k], 0))
 
 const selectedSeparations = computed(() => {
   if (!showBreakdown.value) return totalAllReasons.value
-  let sum = 0
-  if (include.resigned) sum += monthData.value.resigned
-  if (include.retired) sum += monthData.value.retired
-  if (include.fired) sum += monthData.value.fired
-  return sum
+  return REASON_KEYS.reduce((sum, k) => (include[k] ? sum + monthData.value[k] : sum), 0)
 })
 
-const headcountAfterSelected = computed(() => monthData.value.headcountAfter + (totalAllReasons.value - selectedSeparations.value))
+const headcountAfterSelected = computed(
+  () => monthData.value.headcountAfter + (totalAllReasons.value - selectedSeparations.value)
+)
 
 const ratio = computed(() => {
   const before = headcountAfterSelected.value + selectedSeparations.value
@@ -176,6 +193,13 @@ const dashArray = computed(() => {
   return `${filled} ${empty}`
 })
 
+const breakdownText = computed(() => {
+  const parts = REASON_KEYS.filter((k) => monthData.value[k] > 0).map(
+    (k) => `${REASON_LABELS[k]} ${monthData.value[k]}`
+  )
+  return parts.join(', ')
+})
+
 function formatMonthLabel(monthKey: string) {
   const m = /^(\d{4})-(\d{2})$/.exec((monthKey ?? '').trim())
   if (!m) return monthKey
@@ -187,10 +211,19 @@ function formatMonthLabel(monthKey: string) {
 
 const selectedMonthLabel = computed(() => (selectedMonth.value ? formatMonthLabel(selectedMonth.value) : '—'))
 
-function reasonPillClass(reason: 'resigned' | 'retired' | 'fired', enabled: boolean) {
+const REASON_PILL_CLASSES: Record<ReasonKey, string> = {
+  resigned: 'border-teal-200 bg-teal-50 text-teal-800',
+  retired: 'border-purple-200 bg-purple-50 text-brand-purple',
+  fired: 'border-pink-200 bg-pink-50 text-pink-800',
+  vsep: 'border-blue-200 bg-blue-50 text-blue-800',
+  end_of_contract: 'border-indigo-200 bg-indigo-50 text-indigo-800',
+  probation_failure: 'border-rose-200 bg-rose-50 text-rose-800',
+  retrenchment: 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-800',
+  separated: 'border-slate-200 bg-slate-50 text-slate-700'
+}
+
+function reasonPillClass(reason: ReasonKey, enabled: boolean) {
   if (!enabled) return 'border-slate-200 bg-slate-50 text-slate-400'
-  if (reason === 'resigned') return 'border-amber-500/40 bg-amber-950/40 text-amber-100'
-  if (reason === 'retired') return 'border-violet-400/30 bg-violet-500/10 text-violet-200'
-  return 'border-red-500/40 bg-red-950/40 text-red-100'
+  return REASON_PILL_CLASSES[reason]
 }
 </script>

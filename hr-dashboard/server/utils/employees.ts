@@ -34,5 +34,9 @@ export type Employee = {
   personalEmail?: string
   workPhone?: string
   personalPhone?: string
+  /** Laser `hr.employee.date_last_salary_change` when present. */
+  dateLastSalaryChange?: string | null
+  /** Laser `hr.employee.amount_increased_by` when present. */
+  amountIncreasedBy?: number | null
 }
 

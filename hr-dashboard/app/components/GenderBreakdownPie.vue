@@ -36,10 +36,10 @@
         v-if="isCompact"
         :class="[
           showHeaderRow ? 'mt-2' : 'mt-1',
-          fillHeight ? 'flex min-h-0 flex-1 items-start justify-between gap-3 overflow-hidden' : 'flex items-start justify-between gap-4'
+          fillHeight ? 'flex min-h-0 w-full flex-1 items-start justify-start gap-2 overflow-hidden' : 'flex w-full items-start justify-between gap-4'
         ]"
       >
-        <div class="flex items-start justify-start">
+        <div class="flex shrink-0 items-start justify-start">
           <div ref="rootEl" class="relative" :class="compactDonutSizeClass">
             <div
               v-if="hovered"
@@ -51,12 +51,22 @@
             </div>
 
             <svg class="h-full w-full" viewBox="0 0 100 100" aria-hidden="true">
+              <defs>
+                <linearGradient id="gbp-female-c" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stop-color="rgb(251 207 232)" />
+                  <stop offset="100%" stop-color="rgb(236 72 153)" />
+                </linearGradient>
+                <linearGradient id="gbp-male-c" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stop-color="rgb(147 197 253)" />
+                  <stop offset="100%" stop-color="rgb(30 58 138)" />
+                </linearGradient>
+              </defs>
               <circle
                 v-if="isAllFemale"
                 cx="50"
                 cy="50"
                 r="42"
-                fill="rgb(249 168 212)"
+                fill="url(#gbp-female-c)"
                 @pointerenter="onEnter('female', $event)"
                 @pointermove="onMove($event)"
                 @pointerleave="onLeave"
@@ -66,7 +76,7 @@
                 cx="50"
                 cy="50"
                 r="42"
-                fill="rgb(125 211 252)"
+                fill="url(#gbp-male-c)"
                 @pointerenter="onEnter('male', $event)"
                 @pointermove="onMove($event)"
                 @pointerleave="onLeave"
@@ -74,7 +84,7 @@
               <template v-else>
                 <path
                   :d="femaleSlice.d"
-                  :fill="femaleSlice.fill"
+                  fill="url(#gbp-female-c)"
                   @pointerenter="onEnter('female', $event)"
                   @pointermove="onMove($event)"
                   @pointerleave="onLeave"
@@ -82,14 +92,14 @@
                 <path
                   v-if="maleSlice.d"
                   :d="maleSlice.d"
-                  :fill="maleSlice.fill"
+                  fill="url(#gbp-male-c)"
                   @pointerenter="onEnter('male', $event)"
                   @pointermove="onMove($event)"
                   @pointerleave="onLeave"
                 />
               </template>
 
-              <circle cx="50" cy="50" r="20" fill="white" stroke="rgb(226 232 240)" stroke-width="1.5" />
+              <circle cx="50" cy="50" r="20.5" fill="white" stroke="rgb(226 232 240)" stroke-width="1" />
 
               <template v-for="lbl in segmentLabels" :key="lbl.key">
                 <text
@@ -98,9 +108,10 @@
                   :y="lbl.y"
                   text-anchor="middle"
                   dominant-baseline="middle"
-                  fill="rgb(30 58 138)"
+                  fill="white"
                   font-size="6.2"
                   font-weight="700"
+                  style="paint-order: stroke; stroke: rgba(15,23,42,0.18); stroke-width: 0.4px;"
                 >
                   <tspan :x="lbl.x" dy="-2">{{ lbl.pct }}%</tspan>
                 </text>
@@ -115,26 +126,26 @@
           </div>
         </div>
 
-        <div class="min-w-0 flex-1 space-y-2 overflow-y-auto text-xs">
-          <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">Key</div>
+        <div class="min-w-0 flex-1 space-y-1.5 overflow-y-auto text-[11px] leading-tight">
+          <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Key</div>
 
-          <div class="space-y-1.5">
-            <div class="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50/30 px-2 py-1">
-              <div class="flex min-w-0 items-center gap-2 text-slate-800">
-                <span class="h-2.5 w-2.5 rounded-sm bg-pink-300" />
+          <div class="space-y-1">
+            <div class="flex items-center justify-between gap-1.5 rounded-lg border border-slate-200/80 bg-white px-2 py-1">
+              <div class="flex min-w-0 items-center gap-1.5 text-slate-700">
+                <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-gradient-to-b from-pink-300 to-pink-400" />
                 <span class="truncate">Female</span>
               </div>
-              <div class="shrink-0 tabular-nums text-slate-900">
-                {{ female }} <span class="text-slate-400">({{ femalePct }}%)</span>
+              <div class="shrink-0 tabular-nums font-semibold text-hr-navy">
+                {{ female }} <span class="font-normal text-slate-400">({{ femalePct }}%)</span>
               </div>
             </div>
-            <div class="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50/30 px-2 py-1">
-              <div class="flex min-w-0 items-center gap-2 text-slate-800">
-                <span class="h-2.5 w-2.5 rounded-sm bg-sky-200" />
+            <div class="flex items-center justify-between gap-1.5 rounded-lg border border-slate-200/80 bg-white px-2 py-1">
+              <div class="flex min-w-0 items-center gap-1.5 text-slate-700">
+                <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-gradient-to-b from-sky-300 to-sky-400" />
                 <span class="truncate">Male</span>
               </div>
-              <div class="shrink-0 tabular-nums text-slate-900">
-                {{ male }} <span class="text-slate-400">({{ malePct }}%)</span>
+              <div class="shrink-0 tabular-nums font-semibold text-hr-navy">
+                {{ male }} <span class="font-normal text-slate-400">({{ malePct }}%)</span>
               </div>
             </div>
           </div>
@@ -144,14 +155,24 @@
       <div v-else class="mx-auto flex w-full flex-col items-center justify-center" :class="containerClass">
         <div class="relative" :class="donutSizeClass">
           <svg class="h-full w-full" viewBox="0 0 100 100" aria-hidden="true">
-            <circle v-if="isAllFemale" cx="50" cy="50" r="42" fill="rgb(249 168 212)" />
-            <circle v-else-if="isAllMale" cx="50" cy="50" r="42" fill="rgb(125 211 252)" />
+            <defs>
+              <linearGradient id="gbp-female-f" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="rgb(251 207 232)" />
+                <stop offset="100%" stop-color="rgb(236 72 153)" />
+              </linearGradient>
+              <linearGradient id="gbp-male-f" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="rgb(147 197 253)" />
+                <stop offset="100%" stop-color="rgb(30 58 138)" />
+              </linearGradient>
+            </defs>
+            <circle v-if="isAllFemale" cx="50" cy="50" r="42" fill="url(#gbp-female-f)" />
+            <circle v-else-if="isAllMale" cx="50" cy="50" r="42" fill="url(#gbp-male-f)" />
             <template v-else>
-              <path :d="femaleSlice.d" :fill="femaleSlice.fill" />
-              <path v-if="maleSlice.d" :d="maleSlice.d" :fill="maleSlice.fill" />
+              <path :d="femaleSlice.d" fill="url(#gbp-female-f)" />
+              <path v-if="maleSlice.d" :d="maleSlice.d" fill="url(#gbp-male-f)" />
             </template>
 
-            <circle cx="50" cy="50" r="20" fill="white" stroke="rgb(226 232 240)" stroke-width="1.5" />
+            <circle cx="50" cy="50" r="20.5" fill="white" stroke="rgb(226 232 240)" stroke-width="1" />
 
             <template v-for="lbl in segmentLabels" :key="lbl.key">
               <text
@@ -180,7 +201,7 @@
         <div class="w-full" :class="legendClass">
           <div class="flex items-center justify-between gap-6">
             <div class="flex items-center gap-2 text-slate-600">
-              <span class="h-2.5 w-2.5 rounded-sm bg-pink-300" />
+              <span class="h-2.5 w-2.5 rounded-sm bg-pink-500" />
               <span>Female</span>
             </div>
             <div class="tabular-nums text-slate-900">
@@ -189,7 +210,7 @@
           </div>
           <div class="flex items-center justify-between gap-6">
             <div class="flex items-center gap-2 text-slate-600">
-              <span class="h-2.5 w-2.5 rounded-sm bg-sky-200" />
+              <span class="h-2.5 w-2.5 rounded-sm bg-blue-900" />
               <span>Male</span>
             </div>
             <div class="tabular-nums text-slate-900">
@@ -226,8 +247,8 @@ const showHeaderRow = computed(() => !(isCompact.value && filterPlacement.value 
 const donutSizeClass = computed(() => (isCompact.value ? 'h-32 w-32' : 'h-56 w-56 md:h-60 md:w-60'))
 const compactDonutSizeClass = computed(() => {
   const size = props.compactSize ?? 'md'
-  if (size === 'lg') return 'h-40 w-40'
-  return 'h-32 w-32'
+  if (size === 'lg') return 'h-44 w-44'
+  return 'h-40 w-40'
 })
 const containerClass = computed(() => (isCompact.value ? 'max-w-xs pt-1' : 'max-w-sm pt-4'))
 const legendClass = computed(() => (isCompact.value ? 'mt-3 max-w-xs space-y-2 text-sm' : 'mt-5 max-w-xs space-y-2 text-base'))
@@ -326,7 +347,7 @@ const femaleSlice = computed(() => {
   const start = -90
   const end = start + frac * 360
   const d = arcPath(50, 50, 42, start, end)
-  return { d, fill: 'rgb(249 168 212)' } // pink-300
+  return { d, fill: 'rgb(236 72 153)' } // brand pink
 })
 
 const maleSlice = computed(() => {
@@ -334,7 +355,7 @@ const maleSlice = computed(() => {
   const start = -90 + (total.value > 0 ? Math.max(0, Math.min(1, female.value / total.value)) : 0) * 360
   const end = start + frac * 360
   const d = frac <= 0 ? '' : arcPath(50, 50, 42, start, end)
-  return { d, fill: 'rgb(125 211 252)' } // sky-300
+  return { d, fill: 'rgb(30 58 138)' } // brand navy
 })
 
 const segmentLabels = computed(() => {

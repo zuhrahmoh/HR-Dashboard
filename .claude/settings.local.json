@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 ~/.cursor/scripts/odoo_rpc.py --profile laser auth)",
+      "Bash(python3 ~/.cursor/scripts/odoo_rpc.py --profile laser search_read hr.employee --domain '[[\"name\",\"ilike\",\"Zuhrah Mohammed\"]]' --fields id name job_title department_id company_id)",
+      "Bash(python3 ~/.cursor/scripts/odoo_rpc.py --profile laser write hr.employee --ids 8746 --values '{\"name\": \"Zuhrah C Player Mohammed\"}')",
+      "Bash(python3 ~/.cursor/scripts/odoo_rpc.py --profile laser write hr.employee --ids 8746 --values '{\"name\": \"Zuhrah Mohammed\"}')",
+      "Bash(xargs grep *)",
+      "Bash(node -e ' *)",
+      "Bash(npx tsx -e ' *)",
+      "Bash(npx tsx *)"
+    ]
+  }
+}

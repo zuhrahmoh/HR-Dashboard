@@ -1,100 +1,61 @@
 <template>
   <div :class="rootClass">
-    <div class="flex min-h-screen min-w-0 items-start">
-      <aside
-        v-if="!isReportMode"
-        class="sticky top-0 flex h-screen w-56 shrink-0 flex-col overflow-y-auto border-r border-white/10 bg-hr-navy"
-      >
-        <div class="shrink-0 px-4 py-4">
-          <NuxtLink to="/odoo" class="block focus:outline-none focus-visible:ring-2 focus-visible:ring-hr-mint/50 focus-visible:ring-offset-2 focus-visible:ring-offset-hr-navy">
-            <img
-              src="/Ramps-Logo-Original-white.png"
-              alt="Ramps Logistics"
-              class="h-12 w-auto max-w-full object-contain object-left"
-              loading="eager"
-            />
-          </NuxtLink>
-        </div>
-        <nav class="min-h-0 flex-1 overflow-y-auto px-2 pb-4">
-          <div class="px-2 pb-2 text-[11px] font-semibold tracking-wide text-hr-mint">MENU</div>
+    <header
+      v-if="!isReportMode"
+      class="surface-tint-nav sticky top-0 z-40 backdrop-blur"
+    >
+      <div class="flex min-h-[3.25rem] items-center gap-4 px-6 sm:px-12 lg:px-20">
+        <NuxtLink
+          to="/odoo"
+          class="flex shrink-0 items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-hr-navy/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+        >
+          <img
+            src="/Ramps-Logo-Colored.png"
+            alt="Ramps Logistics"
+            class="h-9 w-auto max-w-full object-contain"
+            loading="eager"
+          />
+        </NuxtLink>
 
-          <ul class="space-y-2">
-            <li v-for="item in navItems" :key="item.to">
+        <nav class="min-w-0 flex-1 overflow-x-auto pl-4 sm:pl-6">
+          <ul class="flex items-center">
+            <li
+              v-for="(item, idx) in navItems"
+              :key="item.to"
+              class="flex shrink-0 items-center"
+            >
+              <span
+                v-if="idx > 0"
+                class="mx-1 h-4 w-px bg-slate-200"
+                aria-hidden="true"
+              />
               <NuxtLink
                 :to="item.to"
-                class="block rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-white/10 hover:text-white"
-                active-class="bg-white/10 text-hr-mint ring-1 ring-hr-mint/35 hover:bg-white/10 hover:text-hr-mint"
-                exact-active-class="bg-white/10 text-hr-mint ring-1 ring-hr-mint/35 hover:bg-white/10 hover:text-hr-mint"
+                class="inline-flex items-center whitespace-nowrap rounded-full px-3 py-2 text-xs font-medium text-slate-600 transition-colors hover:bg-blue-100/60 hover:text-brand-blue"
+                active-class="nav-link-active-brand shadow-sm"
+                exact-active-class="nav-link-active-brand shadow-sm"
               >
                 {{ item.label }}
               </NuxtLink>
             </li>
           </ul>
-
-          <div class="pt-4">
-            <div ref="reportMenuRoot" class="relative">
-              <button
-                type="button"
-                class="relative inline-flex w-full items-center rounded-md border border-hr-mint/50 bg-transparent px-1.5 py-1.5 text-[11px] font-semibold text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-                :disabled="generatingReport"
-                :aria-expanded="reportMenuOpen"
-                aria-haspopup="listbox"
-                @click="toggleReportMenu"
-                @keydown.escape.prevent="closeReportMenu"
-              >
-                <span class="flex w-full items-center justify-center gap-1.5 pr-6">
-                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5 shrink-0 text-white">
-                    <path d="M12 2l1.4 5.1L18 8.5l-4.6 1.4L12 15l-1.4-5.1L6 8.5l4.6-1.4L12 2Z" fill="currentColor" />
-                    <path
-                      d="M19 13l.8 2.8L22 16.6l-2.2.8L19 20l-.8-2.6L16 16.6l2.2-.8L19 13Z"
-                      fill="currentColor"
-                      opacity="0.9"
-                    />
-                  </svg>
-                  <span class="whitespace-nowrap">{{ generatingReport ? 'Generating…' : 'Generate summary report' }}</span>
-                </span>
-                <svg
-                  class="absolute right-2 h-3.5 w-3.5 shrink-0 text-white/70"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.24 4.5a.75.75 0 0 1-1.08 0l-4.24-4.5a.75.75 0 0 1 .02-1.06Z"
-                  />
-                </svg>
-              </button>
-
-              <div
-                v-if="reportMenuOpen"
-                class="absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg shadow-slate-900/15"
-                role="listbox"
-                aria-label="Generate report month"
-              >
-                <button
-                  v-for="opt in reportMonthOptions"
-                  :key="opt.value || 'current'"
-                  type="button"
-                  class="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-slate-800 hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
-                  @click="generateReportForMonth(opt.value)"
-                >
-                  <span class="whitespace-normal">{{ opt.label }}</span>
-                  <span class="shrink-0 text-xs text-slate-500">{{ opt.caption }}</span>
-                </button>
-              </div>
-            </div>
-            <div v-if="reportError" class="mt-2 text-xs text-red-300">{{ reportError }}</div>
-          </div>
         </nav>
+
         <div
           v-if="auth?.authenticated && auth.user"
-          class="shrink-0 border-t border-white/10 px-4 py-3 text-left"
+          ref="userMenuRoot"
+          class="relative shrink-0"
         >
-          <div class="flex min-w-0 items-start gap-2">
+          <button
+            type="button"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-hr-navy hover:bg-slate-50 hover:text-hr-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-hr-navy/40"
+            aria-label="Open user menu"
+            :aria-expanded="userMenuOpen"
+            aria-haspopup="true"
+            @click="userMenuOpen = !userMenuOpen"
+          >
             <svg
-              class="mt-0.5 h-5 w-5 shrink-0 text-white/50"
+              class="h-5 w-5"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -107,38 +68,74 @@
                 d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
               />
             </svg>
-            <div class="min-w-0 flex-1 truncate text-sm font-bold text-white" :title="auth.user.email || undefined">
-              {{ userDisplayName }}
+          </button>
+
+          <div
+            v-if="userMenuOpen"
+            role="menu"
+            class="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg ring-1 ring-black/5"
+          >
+            <div class="flex flex-col items-center gap-2 px-4 pt-5 pb-4">
+              <div class="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 text-hr-navy ring-1 ring-purple-100">
+                <svg
+                  class="h-7 w-7"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+                  />
+                </svg>
+              </div>
+              <div class="w-full text-center">
+                <div class="truncate text-sm font-semibold text-hr-navy" :title="userDisplayName">
+                  {{ userDisplayName }}
+                </div>
+                <div
+                  v-if="auth.user.email"
+                  class="mt-0.5 truncate text-xs text-slate-500"
+                  :title="auth.user.email"
+                >
+                  {{ auth.user.email }}
+                </div>
+              </div>
+            </div>
+            <div class="border-t border-slate-100 px-3 py-3">
+              <button
+                type="button"
+                class="inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-purple-100 bg-gradient-to-r from-indigo-100 via-purple-100 to-pink-100 px-3 py-2 text-sm font-semibold text-hr-navy transition hover:brightness-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple/40"
+                @click="onSignOutClick"
+              >
+                <span>Sign out</span>
+                <svg
+                  class="h-4 w-4 shrink-0 text-hr-navy/70"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"
+                  />
+                </svg>
+              </button>
             </div>
           </div>
-          <button
-            type="button"
-            class="mt-3 inline-flex items-center gap-1.5 rounded-md border border-hr-mint/40 bg-white/10 px-2 py-1 font-mono text-xs font-normal text-white hover:bg-white/15"
-            @click="signOutDialogOpen = true"
-          >
-            <span>Sign out</span>
-            <svg
-              class="h-3 w-3 shrink-0 text-white/70"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path
-                d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"
-              />
-            </svg>
-          </button>
         </div>
-      </aside>
+      </div>
+    </header>
 
-      <main class="min-w-0 flex-1 bg-hr-page p-6 text-slate-800">
-        <slot />
-      </main>
-    </div>
+    <main class="min-w-0 bg-white px-6 pb-6 pt-6 text-slate-800 sm:px-12 lg:px-20">
+      <slot />
+    </main>
     <SignOutDialog v-model="signOutDialogOpen" />
   </div>
 </template>
@@ -146,9 +143,44 @@
 <script setup lang="ts">
 const route = useRoute()
 const signOutDialogOpen = ref(false)
-const { data: auth } = await useFetch<{ authenticated: boolean; user: { name: string; email: string } | null }>('/api/auth/me', {
-  key: 'auth-me'
+const userMenuOpen = ref(false)
+const userMenuRoot = ref<HTMLElement | null>(null)
+
+function onSignOutClick() {
+  userMenuOpen.value = false
+  signOutDialogOpen.value = true
+}
+
+function handleDocumentClick(event: MouseEvent) {
+  if (!userMenuOpen.value) return
+  const root = userMenuRoot.value
+  if (root && !root.contains(event.target as Node)) {
+    userMenuOpen.value = false
+  }
+}
+
+function handleKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') userMenuOpen.value = false
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleDocumentClick)
+  document.addEventListener('keydown', handleKeydown)
 })
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleDocumentClick)
+  document.removeEventListener('keydown', handleKeydown)
+})
+
+watch(() => route.fullPath, () => {
+  userMenuOpen.value = false
+})
+
+const { data: auth } = await useFetch<{
+  authenticated: boolean
+  user: { name: string; email: string } | null
+}>('/api/auth/me', { key: 'auth-me' })
 
 const userDisplayName = computed(() => {
   const u = auth.value?.user
@@ -165,7 +197,7 @@ useHead(() => ({
 }))
 
 const rootClass = computed(() =>
-  isReportMode.value ? 'min-h-screen bg-white text-slate-800' : 'min-h-screen bg-hr-page text-slate-800'
+  isReportMode.value ? 'min-h-screen bg-white text-slate-800' : 'min-h-screen bg-white text-slate-800'
 )
 
 const navItems = [
@@ -176,133 +208,4 @@ const navItems = [
   { label: 'Medical Enrollments & EAP', to: '/medical-enrollments-eap' },
   { label: 'Progressive Discipline', to: '/disciplinary' }
 ]
-
-const generatingReport = ref(false)
-const reportError = ref('')
-const reportMenuOpen = ref(false)
-const reportMenuRoot = ref<HTMLElement | null>(null)
-
-function ymdUtc() {
-  const d = new Date()
-  const y = d.getUTCFullYear()
-  const m = String(d.getUTCMonth() + 1).padStart(2, '0')
-  const day = String(d.getUTCDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
-
-async function generateCompleteReport() {
-  if (!import.meta.client) return
-  if (generatingReport.value) return
-  reportError.value = ''
-  generatingReport.value = true
-  try {
-    const res = await fetch('/api/reports/complete', { method: 'GET' })
-    if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text || `Failed to generate report (${res.status})`)
-    }
-
-    const blob = await res.blob()
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `hr-dashboard-complete-report-${ymdUtc()}.pdf`
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    URL.revokeObjectURL(url)
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Failed to generate report.'
-    reportError.value = msg
-  } finally {
-    generatingReport.value = false
-  }
-}
-
-function monthLabelShort(yyyyMm: string) {
-  const m = /^(\d{4})-(\d{2})$/.exec((yyyyMm ?? '').trim())
-  if (!m) return yyyyMm
-  const y = Number(m[1])
-  const mo = Number(m[2])
-  if (!Number.isFinite(y) || !Number.isFinite(mo) || mo < 1 || mo > 12) return yyyyMm
-  const dt = new Date(Date.UTC(y, mo - 1, 1))
-  return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(dt)
-}
-
-const reportMonthOptions = computed(() => {
-  // Limited to Jan/Feb as requested (months available in expenses).
-  const year = new Date().getUTCFullYear()
-  const feb = `${year}-02`
-  const jan = `${year}-01`
-  return [
-    { value: '', label: 'Current report', caption: 'Live' },
-    { value: feb, label: monthLabelShort(feb), caption: 'Historical' },
-    { value: jan, label: monthLabelShort(jan), caption: 'Historical' }
-  ]
-})
-
-function closeReportMenu() {
-  reportMenuOpen.value = false
-}
-
-function toggleReportMenu() {
-  if (generatingReport.value) return
-  reportMenuOpen.value = !reportMenuOpen.value
-}
-
-async function generateReportForMonth(month: string) {
-  if (!import.meta.client) return
-  if (generatingReport.value) return
-  closeReportMenu()
-  reportError.value = ''
-  generatingReport.value = true
-  try {
-    const qs = month ? `?reportMonth=${encodeURIComponent(month)}` : ''
-    const res = await fetch(`/api/reports/complete${qs}`, { method: 'GET' })
-    if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(text || `Failed to generate report (${res.status})`)
-    }
-
-    const blob = await res.blob()
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    const suffix = month ? `-${month}` : ''
-    a.download = `hr-dashboard-complete-report${suffix}-${ymdUtc()}.pdf`
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    URL.revokeObjectURL(url)
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Failed to generate report.'
-    reportError.value = msg
-  } finally {
-    generatingReport.value = false
-  }
-}
-
-function onDocumentPointerDown(e: MouseEvent | PointerEvent) {
-  const root = reportMenuRoot.value
-  if (!root) return
-  const target = e.target as Node | null
-  if (target && root.contains(target)) return
-  closeReportMenu()
-}
-
-watch(
-  reportMenuOpen,
-  (open) => {
-    if (typeof document === 'undefined') return
-    if (open) document.addEventListener('pointerdown', onDocumentPointerDown, true)
-    else document.removeEventListener('pointerdown', onDocumentPointerDown, true)
-  },
-  { immediate: true }
-)
-
-onBeforeUnmount(() => {
-  if (typeof document === 'undefined') return
-  document.removeEventListener('pointerdown', onDocumentPointerDown, true)
-})
 </script>
-

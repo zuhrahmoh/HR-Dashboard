@@ -1,17 +1,8 @@
 import { createError, getRouterParam, setHeader } from 'h3'
 import { getOdooEmployeeByKey } from '../../../../utils/odooEmployees'
-import { buildProfilePdfCardLayout, loadLogo, type ProfileCardInput } from '../../../../utils/profilePdf'
-
-function dashify(value: unknown): string {
-  const s = String(value ?? '').trim()
-  return s ? s : '—'
-}
-
-function capitalizeFirst(value: unknown): string {
-  const s = dashify(value)
-  if (s === '—') return s
-  return s[0]!.toUpperCase() + s.slice(1)
-}
+import { loadOdooDisciplinaryCasesForEmployeeKey } from '../../../../utils/odooDisciplinaryCases'
+import { getCompensationForEmployeeName } from '../../../../utils/sharepointCompensation'
+import { renderEmployeeProfilePdf } from '../../../../utils/employeeProfilePrintHtml'
 
 export default defineEventHandler(async (event) => {
   const employeeKey = getRouterParam(event, 'employeeKey')
@@ -25,44 +16,42 @@ export default defineEventHandler(async (event) => {
   }
 
   const generatedAtIso = new Date().toISOString()
-  const logo = await loadLogo()
 
-  const input: ProfileCardInput = {
-    title: 'Employee Profile',
-    subtitle: dashify(employee.position || employee.name),
-    logo,
-    generatedAtIso,
-    primary: {
-      initials: '—',
-      name: dashify(employee.name),
-      position: dashify(employee.position),
-      employeeStatus: dashify(employee.employeeStatus),
-      employeeType: capitalizeFirst(employee.employeeType),
-      department: dashify(employee.department),
-      countryAssigned: dashify(employee.countryAssigned),
-      reportingTo: dashify(employee.reportingTo)
-    },
-    contact: {
-      workEmail: dashify(employee.workEmail),
-      workPhone: dashify(employee.workPhone),
-      personalPhone: dashify(employee.personalPhone)
-    },
-    employment: {
-      startDate: dashify(employee.startDate),
-      tenure: dashify(employee.tenure),
-      probationEnd: dashify(employee.probationEndDate),
-      contractStart: dashify(employee.contractStartDate),
-      contractEnd: dashify(employee.contractEndDate),
-      gender: dashify(employee.gender),
-      employeeKey: dashify(employee.employeeKey)
-    },
-    talent: { talentRating: dashify(employee.talentRating) }
+  const runtimeConfig = useRuntimeConfig()
+  const tenantId = runtimeConfig.graph?.tenantId || ''
+  const clientId = runtimeConfig.graph?.clientId || ''
+  const clientSecret = runtimeConfig.graph?.clientSecret || ''
+  const hostname = runtimeConfig.sharepoint?.hostname || ''
+  const siteId = (runtimeConfig as any).sharepointSalary?.siteId || ''
+  const listId = (runtimeConfig as any).sharepointSalary?.listId || ''
+  const cacheTtlMs = (runtimeConfig as any).sharepointSalary?.cacheTtlMs as number | undefined
+
+  const name = employee.name?.trim() || ''
+  let compensation = null as Awaited<ReturnType<typeof getCompensationForEmployeeName>>
+  if (tenantId && clientId && clientSecret && hostname && siteId && listId && name) {
+    compensation = await getCompensationForEmployeeName({
+      tenantId,
+      clientId,
+      clientSecret,
+      hostname,
+      siteId,
+      listId,
+      cacheTtlMs,
+      name
+    })
   }
 
-  const pdf = buildProfilePdfCardLayout(input)
+  const disciplinaryCases = await loadOdooDisciplinaryCasesForEmployeeKey(employeeKey)
+
+  const pdf = await renderEmployeeProfilePdf({
+    employee,
+    compensation,
+    disciplinaryCases,
+    generatedAtIso
+  })
 
   setHeader(event, 'content-type', 'application/pdf')
   setHeader(event, 'content-disposition', `attachment; filename="employee-${employeeKey}.pdf"`)
+  setHeader(event, 'cache-control', 'no-store')
   return pdf
 })
-

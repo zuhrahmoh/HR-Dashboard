@@ -7,8 +7,14 @@ type HomeAnalytics = {
   /** Active employees with Odoo `employment_type` consultant / independent contractor (from Laser field mapping). */
   headcountEmploymentSubtotals: { consultants: number; independentContractors: number }
   employmentTypeBreakdown: {
-    overall: { permanent: number; contracted: number; total: number }
-    byCountry: Array<{ country: string; permanent: number; contracted: number; total: number }>
+    overall: { permanent: number; contracted: number; interns: number; total: number }
+    byCountry: Array<{
+      country: string
+      permanent: number
+      contracted: number
+      interns: number
+      total: number
+    }>
   }
   separations: {
     currentMonth: string
@@ -19,6 +25,11 @@ type HomeAnalytics = {
         resigned: number
         retired: number
         fired: number
+        vsep: number
+        end_of_contract: number
+        probation_failure: number
+        retrenchment: number
+        separated: number
         headcountAfter: number
       }
     >
@@ -28,6 +39,10 @@ type HomeAnalytics = {
     resigned: Array<{ year: number; count: number }>
     retired: Array<{ year: number; count: number }>
     fired: Array<{ year: number; count: number }>
+    vsep: Array<{ year: number; count: number }>
+    end_of_contract: Array<{ year: number; count: number }>
+    probation_failure: Array<{ year: number; count: number }>
+    retrenchment: Array<{ year: number; count: number }>
     separated: Array<{ year: number; count: number }>
   }
   additions: {
@@ -71,16 +86,6 @@ type HomeAnalytics = {
     contractOrProbationEndDate: string
     daysRemaining: number
   }>
-  expiredContracts: Array<{
-    employeeKey: string
-    name: string
-    department: string
-    position: string
-    reportingTo: string
-    countryAssigned: string
-    contractOrProbationEndDate: string
-    daysRemaining: number
-  }>
 }
 
 function isActiveStatus(status: string) {
@@ -91,11 +96,24 @@ function isSeparatedStatus(status: string) {
   return !isActiveStatus(status)
 }
 
-function normalizeSeparatedStatus(status: string): 'resigned' | 'retired' | 'fired' | null {
+type SeparationBucket =
+  | 'resigned'
+  | 'retired'
+  | 'fired'
+  | 'vsep'
+  | 'end_of_contract'
+  | 'probation_failure'
+  | 'retrenchment'
+
+function normalizeSeparatedStatus(status: string): SeparationBucket | null {
   const v = status.trim().toLowerCase()
   if (v === 'resigned') return 'resigned'
   if (v === 'retired') return 'retired'
   if (v === 'fired') return 'fired'
+  if (v === 'vsep') return 'vsep'
+  if (v === 'end of contract') return 'end_of_contract'
+  if (v === 'probation failure') return 'probation_failure'
+  if (v === 'retrenchment') return 'retrenchment'
   if (v === 'terminated' || v.includes('terminate') || v.includes('termination')) return 'fired'
   return null
 }
@@ -108,16 +126,19 @@ function normalizeGender(raw: string | undefined): 'male' | 'female' | null {
   return null
 }
 
-function normalizeEmploymentType(raw: string | undefined): 'permanent' | 'contracted' {
+/** Permanent vs contracted-without-intern vs intern — used for stacked breakdowns and KPI. */
+function classifyWorkforceBucket(raw: string | undefined): 'permanent' | 'contracted' | 'intern' {
   const v = (raw ?? '').trim().toLowerCase()
   if (!v) return 'permanent'
-  if (v.includes('intern')) return 'contracted'
-  if (v.includes('contract')) return 'contracted'
-  if (v.includes('fixed')) return 'contracted'
-  if (v.includes('temp')) return 'contracted'
-  if (v.includes('casual')) return 'contracted'
+  if (v.includes('intern')) return 'intern'
+  if (v.includes('contract') || v.includes('fixed') || v.includes('temp') || v.includes('casual')) return 'contracted'
   if (v.includes('permanent') || v.includes('perm')) return 'permanent'
   return 'permanent'
+}
+
+function isContractStyleEmployee(raw: string | undefined) {
+  const b = classifyWorkforceBucket(raw)
+  return b === 'contracted' || b === 'intern'
 }
 
 /** Uses `Employee.employeeType` (Odoo `employment_type` / mapped field) — distinct from permanent/contract pie logic. */
@@ -235,15 +256,6 @@ function isTempExcludedSeparationName(name: string) {
   return n ? TEMP_EXCLUDED_SEPARATION_NAMES.has(n) : false
 }
 
-// TEMP (manual inclusion): ensure specific recently expired contracts still show.
-const TEMP_FORCE_EXPIRED_CONTRACT_NAMES = new Set(
-  ['Anuska Bahal', 'Xue Xiang', 'Justin Jagnarine', 'Kevyn Des Vignes'].map(normName)
-)
-function isTempForcedExpiredContractName(name: string) {
-  const n = normName(name)
-  return n ? TEMP_FORCE_EXPIRED_CONTRACT_NAMES.has(n) : false
-}
-
 export default defineEventHandler(async (event): Promise<HomeAnalytics> => {
   const q = getQuery(event)
   const upcomingDaysRaw = typeof q.upcomingDays === 'string' ? q.upcomingDays : ''
@@ -292,17 +304,21 @@ export default defineEventHandler(async (event): Promise<HomeAnalytics> => {
     .filter((v): v is NonNullable<typeof v> => v !== null)
 
   const separationsByYearMap = new Map<number, number>()
-  const separationsByYearTypeMaps = {
+  const separationsByYearTypeMaps: Record<SeparationBucket | 'separated', Map<number, number>> = {
     resigned: new Map<number, number>(),
     retired: new Map<number, number>(),
     fired: new Map<number, number>(),
+    vsep: new Map<number, number>(),
+    end_of_contract: new Map<number, number>(),
+    probation_failure: new Map<number, number>(),
+    retrenchment: new Map<number, number>(),
     separated: new Map<number, number>()
   }
   for (const r of separatedRows) {
     const year = Number(r.monthKey.slice(0, 4))
     if (!Number.isFinite(year)) continue
     separationsByYearMap.set(year, (separationsByYearMap.get(year) ?? 0) + 1)
-    const key = (r.bucket ?? 'separated') as 'resigned' | 'retired' | 'fired' | 'separated'
+    const key = (r.bucket ?? 'separated') as keyof typeof separationsByYearTypeMaps
     const m = separationsByYearTypeMaps[key]
     m.set(year, (m.get(year) ?? 0) + 1)
   }
@@ -310,11 +326,20 @@ export default defineEventHandler(async (event): Promise<HomeAnalytics> => {
     .map(([year, count]) => ({ year, count }))
     .sort((a, b) => a.year - b.year)
 
+  const toYearSeries = (m: Map<number, number>) =>
+    Array.from(m.entries())
+      .map(([year, count]) => ({ year, count }))
+      .sort((a, b) => a.year - b.year)
+
   const separationsByYearByType: HomeAnalytics['separationsByYearByType'] = {
-    resigned: Array.from(separationsByYearTypeMaps.resigned.entries()).map(([year, count]) => ({ year, count })).sort((a, b) => a.year - b.year),
-    retired: Array.from(separationsByYearTypeMaps.retired.entries()).map(([year, count]) => ({ year, count })).sort((a, b) => a.year - b.year),
-    fired: Array.from(separationsByYearTypeMaps.fired.entries()).map(([year, count]) => ({ year, count })).sort((a, b) => a.year - b.year),
-    separated: Array.from(separationsByYearTypeMaps.separated.entries()).map(([year, count]) => ({ year, count })).sort((a, b) => a.year - b.year)
+    resigned: toYearSeries(separationsByYearTypeMaps.resigned),
+    retired: toYearSeries(separationsByYearTypeMaps.retired),
+    fired: toYearSeries(separationsByYearTypeMaps.fired),
+    vsep: toYearSeries(separationsByYearTypeMaps.vsep),
+    end_of_contract: toYearSeries(separationsByYearTypeMaps.end_of_contract),
+    probation_failure: toYearSeries(separationsByYearTypeMaps.probation_failure),
+    retrenchment: toYearSeries(separationsByYearTypeMaps.retrenchment),
+    separated: toYearSeries(separationsByYearTypeMaps.separated)
   }
 
   const nowMonthKey = monthKeyFromUtcMs(utcTodayMs())
@@ -330,14 +355,33 @@ export default defineEventHandler(async (event): Promise<HomeAnalytics> => {
   const startIdx = nowMonthIdx - (countMonths - 1)
   const months = Array.from({ length: countMonths }, (_, i) => monthKeyFromIndex(startIdx + i)).reverse()
 
-  const countsByMonth = new Map<string, { resigned: number; retired: number; fired: number }>()
+  type MonthCounts = {
+    resigned: number
+    retired: number
+    fired: number
+    vsep: number
+    end_of_contract: number
+    probation_failure: number
+    retrenchment: number
+    separated: number
+  }
+  const emptyMonthCounts = (): MonthCounts => ({
+    resigned: 0,
+    retired: 0,
+    fired: 0,
+    vsep: 0,
+    end_of_contract: 0,
+    probation_failure: 0,
+    retrenchment: 0,
+    separated: 0
+  })
+  const countsByMonth = new Map<string, MonthCounts>()
   const sepMs = separatedRows.map((r) => r.ms).sort((a, b) => a - b)
 
   for (const r of separatedRows) {
-    const cur = countsByMonth.get(r.monthKey) ?? { resigned: 0, retired: 0, fired: 0 }
-    if (r.bucket === 'resigned') cur.resigned += 1
-    else if (r.bucket === 'retired') cur.retired += 1
-    else if (r.bucket === 'fired') cur.fired += 1
+    const cur = countsByMonth.get(r.monthKey) ?? emptyMonthCounts()
+    const key: keyof MonthCounts = r.bucket ?? 'separated'
+    cur[key] += 1
     countsByMonth.set(r.monthKey, cur)
   }
 
@@ -354,13 +398,11 @@ export default defineEventHandler(async (event): Promise<HomeAnalytics> => {
 
   const separationsByMonth: HomeAnalytics['separations']['byMonth'] = {}
   for (const m of months) {
-    const c = countsByMonth.get(m) ?? { resigned: 0, retired: 0, fired: 0 }
+    const c = countsByMonth.get(m) ?? emptyMonthCounts()
     const endMs = monthEndUtcMs(m)
     const afterCount = endMs === null ? 0 : countSeparatedAfter(endMs)
     separationsByMonth[m] = {
-      resigned: c.resigned,
-      retired: c.retired,
-      fired: c.fired,
+      ...c,
       headcountAfter: activeNowCount + afterCount
     }
   }
@@ -386,7 +428,7 @@ export default defineEventHandler(async (event): Promise<HomeAnalytics> => {
 
   const headcountMap = new Map<string, number>()
   const genderByCountry = new Map<string, { male: number; female: number }>()
-  const employmentByCountry = new Map<string, { permanent: number; contracted: number }>()
+  const employmentByCountry = new Map<string, { permanent: number; contracted: number; interns: number }>()
   const ageByCountry = new Map<
     string,
     {
@@ -400,6 +442,7 @@ export default defineEventHandler(async (event): Promise<HomeAnalytics> => {
   let femaleOverall = 0
   let permanentOverall = 0
   let contractedOverall = 0
+  let internsOverall = 0
   let consultantsActive = 0
   let independentContractorsActive = 0
   const todayUtcMs = utcTodayMs()
@@ -413,9 +456,12 @@ export default defineEventHandler(async (event): Promise<HomeAnalytics> => {
     const country = (e.countryAssigned ?? '').trim()
     headcountMap.set(country, (headcountMap.get(country) ?? 0) + 1)
 
-    const empType = normalizeEmploymentType((e as any).employeeType as string | undefined)
-    const empCurrent = employmentByCountry.get(country) ?? { permanent: 0, contracted: 0 }
-    if (empType === 'contracted') {
+    const bucket = classifyWorkforceBucket((e as any).employeeType as string | undefined)
+    const empCurrent = employmentByCountry.get(country) ?? { permanent: 0, contracted: 0, interns: 0 }
+    if (bucket === 'intern') {
+      empCurrent.interns += 1
+      internsOverall += 1
+    } else if (bucket === 'contracted') {
       empCurrent.contracted += 1
       contractedOverall += 1
     } else {
@@ -463,8 +509,9 @@ export default defineEventHandler(async (event): Promise<HomeAnalytics> => {
   }))
 
   const employmentTypeByCountryOrdered: HomeAnalytics['employmentTypeBreakdown']['byCountry'] = BRANCH_COUNTRIES.map((country) => {
-    const counts = employmentByCountry.get(country) ?? { permanent: 0, contracted: 0 }
-    return { country, permanent: counts.permanent, contracted: counts.contracted, total: counts.permanent + counts.contracted }
+    const counts = employmentByCountry.get(country) ?? { permanent: 0, contracted: 0, interns: 0 }
+    const total = counts.permanent + counts.contracted + counts.interns
+    return { country, permanent: counts.permanent, contracted: counts.contracted, interns: counts.interns, total }
   })
 
   const genderByCountryList = Array.from(genderByCountry.entries())
@@ -548,12 +595,13 @@ export default defineEventHandler(async (event): Promise<HomeAnalytics> => {
     }
   }
 
+  // Symmetric window: rows persist on the table for `upcomingDays` days after their end date passes.
   const upcomingContractExpiries = employees
     .filter((e) => isActiveStatus(e.employeeStatus))
-    .filter((e) => normalizeEmploymentType(e.employeeType) === 'contracted')
+    .filter((e) => isContractStyleEmployee(e.employeeType))
     .map((e) => toEndRow(e, e.contractEndDate ?? null))
     .filter((v): v is NonNullable<typeof v> => v !== null)
-    .filter((r) => r.daysRemaining >= 0 && r.daysRemaining <= upcomingDays)
+    .filter((r) => r.daysRemaining >= -upcomingDays && r.daysRemaining <= upcomingDays)
     .sort(
       (a, b) =>
         a.contractOrProbationEndDate.localeCompare(b.contractOrProbationEndDate) ||
@@ -565,53 +613,13 @@ export default defineEventHandler(async (event): Promise<HomeAnalytics> => {
     .filter((e) => isActiveStatus(e.employeeStatus))
     .map((e) => toEndRow(e, e.probationEndDate ?? null))
     .filter((v): v is NonNullable<typeof v> => v !== null)
-    .filter((r) => r.daysRemaining >= 0 && r.daysRemaining <= upcomingDays)
+    .filter((r) => r.daysRemaining >= -upcomingDays && r.daysRemaining <= upcomingDays)
     .sort(
       (a, b) =>
         a.contractOrProbationEndDate.localeCompare(b.contractOrProbationEndDate) ||
         a.name.localeCompare(b.name) ||
         a.employeeKey.localeCompare(b.employeeKey)
     )
-
-  // Expired contracts: ONLY consider actual contract end dates (not probation end dates).
-  const baseExpiredContracts = employees
-    .filter((e) => isActiveStatus(e.employeeStatus))
-    .filter((e) => normalizeEmploymentType(e.employeeType) === 'contracted')
-    .map((e) => {
-      const row = toEndRow(e, e.contractEndDate ?? null)
-      if (!row) return null
-      if (row.daysRemaining >= 0) return null
-      return row
-    })
-    .filter((v): v is NonNullable<typeof v> => v !== null)
-  
-  const forcedExpiredContracts = employees
-    .filter((e) => isTempForcedExpiredContractName(e.name))
-    .map((e) => {
-      const end = e.contractEndDate ?? e.contractOrProbationEndDate ?? null
-      const row = toEndRow(e, end)
-      if (!row) return null
-      if (row.daysRemaining >= 0) return null
-      return row
-    })
-    .filter((v): v is NonNullable<typeof v> => v !== null)
-
-  const expiredContracts = (() => {
-    const seen = new Set<string>()
-    const out: typeof baseExpiredContracts = []
-    for (const r of [...baseExpiredContracts, ...forcedExpiredContracts]) {
-      const k = `${r.employeeKey}__${r.contractOrProbationEndDate}`
-      if (seen.has(k)) continue
-      seen.add(k)
-      out.push(r)
-    }
-    return out.sort(
-      (a, b) =>
-        b.contractOrProbationEndDate.localeCompare(a.contractOrProbationEndDate) ||
-        a.name.localeCompare(b.name) ||
-        a.employeeKey.localeCompare(b.employeeKey)
-    )
-  })()
 
   return {
     headcountByCountry: headcountByCountryOrdered,
@@ -620,7 +628,12 @@ export default defineEventHandler(async (event): Promise<HomeAnalytics> => {
       independentContractors: independentContractorsActive
     },
     employmentTypeBreakdown: {
-      overall: { permanent: permanentOverall, contracted: contractedOverall, total: permanentOverall + contractedOverall },
+      overall: {
+        permanent: permanentOverall,
+        contracted: contractedOverall,
+        interns: internsOverall,
+        total: permanentOverall + contractedOverall + internsOverall
+      },
       byCountry: employmentTypeByCountryOrdered
     },
     separations: { currentMonth: nowMonthKey, months, byMonth: separationsByMonth },
@@ -635,8 +648,7 @@ export default defineEventHandler(async (event): Promise<HomeAnalytics> => {
     avgAgeByCountryGender: avgAgeByCountryGenderOrdered,
     talentDensity,
     upcomingContractExpiries,
-    upcomingProbations,
-    expiredContracts
+    upcomingProbations
   }
 })
 

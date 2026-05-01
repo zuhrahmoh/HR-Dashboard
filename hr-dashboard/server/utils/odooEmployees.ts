@@ -85,6 +85,16 @@ function toYmd(v: unknown): string | null {
   return /^\d{4}-\d{2}-\d{2}$/.test(ymd) ? ymd : null
 }
 
+function parseOdooFloat(v: unknown): number | null {
+  if (v === false || v == null) return null
+  if (typeof v === 'number' && Number.isFinite(v)) return v
+  if (typeof v === 'string') {
+    const n = Number.parseFloat(v.replace(/,/g, ''))
+    return Number.isFinite(n) ? n : null
+  }
+  return null
+}
+
 function safeString(v: unknown) {
   if (v === true || v === false) return ''
   return typeof v === 'string' ? v : v == null ? '' : String(v)
@@ -196,57 +206,54 @@ function normalizeTalentRole(raw: string | undefined) {
   return null
 }
 
-function parseYmdUtcMs(ymd: string | null) {
-  if (!ymd) return null
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd.trim())
-  if (!m) return null
-  const y = Number(m[1])
-  const mo = Number(m[2])
-  const d = Number(m[3])
-  if (!Number.isFinite(y) || !Number.isFinite(mo) || !Number.isFinite(d)) return null
-  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null
-  const ms = Date.UTC(y, mo - 1, d)
-  const dt = new Date(ms)
-  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d) return null
-  return ms
-}
 
-function clampContractLikeEndDate(endYmd: string | null, startYmd: string | null) {
-  const endMs = parseYmdUtcMs(endYmd)
-  if (endMs === null) return null
-  const startMs = parseYmdUtcMs(startYmd)
-  if (startMs === null) return endYmd
-  if (endMs < startMs) return null
-  // Guardrail: ignore obviously wrong far-future dates for "contract-ish" ends.
-  const maxMs = startMs + 5 * 365 * 24 * 60 * 60 * 1000
-  if (endMs > maxMs) return null
-  return endYmd
-}
 
-function clampProbationEndDate(endYmd: string | null, startYmd: string | null) {
-  const endMs = parseYmdUtcMs(endYmd)
-  if (endMs === null) return null
-  const startMs = parseYmdUtcMs(startYmd)
-  if (startMs === null) return endYmd
-  if (endMs < startMs) return null
-  // Probation should be relatively close to start date.
-  const maxMs = startMs + 365 * 24 * 60 * 60 * 1000
-  if (endMs > maxMs) return null
-  return endYmd
-}
+export type DepartureBucket =
+  | 'resigned'
+  | 'retired'
+  | 'fired'
+  | 'vsep'
+  | 'end_of_contract'
+  | 'probation_failure'
+  | 'retrenchment'
 
-function normalizeDepartureReason(reason: string | undefined): 'resigned' | 'retired' | 'fired' | null {
+function normalizeDepartureReason(reason: string | undefined): DepartureBucket | null {
   const v = (reason ?? '').trim().toLowerCase()
   if (!v) return null
+  if (v.includes('vsep') || v.includes('voluntary separation')) return 'vsep'
+  if (v.includes('end of contract') || v.includes('non-renewal') || v.includes('non renewal')) return 'end_of_contract'
+  if (v.includes('probation')) return 'probation_failure'
+  if (v.includes('retrench')) return 'retrenchment'
   if (v === 'resigned' || v.startsWith('resign')) return 'resigned'
   if (v === 'retired' || v.startsWith('retire')) return 'retired'
   if (v === 'fired' || v.startsWith('fire') || v.includes('terminated') || v.includes('termination')) return 'fired'
   return null
 }
 
+const DEPARTURE_BUCKET_LABEL: Record<DepartureBucket, string> = {
+  resigned: 'Resigned',
+  retired: 'Retired',
+  fired: 'Fired',
+  vsep: 'VSEP',
+  end_of_contract: 'End of Contract',
+  probation_failure: 'Probation Failure',
+  retrenchment: 'Retrenchment'
+}
+
+function humanizeSnakeCaseSelection(raw: string): string {
+  const s = raw.trim()
+  if (!s) return ''
+  if (/^[a-z][a-z0-9_]*$/i.test(s) && s.includes('_')) {
+    return s.split('_').filter(Boolean).map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
+  }
+  return s
+}
+
 function selectionDisplayString(v: unknown): string {
   if (Array.isArray(v) && v.length >= 2 && typeof v[1] === 'string') return v[1].trim()
-  return safeString(v).trim()
+  const plain = safeString(v).trim()
+  if (!plain) return ''
+  return humanizeSnakeCaseSelection(plain)
 }
 
 /** True when Odoo marks the employee as in offboarding (still active until last working day). */
@@ -285,17 +292,18 @@ type HrEmployeeMappingCtx = {
   contractEndField: string | null
   probationEndField: string | null
   contractDateStartField: string | null
-  contractDateEndField: string | null
-  contractTrialEndField: string | null
   talentRoleField: string | null
   playerRatingField: string | null
   leaderRatingField: string | null
   talentRatingField: string | null
   employmentTypeField: string | null
   birthDateField: string | null
-  departureReasonField: string | null
+  departureReasonOffboardingField: string | null
+  departureReasonStandardField: string | null
   offboardingStateField: string | null
   offboardingPhaseField: string | null
+  /** Laser `offboarding_last_working_day` when present (planned last day while active). */
+  offboardingPlannedLastDayField: string | null
   departureDateField: string | null
   tenureField: string | null
   workEmailField: string | null
@@ -304,6 +312,8 @@ type HrEmployeeMappingCtx = {
   personalPhoneFields: string[]
   managerField: string | null
   eltField: string | null
+  dateLastSalaryChangeField: string | null
+  amountIncreasedByField: string | null
 }
 
 async function prepareHrEmployeeMappingCtx(client: Awaited<ReturnType<typeof getOdooClient>>): Promise<{
@@ -358,20 +368,6 @@ async function prepareHrEmployeeMappingCtx(client: Awaited<ReturnType<typeof get
     'x_contract_start_date',
     'start_date'
   ])
-  const contractDateEndField = pickFirstExistingField(contractFieldInfo, [
-    'date_end',
-    'x_date_end',
-    'end_date',
-    'contract_end_date',
-    'x_contract_end_date'
-  ])
-  const contractTrialEndField = pickFirstExistingField(contractFieldInfo, [
-    'trial_date_end',
-    'x_trial_date_end',
-    'trial_end_date',
-    'x_probation_end_date',
-    'probation_end_date'
-  ])
 
   const talentRoleField = pickFirstExistingField(fieldInfo, [
     'player_type',
@@ -413,8 +409,10 @@ async function prepareHrEmployeeMappingCtx(client: Awaited<ReturnType<typeof get
     'dob',
     'x_dob'
   ])
-  const departureReasonField = pickFirstExistingField(fieldInfo, ['departure_reason_id', 'x_departure_reason_id'])
+  const departureReasonOffboardingField = pickFirstExistingField(fieldInfo, ['offboarding_departure_reason_id'])
+  const departureReasonStandardField = pickFirstExistingField(fieldInfo, ['departure_reason_id', 'x_departure_reason_id'])
   const offboardingStateField = pickFirstExistingField(fieldInfo, [
+    'is_offboarding',
     'x_offboarding',
     'in_offboarding',
     'x_in_offboarding',
@@ -429,6 +427,8 @@ async function prepareHrEmployeeMappingCtx(client: Awaited<ReturnType<typeof get
     'x_hr_employee_state'
   ])
   const offboardingPhaseField = pickFirstExistingField(fieldInfo, [
+    'offboarding_status',
+    'offboarding_phase',
     'x_offboarding_status',
     'x_offboarding_phase',
     'x_separation_stage',
@@ -436,6 +436,7 @@ async function prepareHrEmployeeMappingCtx(client: Awaited<ReturnType<typeof get
     'separation_stage',
     'x_separation_status'
   ])
+  const offboardingPlannedLastDayField = pickFirstExistingField(fieldInfo, ['offboarding_last_working_day'])
   const departureDateField = pickFirstExistingField(fieldInfo, [
     'departure_date',
     'x_departure_date',
@@ -486,6 +487,8 @@ async function prepareHrEmployeeMappingCtx(client: Awaited<ReturnType<typeof get
     'x_el_team_id',
     'x_elt_member_id'
   ])
+  const dateLastSalaryChangeField = pickFirstExistingField(fieldInfo, ['date_last_salary_change', 'x_date_last_salary_change'])
+  const amountIncreasedByField = pickFirstExistingField(fieldInfo, ['amount_increased_by', 'x_amount_increased_by'])
 
   const fieldDefs = fieldInfo as Record<string, { type?: string; relation?: string }>
   const displayFromHrField = buildDisplayFromHrField(fieldDefs)
@@ -517,15 +520,19 @@ async function prepareHrEmployeeMappingCtx(client: Awaited<ReturnType<typeof get
         talentRatingField,
         employmentTypeField,
         birthDateField,
-        departureReasonField,
+        departureReasonOffboardingField,
+        departureReasonStandardField,
         offboardingStateField,
         offboardingPhaseField,
+        offboardingPlannedLastDayField,
         departureDateField,
         tenureField,
         workEmailField,
         personalEmailField,
         ...workPhoneFields,
-        ...personalPhoneFields
+        ...personalPhoneFields,
+        dateLastSalaryChangeField,
+        amountIncreasedByField
       ].filter(Boolean)
     )
   ) as string[]
@@ -541,17 +548,17 @@ async function prepareHrEmployeeMappingCtx(client: Awaited<ReturnType<typeof get
       contractEndField,
       probationEndField,
       contractDateStartField,
-      contractDateEndField,
-      contractTrialEndField,
       talentRoleField,
       playerRatingField,
       leaderRatingField,
       talentRatingField,
       employmentTypeField,
       birthDateField,
-      departureReasonField,
+      departureReasonOffboardingField,
+      departureReasonStandardField,
       offboardingStateField,
       offboardingPhaseField,
+      offboardingPlannedLastDayField,
       departureDateField,
       tenureField,
       workEmailField,
@@ -559,7 +566,9 @@ async function prepareHrEmployeeMappingCtx(client: Awaited<ReturnType<typeof get
       workPhoneFields,
       personalPhoneFields,
       managerField,
-      eltField
+      eltField,
+      dateLastSalaryChangeField,
+      amountIncreasedByField
     },
     fields
   }
@@ -580,17 +589,17 @@ async function mapHrRowsToEmployees(
     contractEndField,
     probationEndField,
     contractDateStartField,
-    contractDateEndField,
-    contractTrialEndField,
     talentRoleField,
     playerRatingField,
     leaderRatingField,
     talentRatingField,
     employmentTypeField,
     birthDateField,
-    departureReasonField,
+    departureReasonOffboardingField,
+    departureReasonStandardField,
     offboardingStateField,
     offboardingPhaseField,
+    offboardingPlannedLastDayField,
     departureDateField,
     tenureField,
     workEmailField,
@@ -598,7 +607,9 @@ async function mapHrRowsToEmployees(
     workPhoneFields,
     personalPhoneFields,
     managerField,
-    eltField
+    eltField,
+    dateLastSalaryChangeField,
+    amountIncreasedByField
   } = ctx
 
   const contractIds = Array.from(
@@ -610,22 +621,17 @@ async function mapHrRowsToEmployees(
   )
 
   const contractById = new Map<number, Record<string, unknown>>()
-  if (contractIds.length > 0 && (contractDateStartField || contractDateEndField || contractTrialEndField)) {
-    const contractFields = Array.from(
-      new Set([contractDateStartField, contractDateEndField, contractTrialEndField].filter(Boolean))
-    ) as string[]
-    if (contractFields.length > 0) {
-      const contractRows = await client.executeKw<any[]>(
-        'hr.contract',
-        'search_read',
-        [[['id', 'in', contractIds]]],
-        { fields: ['id', ...contractFields] }
-      )
-      if (Array.isArray(contractRows)) {
-        for (const c of contractRows) {
-          const id = c?.id
-          if (Number.isFinite(id)) contractById.set(Number(id), c as Record<string, unknown>)
-        }
+  if (contractIds.length > 0 && contractDateStartField) {
+    const contractRows = await client.executeKw<any[]>(
+      'hr.contract',
+      'search_read',
+      [[['id', 'in', contractIds]]],
+      { fields: ['id', contractDateStartField] }
+    )
+    if (Array.isArray(contractRows)) {
+      for (const c of contractRows) {
+        const id = c?.id
+        if (Number.isFinite(id)) contractById.set(Number(id), c as Record<string, unknown>)
       }
     }
   }
@@ -690,10 +696,13 @@ async function mapHrRowsToEmployees(
       fallbackCountry: countryAssigned
     })
 
-    const rawDepartureReason = departureReasonField ? r?.[departureReasonField] : null
-    const departureReason = departureReasonField
-      ? (many2oneName(rawDepartureReason) || safeString(rawDepartureReason)).trim() || undefined
-      : undefined
+    const reasonFromOffboarding = departureReasonOffboardingField
+      ? (many2oneName(r?.[departureReasonOffboardingField]) || safeString(r?.[departureReasonOffboardingField])).trim()
+      : ''
+    const reasonFromStandard = departureReasonStandardField
+      ? (many2oneName(r?.[departureReasonStandardField]) || safeString(r?.[departureReasonStandardField])).trim()
+      : ''
+    const departureReason = (reasonFromOffboarding || reasonFromStandard) || undefined
     const normReason = normalizeDepartureReason(departureReason)
     const offStateType = offboardingStateField ? fieldDefs[offboardingStateField]?.type : undefined
     const offRaw = offboardingStateField ? r?.[offboardingStateField] : undefined
@@ -701,18 +710,16 @@ async function mapHrRowsToEmployees(
       Boolean(offboardingStateField) && isActive && rawIndicatesOffboarding(offRaw, offStateType)
 
     const employeeStatus = !isActive
-      ? normReason === 'retired'
-        ? 'Retired'
-        : normReason === 'fired'
-          ? 'Fired'
-          : normReason === 'resigned'
-            ? 'Resigned'
-            : 'Separated'
+      ? normReason
+        ? DEPARTURE_BUCKET_LABEL[normReason]
+        : 'Separated'
       : inOffboarding
         ? 'Offboarding'
         : 'Active'
 
-    const lastWorkingDayYmd = departureDateField ? toYmd(r?.[departureDateField]) : null
+    const plannedLast = offboardingPlannedLastDayField ? toYmd(r?.[offboardingPlannedLastDayField]) : null
+    const departureDateYmd = departureDateField ? toYmd(r?.[departureDateField]) : null
+    const lastWorkingDayYmd = plannedLast ?? departureDateYmd
     const offPhaseRaw = offboardingPhaseField ? selectionDisplayString(r?.[offboardingPhaseField]) : ''
 
     const managerDisplay = displayManagerOrElt(r as Record<string, unknown>, managerField)
@@ -744,18 +751,19 @@ async function mapHrRowsToEmployees(
       departureReason,
       lastWorkingDay: lastWorkingDayYmd,
       offboardingPhase: offPhaseRaw || undefined,
-      separatedAt: !isActive ? (departureDateField ? toYmd(r?.[departureDateField]) : null) ?? toYmd(r?.write_date) : null,
+      separatedAt: !isActive ? departureDateYmd ?? toYmd(r?.write_date) : null,
       createdAt: toYmd(r?.create_date),
       tenure: tenureField ? safeString(r?.[tenureField]).trim() || undefined : undefined,
       workEmail: workEmailField ? safeString(r?.[workEmailField]).trim() || undefined : undefined,
       personalEmail: personalEmailField ? safeString(r?.[personalEmailField]).trim() || undefined : undefined,
       workPhone: readFirstNonEmptyFieldString(r as Record<string, unknown>, workPhoneFields),
-      personalPhone: readFirstNonEmptyFieldString(r as Record<string, unknown>, personalPhoneFields)
+      personalPhone: readFirstNonEmptyFieldString(r as Record<string, unknown>, personalPhoneFields),
+      dateLastSalaryChange: dateLastSalaryChangeField ? toYmd(r?.[dateLastSalaryChangeField]) : null,
+      amountIncreasedBy: amountIncreasedByField ? parseOdooFloat(r?.[amountIncreasedByField]) : null
     }
 
     // Prefer contract end for interns/contract staff; probation end for permanent staff.
     const employeeTypeNorm = normalizeEmployeeType(employee.employeeType)
-    const startYmd = employee.startDate
 
     const contractId = Array.isArray(r?.contract_id) ? r.contract_id[0] : null
     const linkedContract = Number.isFinite(contractId) ? contractById.get(Number(contractId)) : null
@@ -763,19 +771,10 @@ async function mapHrRowsToEmployees(
     const contractStartFromContract =
       linkedContract && contractDateStartField ? toYmd(linkedContract[contractDateStartField]) : null
 
-    const contractEndFromContract =
-      linkedContract && contractDateEndField ? toYmd(linkedContract[contractDateEndField]) : null
-    const contractEndFromEmployee = contractEndField ? toYmd(r?.[contractEndField]) : null
-
-    const probationEndFromContract =
-      linkedContract && contractTrialEndField ? toYmd(linkedContract[contractTrialEndField]) : null
-    const probationEndFromEmployee = probationEndField ? toYmd(r?.[probationEndField]) : null
-
-    const contractEndRaw = contractEndFromContract ?? contractEndFromEmployee
-    const probationEndRaw = probationEndFromEmployee ?? probationEndFromContract
-
-    const contractEnd = clampContractLikeEndDate(contractEndRaw, startYmd)
-    const probationEnd = clampProbationEndDate(probationEndRaw, startYmd)
+    // Strict sources: hr.employee.contract_end → contractEndDate,
+    // hr.employee.end_of_probation → probationEndDate. Values are trusted as-is from Odoo.
+    const contractEnd = contractEndField ? toYmd(r?.[contractEndField]) : null
+    const probationEnd = probationEndField ? toYmd(r?.[probationEndField]) : null
     employee.contractStartDate = contractStartFromContract
     employee.contractEndDate = contractEnd
     employee.probationEndDate = probationEnd

@@ -1,9 +1,12 @@
 <template>
-  <section class="min-w-0 space-y-3">
+  <section id="eap-referrals" class="surface-tint-hero scroll-mt-32 min-w-0 space-y-4 rounded-2xl p-4 shadow-card sm:p-5">
     <div class="flex min-w-0 flex-wrap items-start justify-between gap-4">
-      <div class="space-y-1">
-        <h2 class="text-base font-semibold text-hr-navy">Employee Assistance Program Referrals</h2>
-        <p class="text-xs text-slate-400">Read-only: sourced from Odoo (employee profile → Benefits).</p>
+      <div class="flex min-w-0 items-start gap-3">
+        <span class="mt-1 h-6 w-1 shrink-0 rounded-full bg-brand-blue" aria-hidden="true" />
+        <div class="min-w-0 space-y-0.5">
+          <h2 class="text-gradient-brand text-xl font-bold tracking-tight">Employee Assistance Program Referrals</h2>
+          <p class="text-xs text-slate-500">Read-only: sourced from Odoo (employee profile → Benefits).</p>
+        </div>
       </div>
       <div class="flex flex-wrap items-center gap-3">
         <div class="shrink-0 text-xs text-slate-400">Count: {{ items.length }}</div>
@@ -11,9 +14,9 @@
     </div>
 
     <div v-if="pending" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">Loading…</div>
-    <div v-else-if="error" class="rounded-md border border-red-900/60 bg-red-950/30 p-4 text-red-200">
+    <div v-else-if="error" class="rounded-md border border-pink-200 bg-pink-50 p-4 text-pink-800">
       Failed to load EAP referrals.
-      <div v-if="errorMessage" class="mt-2 text-xs text-red-200/80">{{ errorMessage }}</div>
+      <div v-if="errorMessage" class="mt-2 text-xs text-pink-700/80">{{ errorMessage }}</div>
     </div>
 
     <div v-else class="rounded-md border border-slate-200 bg-white shadow-card">
@@ -127,11 +130,11 @@ function normalizeForMatch(value: string) {
 
 function programStatusBadgeClass(value: string) {
   const v = normalizeForMatch(value)
-  if (v === 'active') return 'border-emerald-200 bg-emerald-50 text-emerald-900'
-  if (v === 'completed' || v === 'exited') return 'border-violet-200 bg-violet-50 text-violet-900'
+  if (v === 'active') return 'border-teal-200 bg-teal-50 text-teal-800'
+  if (v === 'completed' || v === 'exited') return 'border-purple-200 bg-purple-50 text-brand-purple'
   if (v === 'on hold') return 'border-slate-300 bg-white text-slate-800'
-  if (v === 'contacted') return 'border-sky-200 bg-sky-50 text-sky-900'
-  return 'border-amber-200 bg-amber-50 text-amber-900'
+  if (v === 'contacted') return 'border-blue-200 bg-blue-50 text-blue-900'
+  return 'border-pink-200 bg-pink-50 text-pink-800'
 }
 
 function getErrorMessage(error: unknown) {

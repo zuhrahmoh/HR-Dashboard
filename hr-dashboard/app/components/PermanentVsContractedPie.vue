@@ -45,7 +45,7 @@
 
           <svg class="h-full w-full" viewBox="0 0 100 100" aria-hidden="true">
             <template v-if="total <= 0">
-              <circle cx="50" cy="50" r="42" fill="rgb(30 41 59)" opacity="0.45" />
+              <circle cx="50" cy="50" r="42" fill="rgb(243 232 255)" opacity="0.65" />
             </template>
             <template v-else-if="isAllPermanent">
               <circle
@@ -100,7 +100,7 @@
                 :y="lbl.y"
                 text-anchor="middle"
                 dominant-baseline="middle"
-                :fill="lbl.key === 'contracted' ? COLORS.permanent : 'rgb(30 58 138)'"
+                :fill="lbl.key === 'permanent' ? 'white' : 'rgb(30 58 138)'"
                 font-size="6.2"
                 font-weight="700"
               >
@@ -139,7 +139,7 @@
               <span class="truncate">Contracted</span>
             </div>
             <div class="shrink-0 tabular-nums text-slate-900">
-              {{ contracted }} <span class="text-slate-400">({{ contractedPct }}%)</span>
+              {{ contractedWithInterns }} <span class="text-slate-400">({{ contractedPct }}%)</span>
             </div>
           </div>
         </div>
@@ -154,7 +154,7 @@
         <div class="relative h-40 w-40">
           <svg class="h-full w-full" viewBox="0 0 100 100" aria-hidden="true">
             <template v-if="total <= 0">
-              <circle cx="50" cy="50" r="42" fill="rgb(30 41 59)" opacity="0.45" />
+              <circle cx="50" cy="50" r="42" fill="rgb(243 232 255)" opacity="0.65" />
             </template>
             <template v-else-if="isAllPermanent">
               <circle cx="50" cy="50" r="42" :fill="COLORS.permanent" />
@@ -176,7 +176,7 @@
                 :y="lbl.y"
                 text-anchor="middle"
                 dominant-baseline="middle"
-                :fill="lbl.key === 'contracted' ? COLORS.permanent : 'rgb(30 58 138)'"
+                :fill="lbl.key === 'permanent' ? 'white' : 'rgb(30 58 138)'"
                 font-size="6.5"
                 font-weight="700"
               >
@@ -217,7 +217,7 @@
               <span class="truncate">Contracted</span>
             </div>
             <div class="shrink-0 tabular-nums text-slate-900">
-              {{ contracted }} <span class="text-slate-400">({{ contractedPct }}%)</span>
+              {{ contractedWithInterns }} <span class="text-slate-400">({{ contractedPct }}%)</span>
             </div>
           </div>
         </div>
@@ -229,8 +229,8 @@
 </template>
 
 <script setup lang="ts">
-type Counts = { permanent: number; contracted: number; total: number }
-type ByCountry = { country: string; permanent: number; contracted: number; total: number }
+type Counts = { permanent: number; contracted: number; interns?: number; total: number }
+type ByCountry = { country: string; permanent: number; contracted: number; interns?: number; total: number }
 
 const props = defineProps<{
   overall: Counts
@@ -242,8 +242,8 @@ const props = defineProps<{
 }>()
 
 const COLORS = {
-  permanent: 'rgb(89 213 154)', // #59D59A
-  contracted: 'rgb(43 69 145)' // #2B4591
+  permanent: 'rgb(30 58 138)', // brand navy
+  contracted: 'rgb(20 184 166)' // brand teal
 } as const
 
 const isCompact = computed(() => props.compact === true)
@@ -261,7 +261,7 @@ const hovered = ref<null | { key: HoverKey; x: number; y: number; label: string;
 
 function tooltipForKey(key: HoverKey) {
   if (key === 'permanent') return { label: 'Permanent', value: `${permanent.value} (${permanentPct.value}%)` }
-  return { label: 'Contracted', value: `${contracted.value} (${contractedPct.value}%)` }
+  return { label: 'Contracted', value: `${contractedWithInterns.value} (${contractedPct.value}%)` }
 }
 
 function setHover(key: HoverKey, e: PointerEvent) {
@@ -302,12 +302,25 @@ const selected = computed<Counts>(() => {
   const key = selectedCountry.value.trim()
   if (!key) return props.overall
   const match = props.byCountry.find((c) => (c.country ?? '').trim() === key)
-  return match ? { permanent: match.permanent, contracted: match.contracted, total: match.total } : props.overall
+  return match
+    ? {
+        permanent: match.permanent,
+        contracted: match.contracted,
+        interns: match.interns ?? 0,
+        total: match.total
+      }
+    : props.overall
 })
 
 const permanent = computed(() => (Number.isFinite(selected.value.permanent) ? selected.value.permanent : 0))
+const interns = computed(() => (Number.isFinite(selected.value.interns) ? (selected.value.interns ?? 0) : 0))
 const contracted = computed(() => (Number.isFinite(selected.value.contracted) ? selected.value.contracted : 0))
-const total = computed(() => (Number.isFinite(selected.value.total) ? selected.value.total : permanent.value + contracted.value))
+const contractedWithInterns = computed(() => contracted.value + interns.value)
+const total = computed(() =>
+  Number.isFinite(selected.value.total)
+    ? selected.value.total
+    : permanent.value + contracted.value + interns.value
+)
 
 const subtitle = computed(() => {
   if (!showFilter.value) return 'Company-wide'
@@ -321,10 +334,10 @@ function pct(part: number, whole: number) {
 }
 
 const permanentPct = computed(() => pct(permanent.value, total.value))
-const contractedPct = computed(() => pct(contracted.value, total.value))
+const contractedPct = computed(() => pct(contractedWithInterns.value, total.value))
 
 const isAllPermanent = computed(() => total.value > 0 && permanent.value === total.value)
-const isAllContracted = computed(() => total.value > 0 && contracted.value === total.value)
+const isAllContracted = computed(() => total.value > 0 && contractedWithInterns.value === total.value)
 
 function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
   const rad = (Math.PI / 180) * angleDeg
@@ -355,7 +368,7 @@ const permanentSlice = computed(() => {
 
 const contractedSlice = computed(() => {
   const permFrac = total.value > 0 ? Math.max(0, Math.min(1, permanent.value / total.value)) : 0
-  const frac = total.value > 0 ? Math.max(0, Math.min(1, contracted.value / total.value)) : 0
+  const frac = total.value > 0 ? Math.max(0, Math.min(1, contractedWithInterns.value / total.value)) : 0
   const start = -90 + permFrac * 360
   const end = start + frac * 360
   return { d: frac <= 0 ? '' : arcPath(50, 50, 42, start, end), fill: COLORS.contracted }
@@ -366,7 +379,7 @@ const segmentLabels = computed(() => {
   if (t <= 0) return []
 
   const permFrac = Math.max(0, Math.min(1, permanent.value / t))
-  const contFrac = Math.max(0, Math.min(1, contracted.value / t))
+  const contFrac = Math.max(0, Math.min(1, contractedWithInterns.value / t))
 
   const start = -90
   const permStart = start
@@ -395,7 +408,7 @@ const segmentLabels = computed(() => {
       x: cMid.x,
       y: cMid.y,
       pct: contractedPct.value,
-      show: contracted.value > 0 && cMid.delta >= MIN_ARC_DEG
+      show: contractedWithInterns.value > 0 && cMid.delta >= MIN_ARC_DEG
     }
   ]
 })
