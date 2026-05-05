@@ -14,7 +14,7 @@ function resolveJsonPath(fileName: string) {
     if (existsSync(p)) return p
   }
 
-  return candidates[0]
+  return candidates[0]!
 }
 
 async function ensureFileInitialized(absolutePath: string) {

@@ -104,7 +104,7 @@ export async function getOdooClient() {
   } else {
     const dbs = await listDbs(baseUrl).catch(() => [])
     for (const candidateDb of dbs) {
-      const candidateUid = await authenticate(baseUrl, [candidateDb, config.username, config.password, {}]).catch(() => false)
+      const candidateUid = await authenticate(baseUrl, [candidateDb, config.username, config.password, {}]).catch(() => false as const)
       if (candidateUid) {
         db = candidateDb
         uid = candidateUid

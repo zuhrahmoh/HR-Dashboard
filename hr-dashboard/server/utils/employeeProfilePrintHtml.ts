@@ -383,7 +383,7 @@ export async function renderEmployeeProfilePdf(payload: EmployeeProfilePrintPayl
     await page.setContent(html, { waitUntil: 'load', timeout: 60_000 })
     try {
       await page.evaluate(async () => {
-        const fonts = document.fonts
+        const fonts = (globalThis as any).document?.fonts
         if (fonts?.ready) await fonts.ready
       })
     } catch {

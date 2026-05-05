@@ -13,12 +13,8 @@ const EXCLUDED_EXACT_NAMES = new Set(
   [
     'Administrator',
     'RampsBot',
-    'Tatiana Paris',
     'Heather Rampersad',
-    'Maria Covaleda',
-    'Chayenne Fraser',
-    'Aneesa Singh',
-    'Krishendath Maharaj',
+    'Deron Seepaul',
     'Aki',
     'Akini',
     'Aruna',

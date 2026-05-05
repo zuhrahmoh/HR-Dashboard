@@ -116,7 +116,7 @@ function isValidIsoDate(value: string) {
 function clampMonthViewToValueOrToday() {
   const v = props.modelValue.trim()
   if (isValidIsoDate(v)) {
-    const [y, m] = v.split('-').map((n) => Number(n))
+    const [y, m] = v.split('-').map((n) => Number(n)) as [number, number]
     viewYear.value = y
     viewMonth.value = m - 1
     return

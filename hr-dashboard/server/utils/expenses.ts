@@ -138,7 +138,7 @@ function parseCsv(text: string): string[][] {
   }
 
   row.push(cell)
-  if (row.length > 1 || row[0].trim() !== '') rows.push(row)
+  if (row.length > 1 || (row[0] ?? '').trim() !== '') rows.push(row)
   return rows
 }
 
@@ -151,19 +151,19 @@ function resolveExpensesCsvPath() {
   for (const p of candidates) {
     if (existsSync(p)) return p
   }
-  return candidates[1]
+  return candidates[1]!
 }
 
 function canonicalizeRows(csvText: string): CanonicalRow[] {
   const rows = parseCsv(csvText)
   if (rows.length === 0) return []
 
-  const headerRow = rows[0]
+  const headerRow = rows[0]!
   const headers = headerRow.map(canonicalHeaderKey)
 
   const out: CanonicalRow[] = []
   for (let i = 1; i < rows.length; i++) {
-    const r = rows[i]
+    const r = rows[i]!
     if (r.every((c) => !c || c.trim() === '')) continue
     const obj: CanonicalRow = {}
     for (let j = 0; j < headers.length; j++) {

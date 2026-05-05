@@ -64,10 +64,6 @@
                 <td>EDO Offshore (TT &amp; GY)</td>
                 <td class="text-right tabular-nums">{{ edoCount }}</td>
               </tr>
-              <tr v-if="consultants > 0 || independentContractors > 0">
-                <td>Consultants</td>
-                <td class="text-right tabular-nums">{{ consultants }}</td>
-              </tr>
               <tr v-if="independentContractors > 0">
                 <td>Independent Contractors</td>
                 <td class="text-right tabular-nums">{{ independentContractors }}</td>
@@ -120,7 +116,7 @@
 <script setup lang="ts">
 type HomeAnalytics = {
   headcountByCountry: Array<{ country: string; headcount: number }>
-  headcountEmploymentSubtotals?: { consultants: number; independentContractors: number }
+  headcountEmploymentSubtotals?: { independentContractors: number }
   employmentTypeBreakdown?: {
     overall: { permanent: number; contracted: number; interns: number; total: number }
     byCountry: Array<{ country: string; permanent: number; contracted: number; interns: number; total: number }>
@@ -153,7 +149,6 @@ const analytics = computed(() => analyticsData.value ?? null)
 const totalHeadcount = computed(() => (analytics.value?.headcountByCountry ?? []).reduce((a, i) => a + safeNum(i.headcount), 0))
 const rampsCount = computed(() => sumBy(analytics.value?.headcountByCountry ?? [], RAMPS_COUNTRIES))
 const edoCount = computed(() => sumBy(analytics.value?.headcountByCountry ?? [], EDO_COUNTRIES))
-const consultants = computed(() => safeNum(analytics.value?.headcountEmploymentSubtotals?.consultants))
 const independentContractors = computed(() => safeNum(analytics.value?.headcountEmploymentSubtotals?.independentContractors))
 
 const overall = computed(() => analytics.value?.employmentTypeBreakdown?.overall ?? { permanent: 0, contracted: 0, interns: 0, total: 0 })

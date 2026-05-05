@@ -8,7 +8,10 @@
       "Bash(xargs grep *)",
       "Bash(node -e ' *)",
       "Bash(npx tsx -e ' *)",
-      "Bash(npx tsx *)"
+      "Bash(npx tsx *)",
+      "Bash(npx vue-tsc *)",
+      "Bash(npx nuxi *)",
+      "Bash(grep -r \"glu_kpi\\\\|dashboard\\\\|registerDashboard\" backend/*.js backend/dashboards/*.js)"
     ]
   }
 }

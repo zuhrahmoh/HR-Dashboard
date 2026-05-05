@@ -33,7 +33,7 @@
         <span aria-hidden="true" class="absolute inset-x-0 top-0 h-[3px] bg-pink-500" />
         <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Pending Actions</div>
         <div class="mt-1 text-2xl font-extrabold tabular-nums tracking-tight text-pink-600">{{ pendingActionsKpi }}</div>
-        <div class="mt-1 text-sm text-slate-500">Past due items: {{ pendingActionsContractsKpi }} contracts • {{ pendingActionsProbationsKpi }} probations</div>
+        <div class="mt-1 text-sm text-slate-500">{{ pendingActionsContractsKpi }} contracts • {{ pendingActionsProbationsKpi }} probations</div>
       </button>
     </section>
 

@@ -178,7 +178,7 @@ const employeesTableRowClass = 'cursor-pointer border-t border-hr-navy/25 bg-whi
 function toTitleCase(input: string) {
   return input
     .trim()
-    .split(/\s+/g)
+    .split(/[\s_]+/g)
     .filter(Boolean)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ')

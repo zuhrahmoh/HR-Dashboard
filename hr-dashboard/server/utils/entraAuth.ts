@@ -12,7 +12,7 @@ export type EntraAuthRuntime = {
 // Minimal OIDC scopes (no offline_access — avoids refresh-token consent; session re-login is enough for this app)
 const SCOPES = 'openid profile email'
 
-export function getEntraAuthRuntime(event: { context?: unknown }): EntraAuthRuntime {
+export function getEntraAuthRuntime(event: Parameters<typeof useRuntimeConfig>[0]): EntraAuthRuntime {
   const config = useRuntimeConfig(event)
   const auth = (config as { auth?: Partial<EntraAuthRuntime> }).auth ?? {}
   return {

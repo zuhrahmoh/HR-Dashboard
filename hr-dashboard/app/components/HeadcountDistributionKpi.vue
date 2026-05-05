@@ -33,9 +33,7 @@
         <span class="text-hr-navy/35" aria-hidden="true">|</span>
         <span>EDO <span class="tabular-nums text-hr-navy">{{ edoHeadcount }}</span></span>
       </p>
-      <p class="mt-0.5 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0 text-[10px] text-hr-navy/55">
-        <span>Consultants <span class="tabular-nums text-hr-navy/80">{{ consultants }}</span></span>
-        <span class="text-hr-navy/30" aria-hidden="true">|</span>
+      <p v-if="independentContractors > 0" class="mt-0.5 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0 text-[10px] text-hr-navy/55">
         <span>Ind. contractors <span class="tabular-nums text-hr-navy/80">{{ independentContractors }}</span></span>
       </p>
     </div>
@@ -49,7 +47,6 @@ const props = defineProps<{
   overall: Breakdown
   rampsHeadcount: number
   edoHeadcount: number
-  consultants: number
   independentContractors: number
 }>()
 

@@ -47,7 +47,7 @@
 <script setup lang="ts">
 type HomeAnalytics = {
   headcountByCountry: Array<{ country: string; headcount: number }>
-  headcountEmploymentSubtotals?: { consultants: number; independentContractors: number }
+  headcountEmploymentSubtotals?: { independentContractors: number }
   employmentTypeBreakdown?: {
     overall: { permanent: number; contracted: number; interns: number; total: number }
   }
@@ -131,12 +131,9 @@ const edoCount = computed(() => sumBy(analytics.value?.headcountByCountry ?? [],
 const rampsEdoLabel = computed(() => `RAMPS ${rampsCount.value} | EDO ${edoCount.value}`)
 
 const consultantsLabel = computed(() => {
-  const sub = analytics.value?.headcountEmploymentSubtotals
-  if (!sub) return ''
-  const c = safeNum(sub.consultants)
-  const ic = safeNum(sub.independentContractors)
-  if (c === 0 && ic === 0) return ''
-  return `Consultants ${c} | Independent contractors ${ic}`
+  const ic = safeNum(analytics.value?.headcountEmploymentSubtotals?.independentContractors)
+  if (ic === 0) return ''
+  return `Independent contractors ${ic}`
 })
 
 const topHub = computed(() => {

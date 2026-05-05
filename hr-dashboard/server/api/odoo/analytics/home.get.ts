@@ -4,8 +4,8 @@ import { BRANCH_COUNTRIES } from '../../../utils/branchClassification'
 
 type HomeAnalytics = {
   headcountByCountry: Array<{ country: string; headcount: number }>
-  /** Active employees with Odoo `employment_type` consultant / independent contractor (from Laser field mapping). */
-  headcountEmploymentSubtotals: { consultants: number; independentContractors: number }
+  /** Active employees with Odoo `employment_type` independent contractor (from Laser field mapping). */
+  headcountEmploymentSubtotals: { independentContractors: number }
   employmentTypeBreakdown: {
     overall: { permanent: number; contracted: number; interns: number; total: number }
     byCountry: Array<{
@@ -142,18 +142,14 @@ function isContractStyleEmployee(raw: string | undefined) {
 }
 
 /** Uses `Employee.employeeType` (Odoo `employment_type` / mapped field) — distinct from permanent/contract pie logic. */
-function classifyEmploymentTypeKpi(raw: string | undefined): 'consultant' | 'independent_contractor' | null {
+function isIndependentContractor(raw: string | undefined): boolean {
   const v = (raw ?? '').trim().toLowerCase()
-  if (!v) return null
-  if (v === 'consultant' || v.includes('consultant')) return 'consultant'
-  if (
+  if (!v) return false
+  return (
     v === 'independent_contractor' ||
     v.includes('independent contractor') ||
     (v.includes('independent') && v.includes('contract'))
-  ) {
-    return 'independent_contractor'
-  }
-  return null
+  )
 }
 
 function parseYmdToUtcMs(ymd: string): number | null {
@@ -225,7 +221,7 @@ function ageYearsFromBirthYmd(birthYmd: string, todayUtcMs: number): number | nu
 function extractBucket(rating: string): 'A' | 'B+' | 'B' | 'B-' | 'C' | null {
   const m = /^(A|B\+|B-|B|C)(?:\s|$)/i.exec(rating.trim())
   if (!m) return null
-  const b = m[1].toUpperCase()
+  const b = m[1]!.toUpperCase()
   if (b === 'A' || b === 'B' || b === 'C') return b
   if (b === 'B+') return 'B+'
   if (b === 'B-') return 'B-'
@@ -390,7 +386,7 @@ export default defineEventHandler(async (event): Promise<HomeAnalytics> => {
     let hi = sepMs.length
     while (lo < hi) {
       const mid = (lo + hi) >> 1
-      if (sepMs[mid] <= utcMs) lo = mid + 1
+      if (sepMs[mid]! <= utcMs) lo = mid + 1
       else hi = mid
     }
     return sepMs.length - lo
@@ -443,15 +439,12 @@ export default defineEventHandler(async (event): Promise<HomeAnalytics> => {
   let permanentOverall = 0
   let contractedOverall = 0
   let internsOverall = 0
-  let consultantsActive = 0
   let independentContractorsActive = 0
   const todayUtcMs = utcTodayMs()
 
   for (const e of employees) {
     if (!isActiveStatus(e.employeeStatus)) continue
-    const kpiCat = classifyEmploymentTypeKpi(e.employeeType)
-    if (kpiCat === 'consultant') consultantsActive += 1
-    else if (kpiCat === 'independent_contractor') independentContractorsActive += 1
+    if (isIndependentContractor(e.employeeType)) independentContractorsActive += 1
 
     const country = (e.countryAssigned ?? '').trim()
     headcountMap.set(country, (headcountMap.get(country) ?? 0) + 1)
@@ -624,7 +617,6 @@ export default defineEventHandler(async (event): Promise<HomeAnalytics> => {
   return {
     headcountByCountry: headcountByCountryOrdered,
     headcountEmploymentSubtotals: {
-      consultants: consultantsActive,
       independentContractors: independentContractorsActive
     },
     employmentTypeBreakdown: {

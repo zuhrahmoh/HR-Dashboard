@@ -96,9 +96,9 @@ function decodePng(buffer: Buffer): PngDecoded {
 
     for (let x = 0; x < stride; x++) {
       const raw = inflated.readUInt8(inOff + x)
-      const left = x >= bpp ? recon[outOff + x - bpp] : 0
-      const up = y > 0 ? recon[outOff - stride + x] : 0
-      const upLeft = y > 0 && x >= bpp ? recon[outOff - stride + x - bpp] : 0
+      const left = x >= bpp ? recon[outOff + x - bpp]! : 0
+      const up = y > 0 ? recon[outOff - stride + x]! : 0
+      const upLeft = y > 0 && x >= bpp ? recon[outOff - stride + x - bpp]! : 0
 
       let val = 0
       if (filter === 0) val = raw
@@ -122,10 +122,10 @@ function decodePng(buffer: Buffer): PngDecoded {
   const rgb = Buffer.alloc(width * height * 3)
   const alpha = Buffer.alloc(width * height)
   for (let i = 0, p = 0, a = 0; i < recon.length; i += 4, p += 3, a += 1) {
-    rgb[p] = recon[i]
-    rgb[p + 1] = recon[i + 1]
-    rgb[p + 2] = recon[i + 2]
-    alpha[a] = recon[i + 3]
+    rgb[p] = recon[i]!
+    rgb[p + 1] = recon[i + 1]!
+    rgb[p + 2] = recon[i + 2]!
+    alpha[a] = recon[i + 3]!
   }
 
   return { width, height, rgb, alpha }
@@ -252,8 +252,8 @@ export function buildProfilePdf(input: {
 
   // Section content
   for (let i = 0; i < Math.min(input.sections.length, boxes.length); i++) {
-    const s = input.sections[i]
-    const b = boxes[i]
+    const s = input.sections[i]!
+    const b = boxes[i]!
     const pad = 14
     const titleY = b.topY - 22
     text('F2', 12, b.x + pad, titleY, s.title)
@@ -269,7 +269,7 @@ export function buildProfilePdf(input: {
       const wrapped = wrapText(r.value, maxValueChars)
       for (let wi = 0; wi < wrapped.length; wi++) {
         if (cursorY < b.topY - b.h + 18) break
-        text('F1', 10, valueX, cursorY, wrapped[wi])
+        text('F1', 10, valueX, cursorY, wrapped[wi]!)
         if (wi < wrapped.length - 1) cursorY -= 12
       }
       cursorY -= 16

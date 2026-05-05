@@ -136,14 +136,14 @@ export function dedupeOdooEmployees(employees: Employee[]): Employee[] {
   // Exact-name duplicates always group.
   for (const idxs of byName.values()) {
     if (idxs.length < 2) continue
-    const [first, ...rest] = idxs
+    const [first, ...rest] = idxs as [number, ...number[]]
     for (const j of rest) u.union(first, j)
   }
 
   // Email duplicates always group.
   for (const idxs of byEmail.values()) {
     if (idxs.length < 2) continue
-    const [first, ...rest] = idxs
+    const [first, ...rest] = idxs as [number, ...number[]]
     for (const j of rest) u.union(first, j)
   }
 

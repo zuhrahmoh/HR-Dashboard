@@ -25,7 +25,6 @@
             :overall="analytics?.employmentTypeBreakdown?.overall ?? { permanent: 0, contracted: 0, interns: 0, total: 0 }"
             :ramps-headcount="rampsHeadcountKpi"
             :edo-headcount="edoHeadcountKpi"
-            :consultants="headcountEmploymentSubtotals.consultants"
             :independent-contractors="headcountEmploymentSubtotals.independentContractors"
           />
 
@@ -456,7 +455,7 @@ const dashboardMonthLabel = computed(() => {
 
 type HomeAnalytics = {
   headcountByCountry: Array<{ country: string; headcount: number }>
-  headcountEmploymentSubtotals: { consultants: number; independentContractors: number }
+  headcountEmploymentSubtotals: { independentContractors: number }
   employmentTypeBreakdown: {
     overall: { permanent: number; contracted: number; interns: number; total: number }
     byCountry: Array<{
@@ -710,7 +709,7 @@ const edoHeadcountKpi = computed(() =>
 )
 
 const headcountEmploymentSubtotals = computed(
-  () => analytics.value?.headcountEmploymentSubtotals ?? { consultants: 0, independentContractors: 0 }
+  () => analytics.value?.headcountEmploymentSubtotals ?? { independentContractors: 0 }
 )
 
 /** Average age by country chart rows (from analytics). */

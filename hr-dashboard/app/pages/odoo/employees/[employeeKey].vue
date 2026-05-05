@@ -566,7 +566,7 @@ const employmentTypePillClass = computed(() => {
 function toTitleCase(input: string) {
   return input
     .trim()
-    .split(/\s+/g)
+    .split(/[\s_]+/g)
     .filter(Boolean)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ')
