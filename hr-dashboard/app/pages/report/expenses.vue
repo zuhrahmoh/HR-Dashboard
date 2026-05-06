@@ -51,38 +51,38 @@
             <tbody>
               <tr v-if="item.grossSalary">
                 <td>Gross Salary</td>
-                <td class="text-right tabular-nums">{{ catPct(item.grossSalary, item.totalOutgoingExpenses || item.total) }}%</td>
+                <td class="text-right tabular-nums">{{ catPct(item.grossSalary, item.total) }}%</td>
                 <td class="text-right tabular-nums">{{ fmtUsd.format(item.grossSalary) }}</td>
+              </tr>
+              <tr v-if="item.allowance">
+                <td>Allowance</td>
+                <td class="text-right tabular-nums">{{ catPct(item.allowance, item.total) }}%</td>
+                <td class="text-right tabular-nums">{{ fmtUsd.format(item.allowance) }}</td>
               </tr>
               <tr v-if="item.overtime">
                 <td>Overtime</td>
-                <td class="text-right tabular-nums">{{ catPct(item.overtime, item.totalOutgoingExpenses || item.total) }}%</td>
+                <td class="text-right tabular-nums">{{ catPct(item.overtime, item.total) }}%</td>
                 <td class="text-right tabular-nums">{{ fmtUsd.format(item.overtime) }}</td>
               </tr>
               <tr v-if="item.vc">
                 <td>VC</td>
-                <td class="text-right tabular-nums">{{ catPct(item.vc, item.totalOutgoingExpenses || item.total) }}%</td>
+                <td class="text-right tabular-nums">{{ catPct(item.vc, item.total) }}%</td>
                 <td class="text-right tabular-nums">{{ fmtUsd.format(item.vc) }}</td>
               </tr>
               <tr v-if="item.nisCompany">
                 <td>NIS (Company)</td>
-                <td class="text-right tabular-nums">{{ catPct(item.nisCompany, item.totalOutgoingExpenses || item.total) }}%</td>
+                <td class="text-right tabular-nums">{{ catPct(item.nisCompany, item.total) }}%</td>
                 <td class="text-right tabular-nums">{{ fmtUsd.format(item.nisCompany) }}</td>
               </tr>
               <tr v-if="item.medicalPlanEmployer">
                 <td>Medical Plan (Employer)</td>
-                <td class="text-right tabular-nums">{{ catPct(item.medicalPlanEmployer, item.totalOutgoingExpenses || item.total) }}%</td>
+                <td class="text-right tabular-nums">{{ catPct(item.medicalPlanEmployer, item.total) }}%</td>
                 <td class="text-right tabular-nums">{{ fmtUsd.format(item.medicalPlanEmployer) }}</td>
-              </tr>
-              <tr v-if="item.other">
-                <td>Other</td>
-                <td class="text-right tabular-nums">{{ catPct(item.other, item.totalOutgoingExpenses || item.total) }}%</td>
-                <td class="text-right tabular-nums">{{ fmtUsd.format(item.other) }}</td>
               </tr>
               <tr style="background:#f8fafc;font-weight:700;">
                 <td>Total Outgoing</td>
                 <td class="text-right">100%</td>
-                <td class="text-right tabular-nums">{{ fmtUsd.format(item.totalOutgoingExpenses || item.total) }}</td>
+                <td class="text-right tabular-nums">{{ fmtUsd.format(item.total) }}</td>
               </tr>
             </tbody>
           </table>
@@ -113,12 +113,11 @@
 type ExpenseItem = {
   country: string
   grossSalary?: number
+  allowance?: number
   overtime?: number
   vc?: number
   nisCompany?: number
   medicalPlanEmployer?: number
-  other?: number
-  totalOutgoingExpenses?: number
   total: number
 }
 
@@ -176,11 +175,7 @@ const { data, pending } = await useFetch<ExpensesResponse>('/api/expenses', {
 const expenses = computed(() => data.value ?? null)
 
 function rowTotal(item: ExpenseItem) {
-  // Prefer the source-provided "Total Outgoing Expenses" when it is a real positive number;
-  // otherwise fall back to the sum of category lines so a 0 in `totalOutgoingExpenses`
-  // does not zero out the country/global total.
-  const t = safeNum(item.totalOutgoingExpenses)
-  return t > 0 ? t : safeNum(item.total)
+  return safeNum(item.total)
 }
 
 const orderedItems = computed(() => {
@@ -200,22 +195,22 @@ const insightBullets = computed(() => {
     out.push(`${top.country} has the highest workforce cost for the reporting period.`)
   }
   // Determine the largest category across major countries
-  const totals = { grossSalary: 0, overtime: 0, vc: 0, nisCompany: 0, medicalPlanEmployer: 0, other: 0 }
+  const totals = { grossSalary: 0, allowance: 0, overtime: 0, vc: 0, nisCompany: 0, medicalPlanEmployer: 0 }
   for (const i of orderedItems.value) {
     totals.grossSalary += safeNum(i.grossSalary)
+    totals.allowance += safeNum(i.allowance)
     totals.overtime += safeNum(i.overtime)
     totals.vc += safeNum(i.vc)
     totals.nisCompany += safeNum(i.nisCompany)
     totals.medicalPlanEmployer += safeNum(i.medicalPlanEmployer)
-    totals.other += safeNum(i.other)
   }
   const labels: Record<keyof typeof totals, string> = {
     grossSalary: 'Gross salary',
+    allowance: 'Allowance',
     overtime: 'Overtime',
     vc: 'VC',
     nisCompany: 'NIS (Company)',
-    medicalPlanEmployer: 'Medical plan (employer)',
-    other: 'Other'
+    medicalPlanEmployer: 'Medical plan (employer)'
   }
   const ranked = (Object.keys(totals) as Array<keyof typeof totals>)
     .filter((k) => totals[k] > 0)

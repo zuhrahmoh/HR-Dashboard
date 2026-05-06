@@ -298,19 +298,19 @@
               :month="expenseMonthRaw"
               :currency="selectedCurrency"
               :gross-salary="convertUsd(item.grossSalary)"
+              :allowance="convertUsd(item.allowance)"
               :overtime="convertUsd(item.overtime)"
               :vc="convertUsd(item.vc)"
               :nis-company="convertUsd(item.nisCompany)"
               :medical-plan-employer="convertUsd(item.medicalPlanEmployer)"
-              :other="convertUsd(item.other)"
               :total="convertUsd(item.total)"
               :show-deltas="showNetChanges && !!baselineMonthKey"
               :delta-gross-salary="convertUsd(expenseDeltasByCountry.get(item.country)?.grossSalary ?? 0)"
+              :delta-allowance="convertUsd(expenseDeltasByCountry.get(item.country)?.allowance ?? 0)"
               :delta-overtime="convertUsd(expenseDeltasByCountry.get(item.country)?.overtime ?? 0)"
               :delta-vc="convertUsd(expenseDeltasByCountry.get(item.country)?.vc ?? 0)"
               :delta-nis-company="convertUsd(expenseDeltasByCountry.get(item.country)?.nisCompany ?? 0)"
               :delta-medical-plan-employer="convertUsd(expenseDeltasByCountry.get(item.country)?.medicalPlanEmployer ?? 0)"
-              :delta-other="convertUsd(expenseDeltasByCountry.get(item.country)?.other ?? 0)"
               :delta-total="convertUsd(expenseDeltasByCountry.get(item.country)?.total ?? 0)"
             />
           </div>
@@ -543,12 +543,11 @@ type ExpensesSnapshot = {
   items: Array<{
     country: string
     grossSalary: number
+    allowance: number
     overtime: number
     vc: number
     nisCompany: number
     medicalPlanEmployer: number
-    other: number
-    totalOutgoingExpenses: number
     total: number
   }>
 }

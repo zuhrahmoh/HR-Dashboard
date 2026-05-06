@@ -5,12 +5,11 @@ export type SharePointExpenseRow = {
   monthKey: string
   monthLabel: string
   grossSalary: number
+  allowance: number
   overtime: number
   vc: number
   nisCompany: number
   medicalPlanEmployer: number
-  other: number
-  totalOutgoingExpenses: number
 }
 
 type GraphListItemsResponse = {
@@ -133,6 +132,10 @@ function extractExpenseRow(fields: Record<string, unknown>): SharePointExpenseRo
       getFieldValue(fields, ['Gross Salary', 'GrossSalary', 'grossSalary', 'GrossSalaryUSD'])
   )
 
+  const allowance = parseAmount(
+    (fields['Allowance'] as unknown) ??
+      getFieldValue(fields, ['Allowance', 'allowance', 'Allowances', 'allowances'])
+  )
   const overtime = parseAmount((fields['Overtime'] as unknown) ?? getFieldValue(fields, ['Overtime', 'overtime']))
   const vc = parseAmount((fields['VC'] as unknown) ?? getFieldValue(fields, ['VC', 'Vc', 'vc']))
   const nisCompany = parseAmount(
@@ -149,26 +152,17 @@ function extractExpenseRow(fields: Record<string, unknown>): SharePointExpenseRo
       'MedicalPlan_x0028_Employer_x0029_'
     ])
   )
-  const other = parseAmount(
-    (fields['Other'] as unknown) ?? getFieldValue(fields, ['Other', 'other', 'OtherExpenses', 'otherExpenses'])
-  )
-
-  const totalOutgoingExpenses = parseAmount(
-    (fields['Total'] as unknown) ??
-      getFieldValue(fields, ['Total', 'Total Outgoing Expenses', 'TotalOutgoingExpenses', 'totalOutgoingExpenses', 'TotalOutgoingEx', 'totalOutgoingEx'])
-  )
 
   return {
     country,
     monthKey,
     monthLabel,
     grossSalary,
+    allowance,
     overtime,
     vc,
     nisCompany,
-    medicalPlanEmployer,
-    other,
-    totalOutgoingExpenses
+    medicalPlanEmployer
   }
 }
 

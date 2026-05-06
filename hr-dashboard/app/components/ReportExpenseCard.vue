@@ -5,11 +5,11 @@
       :month="month"
       currency="USD"
       :gross-salary="item.grossSalary"
+      :allowance="item.allowance"
       :overtime="item.overtime"
       :vc="item.vc"
       :nis-company="item.nisCompany"
       :medical-plan-employer="item.medicalPlanEmployer"
-      :other="item.other"
       :total="item.total"
       :show-deltas="false"
     />
@@ -34,12 +34,11 @@ import ExpenseCountryCard from '~/components/ExpenseCountryCard.vue'
 type ExpenseItem = {
   country: string
   grossSalary: number
+  allowance: number
   overtime: number
   vc: number
   nisCompany: number
   medicalPlanEmployer: number
-  other: number
-  totalOutgoingExpenses: number
   total: number
 }
 
@@ -54,11 +53,11 @@ const isTotalOnly = computed(() => {
   const i = props.item
   return (
     i.grossSalary === 0 &&
+    i.allowance === 0 &&
     i.overtime === 0 &&
     i.vc === 0 &&
     i.nisCompany === 0 &&
-    i.medicalPlanEmployer === 0 &&
-    i.other === 0
+    i.medicalPlanEmployer === 0
   )
 })
 </script>

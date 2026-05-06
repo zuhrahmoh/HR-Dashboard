@@ -6,12 +6,11 @@ import { loadExpensesRowsFromSharePoint } from './sharepointExpenses'
 export type ExpenseCountryBreakdown = {
   country: string
   grossSalary: number
+  allowance: number
   overtime: number
   vc: number
   nisCompany: number
   medicalPlanEmployer: number
-  other: number
-  totalOutgoingExpenses: number
   total: number
 }
 
@@ -53,12 +52,11 @@ function canonicalHeaderKey(rawHeader: string) {
   if (h === 'country') return 'country'
   if (h === 'month') return 'month'
   if (h === 'gross salary') return 'grossSalary'
+  if (h === 'allowance' || h === 'allowances') return 'allowance'
   if (h === 'overtime') return 'overtime'
   if (h === 'vc') return 'vc'
   if (h === 'nis (company)') return 'nisCompany'
   if (h === 'medical plan (employer)') return 'medicalPlanEmployer'
-  if (h === 'other') return 'other'
-  if (h === 'total outgoing expenses') return 'totalOutgoingExpenses'
   return h
 }
 
@@ -205,12 +203,11 @@ type NormalizedExpenseRow = {
   monthKey: string
   monthLabel: string
   grossSalary: number
+  allowance: number
   overtime: number
   vc: number
   nisCompany: number
   medicalPlanEmployer: number
-  other: number
-  totalOutgoingExpenses: number
 }
 
 function sortMonthKeysNewestFirst(keysInEncounterOrder: string[]) {
@@ -241,21 +238,19 @@ function aggregateSnapshot(rows: NormalizedExpenseRow[], selectedMonthKey: strin
     const prev = countryMap.get(country) ?? {
       country,
       grossSalary: 0,
+      allowance: 0,
       overtime: 0,
       vc: 0,
       nisCompany: 0,
-      medicalPlanEmployer: 0,
-      other: 0,
-      totalOutgoingExpenses: 0
+      medicalPlanEmployer: 0
     }
 
     prev.grossSalary += r.grossSalary
+    prev.allowance += r.allowance
     prev.overtime += r.overtime
     prev.vc += r.vc
     prev.nisCompany += r.nisCompany
     prev.medicalPlanEmployer += r.medicalPlanEmployer
-    prev.other += r.other
-    prev.totalOutgoingExpenses += r.totalOutgoingExpenses
 
     countryMap.set(country, prev)
   }
@@ -263,7 +258,7 @@ function aggregateSnapshot(rows: NormalizedExpenseRow[], selectedMonthKey: strin
   const items: ExpenseCountryBreakdown[] = Array.from(countryMap.values())
     .map((i) => ({
       ...i,
-      total: i.grossSalary + i.overtime + i.vc + i.nisCompany + i.medicalPlanEmployer + i.other
+      total: i.grossSalary + i.allowance + i.overtime + i.vc + i.nisCompany + i.medicalPlanEmployer
     }))
     .sort((a, b) => b.total - a.total || a.country.localeCompare(b.country))
 
@@ -281,23 +276,21 @@ function computeDeltas(current: ExpenseCountryBreakdown[], baseline: ExpenseCoun
     const b = byCountryBaseline.get(country)
 
     const grossSalary = (c?.grossSalary ?? 0) - (b?.grossSalary ?? 0)
+    const allowance = (c?.allowance ?? 0) - (b?.allowance ?? 0)
     const overtime = (c?.overtime ?? 0) - (b?.overtime ?? 0)
     const vc = (c?.vc ?? 0) - (b?.vc ?? 0)
     const nisCompany = (c?.nisCompany ?? 0) - (b?.nisCompany ?? 0)
     const medicalPlanEmployer = (c?.medicalPlanEmployer ?? 0) - (b?.medicalPlanEmployer ?? 0)
-    const other = (c?.other ?? 0) - (b?.other ?? 0)
-    const totalOutgoingExpenses = (c?.totalOutgoingExpenses ?? 0) - (b?.totalOutgoingExpenses ?? 0)
-    const total = grossSalary + overtime + vc + nisCompany + medicalPlanEmployer + other
+    const total = grossSalary + allowance + overtime + vc + nisCompany + medicalPlanEmployer
 
     deltas.push({
       country,
       grossSalary,
+      allowance,
       overtime,
       vc,
       nisCompany,
       medicalPlanEmployer,
-      other,
-      totalOutgoingExpenses,
       total
     })
   }
@@ -328,21 +321,19 @@ export async function loadExpensesFromCsv(): Promise<ExpensesSnapshot> {
     const prev = countryMap.get(country) ?? {
       country,
       grossSalary: 0,
+      allowance: 0,
       overtime: 0,
       vc: 0,
       nisCompany: 0,
-      medicalPlanEmployer: 0,
-      other: 0,
-      totalOutgoingExpenses: 0
+      medicalPlanEmployer: 0
     }
 
     prev.grossSalary += parseAmount((r.grossSalary ?? '') as string)
+    prev.allowance += parseAmount((r.allowance ?? '') as string)
     prev.overtime += parseAmount(r.overtime ?? '')
     prev.vc += parseAmount(r.vc ?? '')
     prev.nisCompany += parseAmount(r.nisCompany ?? '')
     prev.medicalPlanEmployer += parseAmount((r.medicalPlanEmployer ?? '') as string)
-    prev.other += parseAmount((r.other ?? '') as string)
-    prev.totalOutgoingExpenses += parseAmount((r.totalOutgoingExpenses ?? '') as string)
 
     countryMap.set(country, prev)
   }
@@ -350,7 +341,7 @@ export async function loadExpensesFromCsv(): Promise<ExpensesSnapshot> {
   const items: ExpenseCountryBreakdown[] = Array.from(countryMap.values())
     .map((i) => ({
       ...i,
-      total: i.grossSalary + i.overtime + i.vc + i.nisCompany + i.medicalPlanEmployer + i.other
+      total: i.grossSalary + i.allowance + i.overtime + i.vc + i.nisCompany + i.medicalPlanEmployer
     }))
     .sort((a, b) => b.total - a.total || a.country.localeCompare(b.country))
 
@@ -376,12 +367,11 @@ async function loadNormalizedRowsFromCsv() {
       monthKey,
       monthLabel: monthLabel || monthKey,
       grossSalary: parseAmount((r.grossSalary ?? '') as string),
+      allowance: parseAmount((r.allowance ?? '') as string),
       overtime: parseAmount(r.overtime ?? ''),
       vc: parseAmount(r.vc ?? ''),
       nisCompany: parseAmount(r.nisCompany ?? ''),
-      medicalPlanEmployer: parseAmount((r.medicalPlanEmployer ?? '') as string),
-      other: parseAmount((r.other ?? '') as string),
-      totalOutgoingExpenses: parseAmount((r.totalOutgoingExpenses ?? '') as string)
+      medicalPlanEmployer: parseAmount((r.medicalPlanEmployer ?? '') as string)
     })
   }
 
