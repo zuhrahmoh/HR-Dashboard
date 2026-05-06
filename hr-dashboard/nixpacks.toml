@@ -18,7 +18,7 @@ aptPkgs = [
 
 [phases.build]
 cmds = [
-  "PLAYWRIGHT_BROWSERS_PATH=0 NODE_OPTIONS=--dns-result-order=ipv4first npx playwright install chromium chromium-headless-shell",
+  "PLAYWRIGHT_BROWSERS_PATH=/app/ms-playwright NODE_OPTIONS=--dns-result-order=ipv4first npx playwright install chromium chromium-headless-shell",
   "npm run build"
 ]
 
