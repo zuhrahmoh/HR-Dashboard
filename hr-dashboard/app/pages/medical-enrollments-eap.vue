@@ -3,7 +3,7 @@
     <div class="space-y-3">
       <div class="space-y-1">
         <h1 class="text-gradient-brand text-3xl font-extrabold tracking-tight">Medical Enrollments and Employee Assistance Program (EAP)</h1>
-        <p class="text-slate-600">Medical enrollments and EAP referrals from Odoo (read-only).</p>
+        <p class="text-slate-600">Medical enrollments from Odoo (read-only). EAP referrals tracked manually in this app.</p>
       </div>
     </div>
 

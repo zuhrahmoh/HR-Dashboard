@@ -9,7 +9,10 @@
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-3">
-        <div class="shrink-0 text-xs text-slate-400">Count: {{ filteredItems.length }}</div>
+        <div class="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-blue/30 bg-brand-blue/10 px-3 py-1 text-xs font-semibold text-brand-blue">
+          <span class="uppercase tracking-wide opacity-80">Count</span>
+          <span class="tabular-nums">{{ filteredItems.length }}</span>
+        </div>
       </div>
     </div>
 

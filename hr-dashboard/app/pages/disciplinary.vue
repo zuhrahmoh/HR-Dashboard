@@ -32,9 +32,15 @@
     </div>
 
     <section class="surface-tint-hero space-y-4 rounded-2xl p-4 shadow-card sm:p-5">
-      <div class="flex min-w-0 items-start gap-3">
-        <span class="mt-1 h-6 w-1 shrink-0 rounded-full bg-brand-blue" aria-hidden="true" />
-        <h2 class="text-gradient-brand text-xl font-bold tracking-tight">Cases</h2>
+      <div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
+        <div class="flex min-w-0 items-start gap-3">
+          <span class="mt-1 h-6 w-1 shrink-0 rounded-full bg-brand-blue" aria-hidden="true" />
+          <h2 class="text-gradient-brand text-xl font-bold tracking-tight">Cases</h2>
+        </div>
+        <div class="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-blue/30 bg-brand-blue/10 px-3 py-1 text-xs font-semibold text-brand-blue">
+          <span class="uppercase tracking-wide opacity-80">Count</span>
+          <span class="tabular-nums">{{ casesForDisplay.length }}</span>
+        </div>
       </div>
 
       <div v-if="pending && cases.length === 0" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">Loading…</div>

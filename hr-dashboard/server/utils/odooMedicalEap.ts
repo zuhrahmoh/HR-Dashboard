@@ -21,27 +21,6 @@ export type OdooMedicalEnrollmentRow = {
   updatedAt: string
 }
 
-export type OdooEapReferralRow = {
-  id: string
-  employeeName: string
-  country: string
-  referralSource?: string
-  referralDate: string
-  reasonCategory: string
-  reasonDetails?: string
-  programStatus: string
-  startDate?: string
-  lastFollowUpDate?: string
-  nextFollowUpDate?: string
-  outcomeNotes?: string
-  ownerHr?: string
-  referralDocsUrl?: string
-  closeDate?: string
-  closedReason?: string
-  createdAt: string
-  updatedAt: string
-}
-
 function safeString(v: unknown) {
   if (v === true || v === false) return ''
   return typeof v === 'string' ? v : v == null ? '' : String(v)
@@ -172,8 +151,7 @@ function getMedicalEapConfig() {
   const runtimeConfig = useRuntimeConfig()
   const odoo = (runtimeConfig as { odoo?: Record<string, unknown> }).odoo ?? {}
   return {
-    medicalLineModel: String(odoo.medicalEnrolmentLineModel ?? 'hr.medical.enrolment').trim() || 'hr.medical.enrolment',
-    eapLineModel: String(odoo.eapLineModel ?? 'hr.eap').trim() || 'hr.eap'
+    medicalLineModel: String(odoo.medicalEnrolmentLineModel ?? 'hr.medical.enrolment').trim() || 'hr.medical.enrolment'
   }
 }
 
@@ -261,75 +239,3 @@ export async function loadOdooMedicalEnrolments(): Promise<OdooMedicalEnrollment
   return out
 }
 
-export async function loadOdooEapReferrals(): Promise<OdooEapReferralRow[]> {
-  const { eapLineModel } = getMedicalEapConfig()
-  const employees = await loadEmployeesFromOdoo({ includeInactive: true })
-  const byOdooId = buildEmployeeIndex(employees)
-  const employeeIds = Array.from(byOdooId.keys())
-  if (!employeeIds.length) return []
-
-  const fieldInfo = await fieldsGetFull(eapLineModel)
-  const employeeField = fieldInfo.employee_id ? 'employee_id' : Object.keys(fieldInfo).find((k) => fieldInfo[k]?.relation === 'hr.employee') || 'employee_id'
-
-  const candidateFields = [
-    'id',
-    employeeField,
-    'referral_source',
-    'referral_date',
-    'reason_category',
-    'reason_details',
-    'program_status',
-    'outcome_notes',
-    'close_date',
-    'closed_reason',
-    'write_date',
-    'create_date'
-  ]
-  let fieldsEap = pickExistingFields(fieldInfo, candidateFields)
-  if (!fieldsEap.includes('id')) fieldsEap = ['id', ...fieldsEap]
-  if (!fieldsEap.includes(employeeField) && fieldInfo[employeeField]) fieldsEap = [...fieldsEap, employeeField]
-
-  const domain: unknown[] = [[employeeField, 'in', employeeIds]]
-  const client = await getOdooClient()
-  const rows = await client.executeKw<Record<string, unknown>[]>(eapLineModel, 'search_read', [domain], {
-    fields: fieldsEap,
-    order: 'write_date desc'
-  })
-  if (!Array.isArray(rows)) {
-    throw createError({ statusCode: 502, statusMessage: 'Unexpected Odoo response for EAP records.' })
-  }
-
-  const srcDef = fieldInfo.referral_source
-  const catDef = fieldInfo.reason_category
-  const progDef = fieldInfo.program_status
-
-  const out: OdooEapReferralRow[] = []
-  for (const r of rows) {
-    const lineId = r?.id
-    if (!Number.isFinite(lineId)) continue
-    const empId = asEmployeeId(r[employeeField])
-    const emp = empId != null ? byOdooId.get(empId) : undefined
-    const refDate = fieldInfo.referral_date ? toYmd(r.referral_date) ?? '' : ''
-    out.push({
-      id: `odoo-eap-${lineId}`,
-      employeeName: (emp?.name ?? '').trim() || many2oneName(r[employeeField]) || 'Unknown employee',
-      country: (emp?.countryAssigned ?? '').trim(),
-      referralSource: fieldInfo.referral_source ? mapSelectionToLabel(srcDef, r.referral_source) : undefined,
-      referralDate: refDate,
-      reasonCategory: fieldInfo.reason_category ? mapSelectionToLabel(catDef, r.reason_category) : '',
-      reasonDetails: fieldInfo.reason_details ? safeString(r.reason_details).trim() || undefined : undefined,
-      programStatus: fieldInfo.program_status ? mapSelectionToLabel(progDef, r.program_status) : '',
-      startDate: undefined,
-      lastFollowUpDate: undefined,
-      nextFollowUpDate: undefined,
-      outcomeNotes: fieldInfo.outcome_notes ? safeString(r.outcome_notes).trim() || undefined : undefined,
-      ownerHr: undefined,
-      referralDocsUrl: undefined,
-      closeDate: fieldInfo.close_date ? toYmd(r.close_date) : undefined,
-      closedReason: fieldInfo.closed_reason ? safeString(r.closed_reason).trim() || undefined : undefined,
-      createdAt: toIsoFromOdooDatetime(r.create_date),
-      updatedAt: toIsoFromOdooDatetime(r.write_date)
-    })
-  }
-  return out
-}
