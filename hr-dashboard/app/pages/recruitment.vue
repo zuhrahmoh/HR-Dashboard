@@ -1281,21 +1281,24 @@ function normalizeRecruitmentStage(value: string) {
   const trimmed = value.trim()
   if (!trimmed) return ''
   const v = normalizeStage(trimmed)
-  if (v === 'pre-onboarding stage') return 'Pre-Onboarding Stage'
-  if (v === 'interview & evaluation stage') return 'Interview & Evaluation Stage'
+  if (v === 'screening stage') return 'Screening Stage'
+  if (v === 'first interview') return 'First Interview'
+  if (v === 'second interview') return 'Second Interview'
+  if (v === 'evaluation stage') return 'Evaluation Stage'
   if (v === 'offer stage') return 'Offer Stage'
+  if (v === 'pre-onboarding stage') return 'Pre-Onboarding Stage'
   if (v === 'feedback stage') return 'Feedback Stage'
-  if (v === 'interview stage' || v === 'approval stage') return 'Interview & Evaluation Stage'
-  if (v === 'contract development' || v === 'plan development') return 'Offer Stage'
-  if (v === 'offer accepted') return 'Feedback Stage'
   return trimmed
 }
 
 function criticalRecruitmentStageBadgeClass(value: string) {
   const v = normalizeStage(normalizeRecruitmentStage(value))
-  if (v === 'pre-onboarding stage') return 'border-teal-200 bg-teal-50 text-teal-800'
-  if (v === 'interview & evaluation stage') return 'border-blue-200 bg-blue-50 text-blue-900'
+  if (v === 'screening stage') return 'border-amber-200 bg-amber-50 text-amber-800'
+  if (v === 'first interview') return 'border-sky-200 bg-sky-50 text-sky-800'
+  if (v === 'second interview') return 'border-blue-200 bg-blue-50 text-blue-900'
+  if (v === 'evaluation stage') return 'border-indigo-200 bg-indigo-50 text-indigo-800'
   if (v === 'offer stage') return 'border-purple-200 bg-purple-50 text-brand-purple'
+  if (v === 'pre-onboarding stage') return 'border-teal-200 bg-teal-50 text-teal-800'
   if (v === 'feedback stage') return 'border-pink-200 bg-pink-50 text-pink-800'
   return 'border-slate-300 bg-white text-slate-800'
 }
@@ -1661,7 +1664,10 @@ const vacancyCountries = computed(() => ensureUsaOption(uniqueSorted((employeesD
 const vacancyDepartments = computed(() => uniqueSorted((employeesData.value ?? []).map((e) => e.department)))
 const vacancyPriorities = ['high', 'medium', 'low'] as const
 const criticalRecruitmentStages = [
-  'Interview & Evaluation Stage',
+  'Screening Stage',
+  'First Interview',
+  'Second Interview',
+  'Evaluation Stage',
   'Offer Stage',
   'Pre-Onboarding Stage',
   'Feedback Stage'

@@ -210,29 +210,33 @@
           <h2 class="text-sm font-semibold text-brand-blue">Compensation</h2>
           <div class="mt-4 rounded-lg bg-slate-50 p-4 ring-1 ring-slate-200/80">
             <dl class="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-              <div class="flex justify-between gap-4">
-                <dt class="text-slate-500">Currency</dt>
-                <dd class="text-right text-slate-900">{{ compensation?.currency ?? '—' }}</dd>
+              <div class="space-y-2">
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-500">Currency</dt>
+                  <dd class="text-right text-slate-900">{{ compensation?.currency ?? '—' }}</dd>
+                </div>
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-500">Date of Last salary change</dt>
+                  <dd class="text-right text-slate-900">{{ formatYmdDateOrDash(employee?.dateLastSalaryChange) }}</dd>
+                </div>
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-500">Amount increased by</dt>
+                  <dd class="text-right text-slate-900">{{ formatMoney(employee?.amountIncreasedBy, compensation?.currency) }}</dd>
+                </div>
               </div>
-              <div class="flex justify-between gap-4">
-                <dt class="text-slate-500">Monthly Salary</dt>
-                <dd class="text-right text-slate-900">{{ formatMoney(compensation?.monthlySalary, compensation?.currency) }}</dd>
-              </div>
-              <div class="flex justify-between gap-4">
-                <dt class="text-slate-500">Allowance</dt>
-                <dd class="text-right text-slate-900">{{ formatMoney(compensation?.allowance, compensation?.currency) }}</dd>
-              </div>
-              <div class="flex justify-between gap-4">
-                <dt class="text-slate-500">Gross Salary</dt>
-                <dd class="text-right text-slate-900">{{ formatMoney(compensation?.grossSalary, compensation?.currency) }}</dd>
-              </div>
-              <div class="flex justify-between gap-4">
-                <dt class="text-slate-500">Date of Last salary change</dt>
-                <dd class="text-right text-slate-900">{{ formatYmdDateOrDash(employee?.dateLastSalaryChange) }}</dd>
-              </div>
-              <div class="flex justify-between gap-4">
-                <dt class="text-slate-500">Amount increased by</dt>
-                <dd class="text-right text-slate-900">{{ formatMoney(employee?.amountIncreasedBy, compensation?.currency) }}</dd>
+              <div class="space-y-2">
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-500">Base Salary</dt>
+                  <dd class="text-right text-slate-900">{{ formatMoney(compensation?.monthlySalary, compensation?.currency) }}</dd>
+                </div>
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-500">Allowance</dt>
+                  <dd class="text-right text-slate-900">{{ formatMoney(compensation?.allowance, compensation?.currency) }}</dd>
+                </div>
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-500">Gross Salary</dt>
+                  <dd class="text-right text-slate-900">{{ formatMoney(compensation?.grossSalary, compensation?.currency) }}</dd>
+                </div>
               </div>
             </dl>
           </div>

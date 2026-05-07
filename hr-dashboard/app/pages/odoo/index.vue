@@ -392,8 +392,28 @@
           <section
             class="flex min-h-[11rem] min-w-0 flex-col overflow-visible rounded-xl border border-slate-200/80 bg-white p-3 shadow-card lg:col-span-8 lg:min-h-[13rem]"
           >
-            <div class="shrink-0 text-sm font-semibold text-hr-navy">Average age by country</div>
-            <p class="mt-0.5 text-[11px] text-slate-500">Male and female averages side-by-side.</p>
+            <div class="flex shrink-0 items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="text-sm font-semibold text-hr-navy">Average age by country</div>
+                <p class="mt-0.5 text-[11px] text-slate-500">Male and female averages side-by-side.</p>
+              </div>
+              <div class="shrink-0 text-right">
+                <div class="text-[11px] font-medium text-slate-500">Company-wide avg</div>
+                <div class="text-base font-semibold tabular-nums text-hr-navy">{{ companyWideOverallAge }}</div>
+                <div class="mt-0.5 flex items-center justify-end gap-3 text-[10px] tabular-nums text-slate-500">
+                  <span class="inline-flex items-center gap-1">
+                    <span class="h-2 w-2 rounded-full bg-brand-blue" />
+                    <span class="font-semibold text-slate-600">Male</span>
+                    <span>{{ companyWideMaleAge }}</span>
+                  </span>
+                  <span class="inline-flex items-center gap-1">
+                    <span class="h-2 w-2 rounded-full bg-brand-pink" />
+                    <span class="font-semibold text-slate-600">Female</span>
+                    <span>{{ companyWideFemaleAge }}</span>
+                  </span>
+                </div>
+              </div>
+            </div>
             <div class="mt-2 min-h-0 flex-1 overflow-x-auto overflow-y-visible">
               <AverageAgeGroupedBarChart compact embedded :items="avgAgeByCountryGenderRows" hide-heading />
             </div>
@@ -713,6 +733,10 @@ const headcountEmploymentSubtotals = computed(
 
 /** Average age by country chart rows (from analytics). */
 const avgAgeByCountryGenderRows = computed(() => analytics.value?.avgAgeByCountryGender ?? [])
+const companyWideAgeAgg = computed(() => companyWideAgeAverages(avgAgeByCountryGenderRows.value))
+const companyWideOverallAge = computed(() => formatAgeOneDecimal(companyWideAgeAgg.value.overallAvg))
+const companyWideMaleAge = computed(() => formatAgeOneDecimal(companyWideAgeAgg.value.maleAvg))
+const companyWideFemaleAge = computed(() => formatAgeOneDecimal(companyWideAgeAgg.value.femaleAvg))
 
 const totalCurrentHeadcount = computed(
   () => analytics.value?.employmentTypeBreakdown?.overall?.total ?? 0

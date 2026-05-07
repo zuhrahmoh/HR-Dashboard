@@ -78,6 +78,29 @@
             </select>
           </label>
         </div>
+
+        <div class="flex flex-wrap items-center gap-2 pt-3">
+          <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Quick view</span>
+          <button
+            type="button"
+            role="switch"
+            :aria-checked="onProbation"
+            class="group inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium shadow-card transition-colors focus:outline-none focus:ring-2 focus:ring-hr-navy/30"
+            :class="
+              onProbation
+                ? 'border-hr-navy bg-hr-navy text-white hover:bg-hr-navy/90'
+                : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+            "
+            @click="onProbation = !onProbation"
+          >
+            <span
+              class="inline-block h-2 w-2 rounded-full transition-colors"
+              :class="onProbation ? 'bg-hr-mint' : 'bg-slate-300'"
+              aria-hidden="true"
+            />
+            <span>On probation</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -115,6 +138,7 @@
                 <th class="px-4 py-3 font-medium">Employment Type</th>
                 <th class="px-4 py-3 font-medium">Status</th>
                 <th class="px-4 py-3 font-medium">Start Date</th>
+                <th v-if="onProbation" class="px-4 py-3 font-medium">Probation End</th>
               </tr>
             </thead>
             <tbody>
@@ -135,9 +159,10 @@
                   </span>
                 </td>
                 <td class="px-4 py-4 text-slate-800">{{ formatYmdDateOrDash(e.startDate) }}</td>
+                <td v-if="onProbation" class="px-4 py-4 text-slate-800">{{ formatYmdDateOrDash(e.probationEndDate ?? null) }}</td>
               </tr>
               <tr v-if="filteredEmployees.length === 0" class="border-t border-hr-navy/25">
-                <td colspan="7" class="px-4 py-6 text-center text-slate-600">No matching employees.</td>
+                <td :colspan="onProbation ? 8 : 7" class="px-4 py-6 text-center text-slate-600">No matching employees.</td>
               </tr>
             </tbody>
           </table>
@@ -160,6 +185,7 @@ type Employee = {
   countryAssigned: string
   employeeType?: string
   employeeStatus: string
+  probationEndDate?: string | null
 }
 
 const { data, pending, error } = useFetch<Employee[]>('/api/odoo/employees')
@@ -169,6 +195,7 @@ const country = ref('')
 const department = ref('')
 const employmentType = ref('')
 const status = ref('')
+const onProbation = ref(false)
 
 const employees = computed(() => data.value ?? [])
 
@@ -220,16 +247,28 @@ const departments = computed(() => uniqueSorted(employees.value.map((e) => e.dep
 const employmentTypes = computed(() => uniqueSorted(employees.value.map((e) => e.employeeType ?? '')))
 const statuses = computed(() => uniqueSorted(employees.value.map((e) => e.employeeStatus)))
 
+const todayYmd = computed(() => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+})
+
+function isOnProbation(e: Employee, today: string) {
+  const end = (e.probationEndDate ?? '').trim()
+  return end !== '' && end >= today
+}
+
 const filteredEmployees = computed(() => {
   const qRaw = search.value.trim()
   const q = qRaw.toLowerCase()
   const qKey = /^\d+$/.test(qRaw) ? `odoo-${qRaw}` : /^odoo-\d+$/.test(q) ? q : null
+  const today = todayYmd.value
   return employees.value
     .filter((e) => (q ? e.name.toLowerCase().includes(q) || (qKey ? e.employeeKey === qKey : false) : true))
     .filter((e) => (country.value ? e.countryAssigned === country.value : true))
     .filter((e) => (department.value ? e.department === department.value : true))
     .filter((e) => (employmentType.value ? (e.employeeType ?? '') === employmentType.value : true))
     .filter((e) => (status.value ? e.employeeStatus === status.value : true))
+    .filter((e) => (onProbation.value ? isOnProbation(e, today) : true))
     .sort((a, b) => a.name.localeCompare(b.name))
 })
 
@@ -250,6 +289,7 @@ function resetFilters() {
   department.value = ''
   employmentType.value = ''
   status.value = ''
+  onProbation.value = false
 }
 </script>
 

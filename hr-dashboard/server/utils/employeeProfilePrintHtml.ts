@@ -127,17 +127,11 @@ export function buildEmployeeProfilePrintHtml(
   if (currency?.trim()) {
     compRows.push({ label: 'Currency', value: escapeHtml(currency.trim()) })
   }
-  const monthly = compensation?.monthlySalary
-  if (monthly != null && Number.isFinite(monthly)) {
-    compRows.push({ label: 'Monthly Salary', value: formatMoney(monthly, currency) })
-  }
-  const gross = compensation?.grossSalary
-  if (gross != null && Number.isFinite(gross)) {
-    compRows.push({ label: 'Gross Salary', value: formatMoney(gross, currency) })
-  }
-  const allowance = compensation?.allowance
-  if (allowance != null && Number.isFinite(allowance)) {
-    compRows.push({ label: 'Allowance', value: formatMoney(allowance, currency) })
+  if (hasText(emp.dateLastSalaryChange)) {
+    compRows.push({
+      label: 'Date of Last Salary Change',
+      value: escapeHtml(formatYmdDateOrDash(emp.dateLastSalaryChange))
+    })
   }
   if (
     emp.amountIncreasedBy != null &&
@@ -149,11 +143,17 @@ export function buildEmployeeProfilePrintHtml(
       value: formatMoney(emp.amountIncreasedBy, currency)
     })
   }
-  if (hasText(emp.dateLastSalaryChange)) {
-    compRows.push({
-      label: 'Date of Last Salary Change',
-      value: escapeHtml(formatYmdDateOrDash(emp.dateLastSalaryChange))
-    })
+  const monthly = compensation?.monthlySalary
+  if (monthly != null && Number.isFinite(monthly)) {
+    compRows.push({ label: 'Base Salary', value: formatMoney(monthly, currency) })
+  }
+  const allowance = compensation?.allowance
+  if (allowance != null && Number.isFinite(allowance)) {
+    compRows.push({ label: 'Allowance', value: formatMoney(allowance, currency) })
+  }
+  const gross = compensation?.grossSalary
+  if (gross != null && Number.isFinite(gross)) {
+    compRows.push({ label: 'Gross Salary', value: formatMoney(gross, currency) })
   }
 
   const disciplinaryRowsHtml =
