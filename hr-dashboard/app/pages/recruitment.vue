@@ -195,7 +195,7 @@
         <div v-for="v in vacanciesForDisplay" :key="v.id" class="rounded-md border border-slate-200 bg-white shadow-card p-3">
           <div class="flex items-start justify-between gap-4">
             <div class="min-w-0">
-              <div class="truncate text-sm font-semibold text-hr-navy">{{ v.positionTitle }}</div>
+              <div class="text-sm font-semibold text-hr-navy">{{ v.positionTitle }}</div>
               <div class="mt-1 text-xs text-slate-600">{{ v.department }} · {{ v.country }}</div>
               <div v-if="v.notes" class="mt-1.5 text-xs text-slate-500 italic">{{ v.notes }}</div>
             </div>
