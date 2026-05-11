@@ -6,6 +6,7 @@ type Vacancy = {
   department: string
   country: string
   priority: string
+  notes: string
   createdAt: string
 }
 

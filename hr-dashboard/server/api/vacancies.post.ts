@@ -8,6 +8,7 @@ type Vacancy = {
   department: string
   country: string
   priority: string
+  notes: string
   createdAt: string
 }
 
@@ -24,6 +25,7 @@ export default defineEventHandler(async (event) => {
   const department = requireNonEmptyString(body?.department, 'department')
   const country = requireNonEmptyString(body?.country, 'country')
   const priority = requireNonEmptyString(body?.priority, 'priority')
+  const notes = typeof body?.notes === 'string' ? body.notes.trim() : ''
 
   const createdAt = new Date()
   const created = await prisma.vacancy.create({
@@ -33,6 +35,7 @@ export default defineEventHandler(async (event) => {
       department,
       country,
       priority,
+      notes,
       createdAt
     }
   })

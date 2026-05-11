@@ -78,69 +78,95 @@
             <p class="text-xs text-slate-500">Read-only: sourced from Odoo employee profiles.</p>
           </div>
         </div>
-        <div class="flex flex-wrap items-center gap-3">
-          <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
-            <span class="whitespace-nowrap">Country</span>
-            <select
-              v-model="filters.country"
-              class="h-8 rounded-md border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-slate-400"
-            >
-              <option value="">All</option>
-              <option v-for="c in countries" :key="c" :value="c">{{ c }}</option>
-            </select>
-          </label>
+        <div class="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-blue/30 bg-brand-blue/10 px-3 py-1 text-xs font-semibold text-brand-blue">
+          <span class="uppercase tracking-wide opacity-80">Count</span>
+          <span class="tabular-nums">{{ filteredContractChanges.length }}</span>
+        </div>
+      </div>
 
-          <div class="flex items-center gap-2 text-sm font-medium text-slate-600">
-            <span class="whitespace-nowrap">Change type</span>
-            <div ref="filterChangeTypeEl" class="relative">
-              <button
-                type="button"
-                class="flex h-8 min-w-[11rem] items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 text-left text-sm text-slate-900 hover:bg-slate-50"
-                aria-haspopup="listbox"
-                :aria-expanded="filterChangeTypeOpen"
-                @click="filterChangeTypeOpen = !filterChangeTypeOpen"
-                @keydown.escape.prevent="filterChangeTypeOpen = false"
+      <div class="flex flex-wrap items-center gap-2">
+        <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
+          <span class="whitespace-nowrap">Country</span>
+          <select
+            v-model="filters.country"
+            class="h-8 rounded-md border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-slate-400"
+          >
+            <option value="">All</option>
+            <option v-for="c in countries" :key="c" :value="c">{{ c }}</option>
+          </select>
+        </label>
+
+        <div class="flex items-center gap-2 text-sm font-medium text-slate-600">
+          <span class="whitespace-nowrap">Change type</span>
+          <div ref="filterChangeTypeEl" class="relative">
+            <button
+              type="button"
+              class="flex h-8 min-w-[11rem] items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 text-left text-sm text-slate-900 hover:bg-slate-50"
+              aria-haspopup="listbox"
+              :aria-expanded="filterChangeTypeOpen"
+              @click="filterChangeTypeOpen = !filterChangeTypeOpen"
+              @keydown.escape.prevent="filterChangeTypeOpen = false"
+            >
+              <span class="min-w-0 truncate">{{ filterChangeTypesSummary(filters.changeTypes) }}</span>
+              <svg viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true">
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.24 4.5a.75.75 0 0 1-1.08 0l-4.24-4.5a.75.75 0 0 1 .02-1.06Z"
+                />
+              </svg>
+            </button>
+            <div
+              v-if="filterChangeTypeOpen"
+              class="absolute z-30 left-0 mt-1 max-h-56 w-max min-w-full overflow-auto rounded-md border border-slate-200 bg-slate-50 py-1 shadow-lg"
+              role="listbox"
+              @keydown.escape.prevent="filterChangeTypeOpen = false"
+            >
+              <label
+                v-for="t in changeTypeFilterOptions"
+                :key="t"
+                class="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50"
               >
-                <span class="min-w-0 truncate">{{ filterChangeTypesSummary(filters.changeTypes) }}</span>
-                <svg viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true">
-                  <path
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.24 4.5a.75.75 0 0 1-1.08 0l-4.24-4.5a.75.75 0 0 1 .02-1.06Z"
-                  />
-                </svg>
-              </button>
-              <div
-                v-if="filterChangeTypeOpen"
-                class="absolute z-30 right-0 mt-1 max-h-56 w-max min-w-full overflow-auto rounded-md border border-slate-200 bg-slate-50 py-1 shadow-lg"
-                role="listbox"
-                @keydown.escape.prevent="filterChangeTypeOpen = false"
-              >
-                <label
-                  v-for="t in changeTypeFilterOptions"
-                  :key="t"
-                  class="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50"
-                >
-                  <input v-model="filters.changeTypes" type="checkbox" :value="t" class="h-4 w-4 accent-slate-200" />
-                  <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium" :class="changeTypeBadgeClass(t)">
-                    {{ t }}
-                  </span>
-                </label>
-              </div>
+                <input v-model="filters.changeTypes" type="checkbox" :value="t" class="h-4 w-4 accent-slate-200" />
+                <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium" :class="changeTypeBadgeClass(t)">
+                  {{ t }}
+                </span>
+              </label>
             </div>
           </div>
-
-          <button
-            v-if="hasActiveFilters"
-            type="button"
-            class="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-800 hover:bg-slate-100"
-            @click="clearFilters"
-          >
-            Clear
-          </button>
-
-          <div class="shrink-0 text-xs text-slate-400">Count: {{ filteredContractChanges.length }}</div>
         </div>
+
+        <button
+          v-if="hasActiveFilters"
+          type="button"
+          class="h-8 rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-800 hover:bg-slate-100"
+          @click="clearFilters"
+        >
+          Clear
+        </button>
+
+        <button
+          v-if="completedContractChangeRows.length > 0"
+          type="button"
+          class="ml-auto inline-flex items-center gap-1.5 rounded-md border border-teal-200 bg-teal-50 px-3 py-1.5 text-sm font-medium text-teal-800 hover:bg-teal-100"
+          @click="completedUpdatesHistoryOpen = true"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="h-4 w-4 shrink-0"
+            aria-hidden="true"
+          >
+            <path d="M3 12a9 9 0 1 0 3-6.7" />
+            <path d="M3 4v5h5" />
+            <path d="M12 7v5l3 2" />
+          </svg>
+          <span>Completed Updates ({{ completedContractChangeRows.length }})</span>
+        </button>
       </div>
 
       <div v-if="pending" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">Loading…</div>
@@ -152,13 +178,14 @@
       <div v-else class="rounded-md border border-slate-200 bg-white shadow-card">
         <table class="w-full table-fixed border-collapse text-left text-sm">
           <colgroup>
-            <col style="width: 15%" />
-            <col style="width: 9%" />
-            <col style="width: 12%" />
-            <col style="width: 12%" />
-            <col style="width: 18%" />
             <col style="width: 14%" />
-            <col style="width: 20%" />
+            <col style="width: 8%" />
+            <col style="width: 11%" />
+            <col style="width: 11%" />
+            <col style="width: 17%" />
+            <col style="width: 13%" />
+            <col style="width: 18%" />
+            <col style="width: 8%" />
           </colgroup>
           <thead class="bg-slate-100 text-slate-600">
             <tr>
@@ -169,6 +196,7 @@
               <th class="px-3 py-3 align-bottom font-medium">Change</th>
               <th class="px-3 py-3 align-bottom font-medium">Status</th>
               <th class="px-3 py-3 align-bottom font-medium">Description</th>
+              <th class="px-3 py-3 text-center align-bottom font-medium">Mark Completed</th>
             </tr>
           </thead>
           <tbody>
@@ -193,18 +221,131 @@
               <td class="min-w-0 px-3 py-3 align-top text-slate-800">
                 <div class="break-words whitespace-pre-wrap">{{ row.description }}</div>
               </td>
+              <td class="px-3 py-3 text-center align-top">
+                <input
+                  :id="`mark-completed-${row.id}`"
+                  type="checkbox"
+                  class="h-4 w-4 cursor-pointer accent-teal-600"
+                  :checked="false"
+                  :aria-label="`Mark ${row.employeeName} as completed`"
+                  @change="(event) => void markCompleted(row, (event.target as HTMLInputElement).checked)"
+                />
+              </td>
             </tr>
 
             <tr v-if="contractChanges.length === 0" class="border-t border-hr-navy/25">
-              <td colspan="7" class="px-3 py-6 text-center text-slate-600">No contract changes yet.</td>
+              <td colspan="8" class="px-3 py-6 text-center text-slate-600">No contract changes yet.</td>
             </tr>
             <tr v-else-if="filteredContractChanges.length === 0" class="border-t border-hr-navy/25">
-              <td colspan="7" class="px-3 py-6 text-center text-slate-600">No contract changes match the filters.</td>
+              <td colspan="8" class="px-3 py-6 text-center text-slate-600">No contract changes match the filters.</td>
             </tr>
           </tbody>
         </table>
       </div>
     </section>
+
+    <Teleport to="body">
+      <div
+        v-if="completedUpdatesHistoryOpen"
+        class="fixed inset-0 z-[200] flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="completed-updates-dialog-title"
+      >
+        <button
+          type="button"
+          class="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px]"
+          aria-label="Dismiss"
+          @click="completedUpdatesHistoryOpen = false"
+        />
+        <div
+          class="relative z-10 flex max-h-[92vh] w-full max-w-[95vw] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card"
+          @click.stop
+        >
+          <div class="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4">
+            <div class="min-w-0">
+              <h2 id="completed-updates-dialog-title" class="text-base font-semibold text-slate-900">Completed Contract Updates</h2>
+              <p class="mt-0.5 text-xs text-slate-500">Contract changes marked as completed on the dashboard. Snapshot taken at the time of completion.</p>
+            </div>
+            <button
+              type="button"
+              class="-mr-1 -mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+              aria-label="Close"
+              @click="completedUpdatesHistoryOpen = false"
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M4.21 4.21a.75.75 0 0 1 1.06 0L10 8.94l4.73-4.73a.75.75 0 1 1 1.06 1.06L11.06 10l4.73 4.73a.75.75 0 1 1-1.06 1.06L10 11.06l-4.73 4.73a.75.75 0 1 1-1.06-1.06L8.94 10 4.21 5.27a.75.75 0 0 1 0-1.06Z" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="min-w-0 overflow-auto px-5 py-4">
+            <div v-if="completedContractChangeRows.length === 0" class="rounded-md border border-slate-200 bg-white p-4 text-sm text-slate-800">
+              No completed updates yet.
+            </div>
+            <div v-else class="rounded-md border border-slate-200 bg-white">
+              <table class="w-full table-fixed border-collapse text-left text-sm">
+                <colgroup>
+                  <col style="width: 13%" />
+                  <col style="width: 7%" />
+                  <col style="width: 10%" />
+                  <col style="width: 10%" />
+                  <col style="width: 13%" />
+                  <col style="width: 10%" />
+                  <col style="width: 13%" />
+                  <col style="width: 24%" />
+                </colgroup>
+                <thead class="bg-slate-100 text-slate-600">
+                  <tr>
+                    <th class="px-3 py-3 align-bottom font-medium">Employee</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Country</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Department</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Position</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Change</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Status</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Description</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Audit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="entry in completedContractChangeRows" :key="entry.odooLineId" class="border-t border-hr-navy/25 align-top">
+                    <td class="min-w-0 break-words px-3 py-3 align-top text-slate-900">{{ entry.snapshot.employeeName }}</td>
+                    <td class="min-w-0 break-words px-3 py-3 align-top text-slate-800">{{ entry.snapshot.country || '—' }}</td>
+                    <td class="min-w-0 break-words px-3 py-3 align-top text-slate-800">{{ entry.snapshot.department }}</td>
+                    <td class="min-w-0 break-words px-3 py-3 align-top text-slate-800">{{ entry.snapshot.position }}</td>
+                    <td class="min-w-0 px-3 py-3 align-top">
+                      <div class="flex flex-wrap content-start gap-1.5">
+                        <span v-for="t in entry.snapshot.changeTypes" :key="t" :class="[tableDataBadgeClass, changeTypeBadgeClass(t)]">
+                          {{ t }}
+                        </span>
+                        <span v-if="(entry.snapshot.changeTypes?.length ?? 0) === 0" class="text-slate-400">—</span>
+                      </div>
+                    </td>
+                    <td class="min-w-0 px-3 py-3 align-top">
+                      <span :class="[tableDataBadgeClass, statusBadgeClass(entry.snapshot.status ?? '')]">
+                        {{ entry.snapshot.status || '—' }}
+                      </span>
+                    </td>
+                    <td class="min-w-0 px-3 py-3 align-top text-slate-800">
+                      <div class="break-words whitespace-pre-wrap">{{ entry.snapshot.description }}</div>
+                    </td>
+                    <td class="min-w-0 px-3 py-3 align-top">
+                      <CompletedAuditCell
+                        :created-at="entry.snapshot.createdAt"
+                        :last-modified-at="entry.snapshot.lastModifiedAt"
+                        :last-modified-by="entry.snapshot.lastModifiedBy"
+                        :completed-at="entry.completedAt"
+                        @reopen="void reopenCompleted(entry.odooLineId)"
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
 
     <section class="surface-tint-hero min-w-0 space-y-4 rounded-2xl p-4 shadow-card sm:p-5">
       <div class="flex min-w-0 items-start gap-3">
@@ -271,6 +412,26 @@ type ContractChange = {
   status?: string
   description: string
   createdAt: string
+  lastModifiedAt: string
+  lastModifiedBy: string
+}
+
+type ContractChangeSnapshot = {
+  employeeName: string
+  country?: string
+  department: string
+  position: string
+  changeTypes: string[]
+  status?: string
+  description: string
+  createdAt: string
+  lastModifiedAt: string
+  lastModifiedBy: string
+}
+
+type ContractChangeCompletion = {
+  completedAt: string
+  snapshot: ContractChangeSnapshot
 }
 
 type Employee = { department: string; countryAssigned: string }
@@ -381,6 +542,84 @@ const { data, pending, error } = useFetch<ContractChange[]>('/api/odoo/contract-
 const contractChanges = computed(() => data.value ?? [])
 const errorMessage = computed(() => getErrorMessage(error.value))
 
+const { data: completionsPayload, refresh: refreshCompletions } = useFetch<{
+  completions: Record<string, ContractChangeCompletion>
+}>('/api/contract-change-reviews')
+
+const completionsByLineId = ref<Record<string, ContractChangeCompletion>>({})
+
+watch(
+  completionsPayload,
+  (p) => {
+    completionsByLineId.value = p?.completions ?? {}
+  },
+  { immediate: true }
+)
+
+const completedUpdatesHistoryOpen = ref(false)
+
+function buildSnapshot(row: ContractChange): ContractChangeSnapshot {
+  return {
+    employeeName: row.employeeName,
+    country: row.country,
+    department: row.department,
+    position: row.position,
+    changeTypes: [...(row.changeTypes ?? [])],
+    status: row.status,
+    description: row.description,
+    createdAt: row.createdAt,
+    lastModifiedAt: row.lastModifiedAt,
+    lastModifiedBy: row.lastModifiedBy
+  }
+}
+
+async function markCompleted(row: ContractChange, completed: boolean) {
+  const prev = { ...completionsByLineId.value }
+  const next = { ...completionsByLineId.value }
+  if (completed) {
+    const snapshot = buildSnapshot(row)
+    next[row.id] = { completedAt: new Date().toISOString(), snapshot }
+  } else {
+    delete next[row.id]
+  }
+  completionsByLineId.value = next
+  try {
+    await $fetch('/api/contract-change-reviews', {
+      method: 'PUT',
+      body: completed
+        ? { odooLineId: row.id, completed: true, snapshot: buildSnapshot(row) }
+        : { odooLineId: row.id, completed: false }
+    })
+    await refreshCompletions()
+  } catch (err) {
+    completionsByLineId.value = prev
+    throw err
+  }
+}
+
+async function reopenCompleted(odooLineId: string) {
+  const prev = { ...completionsByLineId.value }
+  const next = { ...completionsByLineId.value }
+  delete next[odooLineId]
+  completionsByLineId.value = next
+  try {
+    await $fetch('/api/contract-change-reviews', {
+      method: 'PUT',
+      body: { odooLineId, completed: false }
+    })
+    await refreshCompletions()
+  } catch (err) {
+    completionsByLineId.value = prev
+    throw err
+  }
+}
+
+const completedContractChangeRows = computed(() => {
+  return Object.entries(completionsByLineId.value)
+    .map(([odooLineId, entry]) => ({ odooLineId, ...entry }))
+    .sort((a, b) => b.completedAt.localeCompare(a.completedAt))
+})
+
 const upcomingWindowDays = ref<'30' | '60' | '90'>('60')
 const upcomingQuery = computed(() => ({ upcomingDays: upcomingWindowDays.value }))
 const { data: upcomingData, pending: upcomingPending, error: upcomingError } = useFetch<HomeAnalytics>('/api/odoo/analytics/home', {
@@ -397,9 +636,12 @@ const { data: kpiData } = useFetch<HomeAnalytics>('/api/odoo/analytics/home', {
 const kpiContractExpiries = computed(() => kpiData.value?.upcomingContractExpiries ?? [])
 const kpiProbations = computed(() => kpiData.value?.upcomingProbations ?? [])
 
-const awaitingApprovalKpi = computed(
-  () => contractChanges.value.filter((r) => isAwaitingApprovalStatus(r.status ?? '')).length
-)
+const awaitingApprovalKpi = computed(() => {
+  const completions = completionsByLineId.value
+  return contractChanges.value.filter(
+    (r) => !completions[r.id] && isAwaitingApprovalStatus(r.status ?? '')
+  ).length
+})
 const expiringContractsKpi = computed(
   () => kpiContractExpiries.value.filter((r) => r.daysRemaining >= 0 && r.daysRemaining <= 60).length
 )
@@ -451,7 +693,9 @@ const filteredContractChanges = computed(() => {
   const list = contractChanges.value ?? []
   const country = filters.country.trim()
   const selTypes = filters.changeTypes
+  const completions = completionsByLineId.value
   return list.filter((r) => {
+    if (completions[r.id]) return false
     if (country && (r.country || '') !== country) return false
     if (selTypes.length > 0) {
       const rowTypes = r.changeTypes ?? []

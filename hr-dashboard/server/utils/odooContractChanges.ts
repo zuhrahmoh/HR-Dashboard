@@ -15,6 +15,8 @@ export type OdooContractChangeRow = {
   status?: string
   description: string
   createdAt: string
+  lastModifiedAt: string
+  lastModifiedBy: string
 }
 
 function safeString(v: unknown) {
@@ -258,7 +260,18 @@ export async function loadOdooContractChanges(): Promise<OdooContractChangeRow[]
   const statusDef = statusField ? fieldInfo[statusField] : undefined
 
   const fields = Array.from(
-    new Set(['id', employeeField, typeField, descriptionField, 'create_date', statusField].filter(Boolean) as string[])
+    new Set(
+      [
+        'id',
+        employeeField,
+        typeField,
+        descriptionField,
+        'create_date',
+        'write_date',
+        'write_uid',
+        statusField
+      ].filter(Boolean) as string[]
+    )
   )
 
   const domain: unknown[] = [[employeeField, 'in', employeeIds]]
@@ -302,7 +315,9 @@ export async function loadOdooContractChanges(): Promise<OdooContractChangeRow[]
       changeTypes,
       status: statusLabel || undefined,
       description: safeString(r[descriptionField]).trim(),
-      createdAt: toIsoFromOdooDatetime(r.create_date)
+      createdAt: toIsoFromOdooDatetime(r.create_date),
+      lastModifiedAt: toIsoFromOdooDatetime(r.write_date),
+      lastModifiedBy: many2oneName(r.write_uid)
     })
   }
 

@@ -7,6 +7,7 @@ type Vacancy = {
   department: string
   country: string
   priority: string
+  notes: string
   createdAt: string
 }
 
@@ -26,13 +27,14 @@ export default defineEventHandler(async (event) => {
   const department = requireNonEmptyString(body?.department, 'department')
   const country = requireNonEmptyString(body?.country, 'country')
   const priority = requireNonEmptyString(body?.priority, 'priority')
+  const notes = typeof body?.notes === 'string' ? body.notes.trim() : ''
 
   const existing = await prisma.vacancy.findUnique({ where: { id } })
   if (!existing) throw createError({ statusCode: 404, statusMessage: 'Vacancy not found' })
 
   const updated = await prisma.vacancy.update({
     where: { id },
-    data: { positionTitle, department, country, priority }
+    data: { positionTitle, department, country, priority, notes }
   })
 
   return { ...updated, createdAt: updated.createdAt.toISOString() }

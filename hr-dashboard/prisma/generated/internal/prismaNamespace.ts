@@ -396,7 +396,10 @@ export const ModelName = {
   UpcomingContractExpiryStatus: 'UpcomingContractExpiryStatus',
   RecruitmentOnboardingChecklist: 'RecruitmentOnboardingChecklist',
   RecruitmentExitChecklist: 'RecruitmentExitChecklist',
-  NewHireCheckinStatus: 'NewHireCheckinStatus'
+  NewHireCheckinStatus: 'NewHireCheckinStatus',
+  ContractChangeReview: 'ContractChangeReview',
+  MedicalEnrollmentReview: 'MedicalEnrollmentReview',
+  DisciplinaryCaseReview: 'DisciplinaryCaseReview'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -412,7 +415,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "vacancy" | "criticalRecruitment" | "disciplinaryCase" | "disciplinaryCaseInclude" | "contractChange" | "medicalEnrollment" | "eapReferral" | "cPlayerNote" | "headcountSnapshot" | "upcomingContractExpiryStatus" | "recruitmentOnboardingChecklist" | "recruitmentExitChecklist" | "newHireCheckinStatus"
+    modelProps: "vacancy" | "criticalRecruitment" | "disciplinaryCase" | "disciplinaryCaseInclude" | "contractChange" | "medicalEnrollment" | "eapReferral" | "cPlayerNote" | "headcountSnapshot" | "upcomingContractExpiryStatus" | "recruitmentOnboardingChecklist" | "recruitmentExitChecklist" | "newHireCheckinStatus" | "contractChangeReview" | "medicalEnrollmentReview" | "disciplinaryCaseReview"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1378,6 +1381,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ContractChangeReview: {
+      payload: Prisma.$ContractChangeReviewPayload<ExtArgs>
+      fields: Prisma.ContractChangeReviewFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ContractChangeReviewFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContractChangeReviewPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ContractChangeReviewFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContractChangeReviewPayload>
+        }
+        findFirst: {
+          args: Prisma.ContractChangeReviewFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContractChangeReviewPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ContractChangeReviewFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContractChangeReviewPayload>
+        }
+        findMany: {
+          args: Prisma.ContractChangeReviewFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContractChangeReviewPayload>[]
+        }
+        create: {
+          args: Prisma.ContractChangeReviewCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContractChangeReviewPayload>
+        }
+        createMany: {
+          args: Prisma.ContractChangeReviewCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ContractChangeReviewCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContractChangeReviewPayload>[]
+        }
+        delete: {
+          args: Prisma.ContractChangeReviewDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContractChangeReviewPayload>
+        }
+        update: {
+          args: Prisma.ContractChangeReviewUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContractChangeReviewPayload>
+        }
+        deleteMany: {
+          args: Prisma.ContractChangeReviewDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ContractChangeReviewUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ContractChangeReviewUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContractChangeReviewPayload>[]
+        }
+        upsert: {
+          args: Prisma.ContractChangeReviewUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ContractChangeReviewPayload>
+        }
+        aggregate: {
+          args: Prisma.ContractChangeReviewAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateContractChangeReview>
+        }
+        groupBy: {
+          args: Prisma.ContractChangeReviewGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ContractChangeReviewGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ContractChangeReviewCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ContractChangeReviewCountAggregateOutputType> | number
+        }
+      }
+    }
+    MedicalEnrollmentReview: {
+      payload: Prisma.$MedicalEnrollmentReviewPayload<ExtArgs>
+      fields: Prisma.MedicalEnrollmentReviewFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MedicalEnrollmentReviewFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MedicalEnrollmentReviewPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MedicalEnrollmentReviewFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MedicalEnrollmentReviewPayload>
+        }
+        findFirst: {
+          args: Prisma.MedicalEnrollmentReviewFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MedicalEnrollmentReviewPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MedicalEnrollmentReviewFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MedicalEnrollmentReviewPayload>
+        }
+        findMany: {
+          args: Prisma.MedicalEnrollmentReviewFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MedicalEnrollmentReviewPayload>[]
+        }
+        create: {
+          args: Prisma.MedicalEnrollmentReviewCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MedicalEnrollmentReviewPayload>
+        }
+        createMany: {
+          args: Prisma.MedicalEnrollmentReviewCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MedicalEnrollmentReviewCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MedicalEnrollmentReviewPayload>[]
+        }
+        delete: {
+          args: Prisma.MedicalEnrollmentReviewDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MedicalEnrollmentReviewPayload>
+        }
+        update: {
+          args: Prisma.MedicalEnrollmentReviewUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MedicalEnrollmentReviewPayload>
+        }
+        deleteMany: {
+          args: Prisma.MedicalEnrollmentReviewDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MedicalEnrollmentReviewUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MedicalEnrollmentReviewUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MedicalEnrollmentReviewPayload>[]
+        }
+        upsert: {
+          args: Prisma.MedicalEnrollmentReviewUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MedicalEnrollmentReviewPayload>
+        }
+        aggregate: {
+          args: Prisma.MedicalEnrollmentReviewAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMedicalEnrollmentReview>
+        }
+        groupBy: {
+          args: Prisma.MedicalEnrollmentReviewGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MedicalEnrollmentReviewGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MedicalEnrollmentReviewCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MedicalEnrollmentReviewCountAggregateOutputType> | number
+        }
+      }
+    }
+    DisciplinaryCaseReview: {
+      payload: Prisma.$DisciplinaryCaseReviewPayload<ExtArgs>
+      fields: Prisma.DisciplinaryCaseReviewFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DisciplinaryCaseReviewFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseReviewPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DisciplinaryCaseReviewFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseReviewPayload>
+        }
+        findFirst: {
+          args: Prisma.DisciplinaryCaseReviewFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseReviewPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DisciplinaryCaseReviewFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseReviewPayload>
+        }
+        findMany: {
+          args: Prisma.DisciplinaryCaseReviewFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseReviewPayload>[]
+        }
+        create: {
+          args: Prisma.DisciplinaryCaseReviewCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseReviewPayload>
+        }
+        createMany: {
+          args: Prisma.DisciplinaryCaseReviewCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DisciplinaryCaseReviewCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseReviewPayload>[]
+        }
+        delete: {
+          args: Prisma.DisciplinaryCaseReviewDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseReviewPayload>
+        }
+        update: {
+          args: Prisma.DisciplinaryCaseReviewUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseReviewPayload>
+        }
+        deleteMany: {
+          args: Prisma.DisciplinaryCaseReviewDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DisciplinaryCaseReviewUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DisciplinaryCaseReviewUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseReviewPayload>[]
+        }
+        upsert: {
+          args: Prisma.DisciplinaryCaseReviewUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DisciplinaryCaseReviewPayload>
+        }
+        aggregate: {
+          args: Prisma.DisciplinaryCaseReviewAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDisciplinaryCaseReview>
+        }
+        groupBy: {
+          args: Prisma.DisciplinaryCaseReviewGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DisciplinaryCaseReviewGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DisciplinaryCaseReviewCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DisciplinaryCaseReviewCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1423,6 +1648,7 @@ export const VacancyScalarFieldEnum = {
   department: 'department',
   country: 'country',
   priority: 'priority',
+  notes: 'notes',
   createdAt: 'createdAt'
 } as const
 
@@ -1576,6 +1802,36 @@ export const NewHireCheckinStatusScalarFieldEnum = {
 } as const
 
 export type NewHireCheckinStatusScalarFieldEnum = (typeof NewHireCheckinStatusScalarFieldEnum)[keyof typeof NewHireCheckinStatusScalarFieldEnum]
+
+
+export const ContractChangeReviewScalarFieldEnum = {
+  odooLineId: 'odooLineId',
+  snapshot: 'snapshot',
+  completedAt: 'completedAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ContractChangeReviewScalarFieldEnum = (typeof ContractChangeReviewScalarFieldEnum)[keyof typeof ContractChangeReviewScalarFieldEnum]
+
+
+export const MedicalEnrollmentReviewScalarFieldEnum = {
+  odooLineId: 'odooLineId',
+  snapshot: 'snapshot',
+  completedAt: 'completedAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MedicalEnrollmentReviewScalarFieldEnum = (typeof MedicalEnrollmentReviewScalarFieldEnum)[keyof typeof MedicalEnrollmentReviewScalarFieldEnum]
+
+
+export const DisciplinaryCaseReviewScalarFieldEnum = {
+  odooLineId: 'odooLineId',
+  snapshot: 'snapshot',
+  completedAt: 'completedAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DisciplinaryCaseReviewScalarFieldEnum = (typeof DisciplinaryCaseReviewScalarFieldEnum)[keyof typeof DisciplinaryCaseReviewScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1808,6 +2064,9 @@ export type GlobalOmitConfig = {
   recruitmentOnboardingChecklist?: Prisma.RecruitmentOnboardingChecklistOmit
   recruitmentExitChecklist?: Prisma.RecruitmentExitChecklistOmit
   newHireCheckinStatus?: Prisma.NewHireCheckinStatusOmit
+  contractChangeReview?: Prisma.ContractChangeReviewOmit
+  medicalEnrollmentReview?: Prisma.MedicalEnrollmentReviewOmit
+  disciplinaryCaseReview?: Prisma.DisciplinaryCaseReviewOmit
 }
 
 /* Types for Logging */

@@ -63,7 +63,10 @@ export const ModelName = {
   UpcomingContractExpiryStatus: 'UpcomingContractExpiryStatus',
   RecruitmentOnboardingChecklist: 'RecruitmentOnboardingChecklist',
   RecruitmentExitChecklist: 'RecruitmentExitChecklist',
-  NewHireCheckinStatus: 'NewHireCheckinStatus'
+  NewHireCheckinStatus: 'NewHireCheckinStatus',
+  ContractChangeReview: 'ContractChangeReview',
+  MedicalEnrollmentReview: 'MedicalEnrollmentReview',
+  DisciplinaryCaseReview: 'DisciplinaryCaseReview'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -88,6 +91,7 @@ export const VacancyScalarFieldEnum = {
   department: 'department',
   country: 'country',
   priority: 'priority',
+  notes: 'notes',
   createdAt: 'createdAt'
 } as const
 
@@ -241,6 +245,36 @@ export const NewHireCheckinStatusScalarFieldEnum = {
 } as const
 
 export type NewHireCheckinStatusScalarFieldEnum = (typeof NewHireCheckinStatusScalarFieldEnum)[keyof typeof NewHireCheckinStatusScalarFieldEnum]
+
+
+export const ContractChangeReviewScalarFieldEnum = {
+  odooLineId: 'odooLineId',
+  snapshot: 'snapshot',
+  completedAt: 'completedAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ContractChangeReviewScalarFieldEnum = (typeof ContractChangeReviewScalarFieldEnum)[keyof typeof ContractChangeReviewScalarFieldEnum]
+
+
+export const MedicalEnrollmentReviewScalarFieldEnum = {
+  odooLineId: 'odooLineId',
+  snapshot: 'snapshot',
+  completedAt: 'completedAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MedicalEnrollmentReviewScalarFieldEnum = (typeof MedicalEnrollmentReviewScalarFieldEnum)[keyof typeof MedicalEnrollmentReviewScalarFieldEnum]
+
+
+export const DisciplinaryCaseReviewScalarFieldEnum = {
+  odooLineId: 'odooLineId',
+  snapshot: 'snapshot',
+  completedAt: 'completedAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DisciplinaryCaseReviewScalarFieldEnum = (typeof DisciplinaryCaseReviewScalarFieldEnum)[keyof typeof DisciplinaryCaseReviewScalarFieldEnum]
 
 
 export const SortOrder = {

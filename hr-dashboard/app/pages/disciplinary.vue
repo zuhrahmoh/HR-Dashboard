@@ -43,6 +43,62 @@
         </div>
       </div>
 
+      <div class="flex flex-wrap items-center gap-2">
+        <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
+          <span class="whitespace-nowrap">Country</span>
+          <select
+            v-model="filters.country"
+            class="h-8 rounded-md border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-slate-400"
+          >
+            <option value="">All</option>
+            <option v-for="c in countryFilterOptions" :key="c" :value="c">{{ c }}</option>
+          </select>
+        </label>
+
+        <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
+          <span class="whitespace-nowrap">Status</span>
+          <select
+            v-model="filters.status"
+            class="h-8 rounded-md border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-slate-400"
+          >
+            <option value="">All</option>
+            <option v-for="s in statusFilterOptions" :key="s" :value="s">{{ s }}</option>
+          </select>
+        </label>
+
+        <button
+          v-if="hasActiveFilters"
+          type="button"
+          class="h-8 rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-800 hover:bg-slate-100"
+          @click="clearFilters"
+        >
+          Clear
+        </button>
+
+        <button
+          v-if="completedCaseRows.length > 0"
+          type="button"
+          class="ml-auto inline-flex items-center gap-1.5 rounded-md border border-teal-200 bg-teal-50 px-3 py-1.5 text-sm font-medium text-teal-800 hover:bg-teal-100"
+          @click="completedHistoryOpen = true"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="h-4 w-4 shrink-0"
+            aria-hidden="true"
+          >
+            <path d="M3 12a9 9 0 1 0 3-6.7" />
+            <path d="M3 4v5h5" />
+            <path d="M12 7v5l3 2" />
+          </svg>
+          <span>Completed Cases ({{ completedCaseRows.length }})</span>
+        </button>
+      </div>
+
       <div v-if="pending && cases.length === 0" class="rounded-md border border-slate-200 bg-white shadow-card p-4 text-slate-800">Loading…</div>
       <div v-else-if="error && cases.length === 0" class="rounded-md border border-pink-200 bg-pink-50 p-4 text-pink-800">
         Failed to load cases.
@@ -59,6 +115,7 @@
                 <th class="px-4 py-3 font-medium">Status</th>
                 <th class="px-4 py-3 font-medium">Created Date</th>
                 <th class="px-4 py-3 font-medium">Include in Report</th>
+                <th class="px-4 py-3 text-center font-medium">Mark Completed</th>
               </tr>
             </thead>
             <tbody>
@@ -84,10 +141,23 @@
                     <span class="text-slate-600">Include</span>
                   </label>
                 </td>
+                <td class="px-4 py-3 text-center">
+                  <input
+                    :id="`mark-completed-dc-${c.id}`"
+                    type="checkbox"
+                    class="h-4 w-4 cursor-pointer accent-teal-600"
+                    :checked="false"
+                    :aria-label="`Mark ${c.employeeName} case as completed`"
+                    @change="(event) => void markCompleted(c, (event.target as HTMLInputElement).checked)"
+                  />
+                </td>
               </tr>
 
               <tr v-if="cases.length === 0" class="border-t border-hr-navy/25">
-                <td colspan="6" class="px-4 py-6 text-center text-slate-600">No cases yet.</td>
+                <td colspan="7" class="px-4 py-6 text-center text-slate-600">No cases yet.</td>
+              </tr>
+              <tr v-else-if="casesForDisplay.length === 0" class="border-t border-hr-navy/25">
+                <td colspan="7" class="px-4 py-6 text-center text-slate-600">No cases match the filters.</td>
               </tr>
             </tbody>
           </table>
@@ -99,6 +169,94 @@
 
       <div v-if="!pending && !error && actionError" class="text-xs text-pink-700">{{ actionError }}</div>
     </section>
+
+    <Teleport to="body">
+      <div
+        v-if="completedHistoryOpen"
+        class="fixed inset-0 z-[200] flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="completed-discipline-dialog-title"
+      >
+        <button
+          type="button"
+          class="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px]"
+          aria-label="Dismiss"
+          @click="completedHistoryOpen = false"
+        />
+        <div
+          class="relative z-10 flex max-h-[92vh] w-full max-w-[95vw] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card"
+          @click.stop
+        >
+          <div class="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4">
+            <div class="min-w-0">
+              <h2 id="completed-discipline-dialog-title" class="text-base font-semibold text-slate-900">Completed Discipline Cases</h2>
+              <p class="mt-0.5 text-xs text-slate-500">Cases marked as completed on the dashboard. Snapshot taken at the time of completion.</p>
+            </div>
+            <button
+              type="button"
+              class="-mr-1 -mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+              aria-label="Close"
+              @click="completedHistoryOpen = false"
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M4.21 4.21a.75.75 0 0 1 1.06 0L10 8.94l4.73-4.73a.75.75 0 1 1 1.06 1.06L11.06 10l4.73 4.73a.75.75 0 1 1-1.06 1.06L10 11.06l-4.73 4.73a.75.75 0 1 1-1.06-1.06L8.94 10 4.21 5.27a.75.75 0 0 1 0-1.06Z" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="min-w-0 overflow-auto px-5 py-4">
+            <div v-if="completedCaseRows.length === 0" class="rounded-md border border-slate-200 bg-white p-4 text-sm text-slate-800">
+              No completed cases yet.
+            </div>
+            <div v-else class="rounded-md border border-slate-200 bg-white">
+              <table class="w-full table-fixed border-collapse text-left text-sm">
+                <colgroup>
+                  <col style="width: 14%" />
+                  <col style="width: 10%" />
+                  <col style="width: 22%" />
+                  <col style="width: 14%" />
+                  <col style="width: 10%" />
+                  <col style="width: 30%" />
+                </colgroup>
+                <thead class="bg-slate-100 text-slate-600">
+                  <tr>
+                    <th class="px-3 py-3 align-bottom font-medium">Employee</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Country</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Summary</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Status</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Created Date</th>
+                    <th class="px-3 py-3 align-bottom font-medium">Audit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="entry in completedCaseRows" :key="entry.odooLineId" class="border-t border-hr-navy/25 align-top">
+                    <td class="min-w-0 break-words px-3 py-3 align-top font-medium text-slate-900">{{ entry.snapshot.employeeName }}</td>
+                    <td class="min-w-0 px-3 py-3 align-top text-slate-800">{{ entry.snapshot.country || '—' }}</td>
+                    <td class="min-w-0 break-words px-3 py-3 align-top text-slate-800">{{ entry.snapshot.summary }}</td>
+                    <td class="min-w-0 px-3 py-3 align-top">
+                      <span :class="[tableDataBadgeClass, statusBadgeClass(entry.snapshot.status)]">
+                        {{ entry.snapshot.status }}
+                      </span>
+                    </td>
+                    <td class="min-w-0 whitespace-nowrap px-3 py-3 align-top tabular-nums text-slate-800">{{ formatDate(entry.snapshot.createdAt) }}</td>
+                    <td class="min-w-0 px-3 py-3 align-top">
+                      <CompletedAuditCell
+                        :created-at="entry.snapshot.createdAt"
+                        :last-modified-at="entry.snapshot.lastModifiedAt"
+                        :last-modified-by="entry.snapshot.lastModifiedBy"
+                        :completed-at="entry.completedAt"
+                        @reopen="void reopenCompleted(entry.odooLineId)"
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -114,6 +272,23 @@ type DisciplinaryCase = {
   status: string
   includeInReport: boolean
   createdAt: string
+  lastModifiedAt: string
+  lastModifiedBy: string
+}
+
+type DisciplinaryCaseSnapshot = {
+  employeeName: string
+  country?: string
+  summary: string
+  status: string
+  createdAt: string
+  lastModifiedAt: string
+  lastModifiedBy: string
+}
+
+type DisciplinaryCaseCompletion = {
+  completedAt: string
+  snapshot: DisciplinaryCaseSnapshot
 }
 
 const route = useRoute()
@@ -179,7 +354,113 @@ const casesSorted = computed(() =>
     .sort((a, b) => compareDisciplineCountries(a.country, b.country) || b.createdAt.localeCompare(a.createdAt) || a.employeeName.localeCompare(b.employeeName))
 )
 
-const casesForDisplay = computed(() => (isReportMode.value ? casesSorted.value.slice(0, REPORT_TOP_CASES) : casesSorted.value))
+const filters = reactive({
+  country: '',
+  status: ''
+})
+
+const hasActiveFilters = computed(() => Object.values(filters).some((v) => (v ?? '').trim() !== ''))
+
+function clearFilters() {
+  filters.country = ''
+  filters.status = ''
+}
+
+function uniqueSorted(values: string[]) {
+  return Array.from(new Set(values.map((v) => v.trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b))
+}
+
+const countryFilterOptions = computed(() => uniqueSorted(cases.value.map((c) => c.country || '')))
+
+const statusFilterOptions = computed(() => uniqueSorted(cases.value.map((c) => c.status)))
+
+const { data: completionsPayload, refresh: refreshCompletions } = useFetch<{
+  completions: Record<string, DisciplinaryCaseCompletion>
+}>('/api/disciplinary-case-reviews')
+
+const completionsByLineId = ref<Record<string, DisciplinaryCaseCompletion>>({})
+
+watch(
+  completionsPayload,
+  (p) => {
+    completionsByLineId.value = p?.completions ?? {}
+  },
+  { immediate: true }
+)
+
+const completedHistoryOpen = ref(false)
+
+function buildSnapshot(c: DisciplinaryCase): DisciplinaryCaseSnapshot {
+  return {
+    employeeName: c.employeeName,
+    country: c.country,
+    summary: c.summary,
+    status: c.status,
+    createdAt: c.createdAt,
+    lastModifiedAt: c.lastModifiedAt,
+    lastModifiedBy: c.lastModifiedBy
+  }
+}
+
+async function markCompleted(c: DisciplinaryCase, completed: boolean) {
+  const prev = { ...completionsByLineId.value }
+  const next = { ...completionsByLineId.value }
+  if (completed) {
+    next[c.id] = { completedAt: new Date().toISOString(), snapshot: buildSnapshot(c) }
+  } else {
+    delete next[c.id]
+  }
+  completionsByLineId.value = next
+  try {
+    await $fetch('/api/disciplinary-case-reviews', {
+      method: 'PUT',
+      body: completed
+        ? { odooLineId: c.id, completed: true, snapshot: buildSnapshot(c) }
+        : { odooLineId: c.id, completed: false }
+    })
+    await refreshCompletions()
+  } catch (err) {
+    completionsByLineId.value = prev
+    throw err
+  }
+}
+
+async function reopenCompleted(odooLineId: string) {
+  const prev = { ...completionsByLineId.value }
+  const next = { ...completionsByLineId.value }
+  delete next[odooLineId]
+  completionsByLineId.value = next
+  try {
+    await $fetch('/api/disciplinary-case-reviews', {
+      method: 'PUT',
+      body: { odooLineId, completed: false }
+    })
+    await refreshCompletions()
+  } catch (err) {
+    completionsByLineId.value = prev
+    throw err
+  }
+}
+
+const completedCaseRows = computed(() => {
+  return Object.entries(completionsByLineId.value)
+    .map(([odooLineId, entry]) => ({ odooLineId, ...entry }))
+    .sort((a, b) => b.completedAt.localeCompare(a.completedAt))
+})
+
+const casesFiltered = computed(() => {
+  const country = filters.country.trim()
+  const status = filters.status.trim()
+  const completions = completionsByLineId.value
+  return casesSorted.value.filter((c) => {
+    if (completions[c.id]) return false
+    if (country && (c.country || '') !== country) return false
+    if (status && c.status !== status) return false
+    return true
+  })
+})
+
+const casesForDisplay = computed(() => (isReportMode.value ? casesFiltered.value.slice(0, REPORT_TOP_CASES) : casesFiltered.value))
 
 const actionError = ref('')
 

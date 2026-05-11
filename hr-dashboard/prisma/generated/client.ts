@@ -104,3 +104,18 @@ export type RecruitmentExitChecklist = Prisma.RecruitmentExitChecklistModel
  * 
  */
 export type NewHireCheckinStatus = Prisma.NewHireCheckinStatusModel
+/**
+ * Model ContractChangeReview
+ * 
+ */
+export type ContractChangeReview = Prisma.ContractChangeReviewModel
+/**
+ * Model MedicalEnrollmentReview
+ * 
+ */
+export type MedicalEnrollmentReview = Prisma.MedicalEnrollmentReviewModel
+/**
+ * Model DisciplinaryCaseReview
+ * 
+ */
+export type DisciplinaryCaseReview = Prisma.DisciplinaryCaseReviewModel

@@ -145,6 +145,15 @@
             </select>
           </label>
         </div>
+        <label class="mt-3 block">
+          <div class="mb-1 text-sm text-slate-600">Notes</div>
+          <textarea
+            v-model="vacancyForm.notes"
+            rows="2"
+            class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500"
+            placeholder="Optional notes about this vacancy"
+          />
+        </label>
 
         <div class="mt-3 flex items-center justify-between gap-3">
           <div v-if="vacancyActionError" class="text-xs text-pink-700">{{ vacancyActionError }}</div>
@@ -188,6 +197,7 @@
             <div class="min-w-0">
               <div class="truncate text-sm font-semibold text-hr-navy">{{ v.positionTitle }}</div>
               <div class="mt-1 text-xs text-slate-600">{{ v.department }} · {{ v.country }}</div>
+              <div v-if="v.notes" class="mt-1.5 text-xs text-slate-500 italic">{{ v.notes }}</div>
             </div>
 
             <div class="flex shrink-0 flex-col items-end gap-2">
@@ -271,6 +281,15 @@
                 </select>
               </label>
             </div>
+            <label class="block">
+              <div class="mb-1 text-xs text-slate-600">Notes</div>
+              <textarea
+                v-model="vacancyEditForm.notes"
+                rows="2"
+                class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500"
+                placeholder="Optional notes about this vacancy"
+              />
+            </label>
 
             <div v-if="vacancyEditError" class="text-xs text-pink-700">{{ vacancyEditError }}</div>
 
@@ -1169,6 +1188,7 @@ type Vacancy = {
   department: string
   country: string
   priority: string
+  notes: string
   createdAt: string
 }
 
@@ -1782,11 +1802,11 @@ const filteredOffboardingEmployees = computed(() => {
 })
 
 const showVacancyForm = ref(false)
-const vacancyForm = reactive({ positionTitle: '', department: '', country: '', priority: '' })
+const vacancyForm = reactive({ positionTitle: '', department: '', country: '', priority: '', notes: '' })
 const vacancySaving = ref(false)
 const vacancyActionError = ref('')
 const vacancyEditId = ref<string | null>(null)
-const vacancyEditForm = reactive({ positionTitle: '', department: '', country: '', priority: '' })
+const vacancyEditForm = reactive({ positionTitle: '', department: '', country: '', priority: '', notes: '' })
 const vacancyEditError = ref('')
 
 function cancelVacancyCreate() {
@@ -1803,6 +1823,7 @@ async function createVacancy() {
     vacancyForm.department = ''
     vacancyForm.country = ''
     vacancyForm.priority = ''
+    vacancyForm.notes = ''
     showVacancyForm.value = false
     await refreshVacancies()
   } catch (err) {
@@ -1819,6 +1840,7 @@ function startEditVacancy(v: Vacancy) {
   vacancyEditForm.department = v.department
   vacancyEditForm.country = v.country
   vacancyEditForm.priority = v.priority
+  vacancyEditForm.notes = v.notes || ''
 }
 
 function cancelEditVacancy() {

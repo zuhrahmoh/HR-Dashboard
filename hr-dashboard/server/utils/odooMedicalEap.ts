@@ -19,6 +19,7 @@ export type OdooMedicalEnrollmentRow = {
   attachmentsUrl?: string
   createdAt: string
   updatedAt: string
+  lastModifiedBy: string
 }
 
 function safeString(v: unknown) {
@@ -175,6 +176,7 @@ export async function loadOdooMedicalEnrolments(): Promise<OdooMedicalEnrollment
     'next_action',
     'attachments',
     'write_date',
+    'write_uid',
     'create_date'
   ]
   let fields = pickExistingFields(fieldInfo, candidateFields)
@@ -233,7 +235,8 @@ export async function loadOdooMedicalEnrolments(): Promise<OdooMedicalEnrollment
       notes: undefined,
       attachmentsUrl,
       createdAt: toIsoFromOdooDatetime(r.create_date),
-      updatedAt: toIsoFromOdooDatetime(r.write_date)
+      updatedAt: toIsoFromOdooDatetime(r.write_date),
+      lastModifiedBy: many2oneName(r.write_uid)
     })
   }
   return out

@@ -15,6 +15,8 @@ export type OdooDisciplinaryCaseRow = {
   status: string
   includeInReport: boolean
   createdAt: string
+  lastModifiedAt: string
+  lastModifiedBy: string
 }
 
 function safeString(v: unknown) {
@@ -127,7 +129,9 @@ function mapDisciplineRowsToOutput(
       summary: safeString(r.case_summary).trim() || '—',
       status: fieldInfo.status ? mapSelectionToLabel(statusDef, r.status) : safeString(r.status).trim() || '—',
       includeInReport: false,
-      createdAt: toIsoFromOdooDatetime(r.create_date ?? r.date_created)
+      createdAt: toIsoFromOdooDatetime(r.create_date ?? r.date_created),
+      lastModifiedAt: toIsoFromOdooDatetime(r.write_date),
+      lastModifiedBy: many2oneName(r.write_uid)
     })
   }
   return out
@@ -143,7 +147,7 @@ export async function loadOdooDisciplinaryCases(): Promise<OdooDisciplinaryCaseR
   const fieldInfo = await fieldsGetFull(lineModel)
   const employeeField = resolveEmployeeField(fieldInfo)
 
-  const candidateFields = ['id', employeeField, 'case_summary', 'status', 'date_created', 'create_date', 'write_date']
+  const candidateFields = ['id', employeeField, 'case_summary', 'status', 'date_created', 'create_date', 'write_date', 'write_uid']
 
   let fields = pickExistingFields(fieldInfo, candidateFields)
   if (!fields.includes('id')) fields = ['id', ...fields]
@@ -176,7 +180,7 @@ export async function loadOdooDisciplinaryCasesForEmployeeKey(employeeKey: strin
   const fieldInfo = await fieldsGetFull(lineModel)
   const employeeField = resolveEmployeeField(fieldInfo)
 
-  const candidateFields = ['id', employeeField, 'case_summary', 'status', 'date_created', 'create_date', 'write_date']
+  const candidateFields = ['id', employeeField, 'case_summary', 'status', 'date_created', 'create_date', 'write_date', 'write_uid']
 
   let fields = pickExistingFields(fieldInfo, candidateFields)
   if (!fields.includes('id')) fields = ['id', ...fields]
