@@ -5,7 +5,7 @@
       type="button"
       :title="labelFor(modelValue)"
       class="inline-flex min-h-[2rem] w-full min-w-0 items-center justify-between gap-1.5 rounded-lg border px-2 py-1 text-left text-xs font-semibold leading-tight outline-none ring-0 transition focus-visible:ring-2 focus-visible:ring-sky-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-      :class="badgeClass"
+      :style="badgeStyle"
       @click="toggle"
       @keydown.escape.prevent="close"
     >
@@ -82,13 +82,13 @@ function labelFor(v: StatusKey) {
   return m ? m.label : 'Not Started'
 }
 
-const badgeClass = computed(() => {
+const badgeStyle = computed(() => {
   const v = props.modelValue
-  if (v === 'not_started') return 'border-[#fde68a] bg-[#fffbeb] text-[#b45309]'
-  if (v === 'discussion_in_progress') return 'border-[#bae6fd] bg-[#f0f9ff] text-[#0369a1]'
-  if (v === 'confirmed_for_permanency') return 'border-[#bbf7d0] bg-[#ecfdf5] text-[#047857]'
-  if (v === 'contracted_extension') return 'border-[#ddd6fe] bg-[#f5f3ff] text-[#5b21b6]'
-  return 'border-[#fecaca] bg-[#fef2f2] text-[#b91c1c]'
+  if (v === 'not_started') return { borderColor: '#fde68a', backgroundColor: '#fffbeb', color: '#b45309' }
+  if (v === 'discussion_in_progress') return { borderColor: '#bae6fd', backgroundColor: '#f0f9ff', color: '#0369a1' }
+  if (v === 'confirmed_for_permanency') return { borderColor: '#bbf7d0', backgroundColor: '#ecfdf5', color: '#047857' }
+  if (v === 'contracted_extension') return { borderColor: '#ddd6fe', backgroundColor: '#f5f3ff', color: '#5b21b6' }
+  return { borderColor: '#fecaca', backgroundColor: '#fef2f2', color: '#b91c1c' }
 })
 
 function close() {
