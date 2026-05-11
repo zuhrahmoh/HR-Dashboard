@@ -1,15 +1,15 @@
 <template>
-  <div ref="rootEl" class="relative inline-block w-[14.5rem] max-w-full min-w-0 align-top">
+  <div ref="rootEl" class="relative inline-block w-[18rem] max-w-full min-w-0 align-top">
     <button
       ref="buttonEl"
       type="button"
       :title="labelFor(modelValue)"
-      class="inline-flex h-8 w-full min-w-0 items-center justify-between gap-1.5 rounded-lg border px-2 py-0 text-left text-xs font-semibold leading-none outline-none ring-0 transition focus-visible:ring-2 focus-visible:ring-sky-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+      class="inline-flex min-h-[2rem] w-full min-w-0 items-center justify-between gap-1.5 rounded-lg border px-2 py-1 text-left text-xs font-semibold leading-tight outline-none ring-0 transition focus-visible:ring-2 focus-visible:ring-sky-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
       :class="badgeClass"
       @click="toggle"
       @keydown.escape.prevent="close"
     >
-      <span class="min-w-0 flex-1 truncate text-left">{{ labelFor(modelValue) }}</span>
+      <span class="min-w-0 flex-1 text-left">{{ labelFor(modelValue) }}</span>
       <svg class="h-3.5 w-3.5 shrink-0 opacity-80" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
         <path
           fill-rule="evenodd"
@@ -23,7 +23,7 @@
       <div
         v-if="open"
         ref="menuEl"
-        class="fixed z-[300] w-64 overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg shadow-slate-900/15"
+        class="fixed z-[300] w-[18rem] overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg shadow-slate-900/15"
         :style="{ left: `${menuPos.left}px`, top: `${menuPos.top}px` }"
         role="listbox"
         aria-label="Status"
@@ -63,7 +63,7 @@ const options = [
   { value: 'not_started' as const, label: 'Not Started' },
   { value: 'discussion_in_progress' as const, label: 'Discussion in progress' },
   { value: 'confirmed_for_permanency' as const, label: 'Confirmed for Permanency' },
-  { value: 'contracted_extension' as const, label: 'Contracted Extension' },
+  { value: 'contracted_extension' as const, label: 'Contract Extension' },
   { value: 'unsuccessful_probation' as const, label: 'Unsuccessful Probation' }
 ]
 
@@ -73,7 +73,7 @@ const buttonEl = ref<HTMLButtonElement | null>(null)
 const menuEl = ref<HTMLElement | null>(null)
 const menuPos = ref({ left: 0, top: 0 })
 
-const MENU_WIDTH = 256
+const MENU_WIDTH = 288
 const MENU_HEIGHT_ESTIMATE = 220
 const MENU_GAP = 4
 

@@ -263,7 +263,7 @@
           <div class="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4">
             <div class="min-w-0">
               <h2 id="completed-contracts-dialog-title" class="text-base font-semibold text-slate-900">Completed Contract Reviews</h2>
-              <p class="mt-0.5 text-xs text-slate-500">Contract expiries marked as Confirmed for Permanency, Contracted Extension, or Unsuccessful Probation.</p>
+              <p class="mt-0.5 text-xs text-slate-500">Contract expiries marked as Confirmed for Permanency, Contract Extension, or Unsuccessful Probation.</p>
             </div>
             <button
               type="button"
@@ -346,7 +346,7 @@
           <div class="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4">
             <div class="min-w-0">
               <h2 id="completed-probations-dialog-title" class="text-base font-semibold text-slate-900">Completed Probation Reviews</h2>
-              <p class="mt-0.5 text-xs text-slate-500">Probation reviews marked as Confirmed for Permanency, Contracted Extension, or Unsuccessful Probation.</p>
+              <p class="mt-0.5 text-xs text-slate-500">Probation reviews marked as Confirmed for Permanency, Contract Extension, or Unsuccessful Probation.</p>
             </div>
             <button
               type="button"
