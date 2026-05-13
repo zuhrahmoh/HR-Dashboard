@@ -21,7 +21,7 @@ export const ONBOARDING_TASKS = [
 
 export const EXIT_TASKS = [
   'Letter confirming separation of employee (resignation, retirement, termination)',
-  'Inform IBWIL to remove from Medical Plan',
+  'Inform IBWIL/GTM to remove from Medical Plan',
   'Inform Finance about resignation/removal from Payroll',
   'Payment of outstanding commissions (Sales personnel)',
   "Removal of the employee's contents from office or workspace",
